@@ -1,0 +1,5 @@
+{
+  "/verify/page": "app/verify/page.js",
+  "/reset-success/page": "app/reset-success/page.js",
+  "/sign-in/page": "app/sign-in/page.js"
+}
