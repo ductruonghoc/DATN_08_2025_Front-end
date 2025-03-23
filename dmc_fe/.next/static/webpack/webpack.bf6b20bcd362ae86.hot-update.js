@@ -42,11 +42,15 @@ self["webpackHotUpdate_N_E"]("webpack",{},
 /******/ /* webpack/runtime/getFullHash */
 /******/ !function() {
 <<<<<<< Updated upstream:dmc_fe/.next/static/webpack/webpack.bf6b20bcd362ae86.hot-update.js
+<<<<<<< Updated upstream:dmc_fe/.next/static/webpack/webpack.bf6b20bcd362ae86.hot-update.js
 <<<<<<< HEAD:dmc_fe/.next/static/webpack/webpack.ab896b2d50c98dbe.hot-update.js
 /******/ 	__webpack_require__.h = function() { return "924f7a8cdb734930"; }
 =======
 /******/ 	__webpack_require__.h = function() { return "c66e5a4a32c78fc5"; }
 >>>>>>> origin/HLoc:dmc_fe/.next/static/webpack/webpack.bf6b20bcd362ae86.hot-update.js
+=======
+/******/ 	__webpack_require__.h = function() { return "eec7afcdd715bd5d"; }
+>>>>>>> Stashed changes:dmc_fe/.next/static/webpack/webpack.ab896b2d50c98dbe.hot-update.js
 =======
 /******/ 	__webpack_require__.h = function() { return "eec7afcdd715bd5d"; }
 >>>>>>> Stashed changes:dmc_fe/.next/static/webpack/webpack.ab896b2d50c98dbe.hot-update.js
