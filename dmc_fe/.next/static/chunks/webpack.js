@@ -91,6 +91,18 @@
 /******/ 		};
 /******/ 	}();
 /******/ 	
+/******/ 	/* webpack/runtime/compat get default export */
+/******/ 	!function() {
+/******/ 		// getDefaultExport function for compatibility with non-harmony modules
+/******/ 		__webpack_require__.n = function(module) {
+/******/ 			var getter = module && module.__esModule ?
+/******/ 				function() { return module['default']; } :
+/******/ 				function() { return module; };
+/******/ 			__webpack_require__.d(getter, { a: getter });
+/******/ 			return getter;
+/******/ 		};
+/******/ 	}();
+/******/ 	
 /******/ 	/* webpack/runtime/create fake namespace object */
 /******/ 	!function() {
 /******/ 		var getProto = Object.getPrototypeOf ? function(obj) { return Object.getPrototypeOf(obj); } : function(obj) { return obj.__proto__; };
@@ -180,23 +192,7 @@
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	!function() {
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-/******/ 		__webpack_require__.h = function() { return "e77292a52ae5d78b"; }
-=======
-/******/ 		__webpack_require__.h = function() { return "393c782840dbe48e"; }
->>>>>>> Stashed changes
-=======
-/******/ 		__webpack_require__.h = function() { return "393c782840dbe48e"; }
->>>>>>> Stashed changes
-=======
-/******/ 		__webpack_require__.h = function() { return "393c782840dbe48e"; }
->>>>>>> Stashed changes
-=======
-/******/ 		__webpack_require__.h = function() { return "393c782840dbe48e"; }
->>>>>>> Stashed changes
+/******/ 		__webpack_require__.h = function() { return "7c283dbc582d9d24"; }
 /******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/global */
