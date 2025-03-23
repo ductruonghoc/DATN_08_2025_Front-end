@@ -62,8 +62,8 @@ export default function OTPVerificationPage() {
         <Link href="/" className="flex items-center gap-2">
           <div className="text-[#2e3139] text-xl font-semibold">DMC</div>
         </Link>
-        <Link href="/sign-in" className="text-[#4045ef] hover:text-[#2d336b] transition-colors">
-          Sign-in
+        <Link href="/log-in" className="text-[#4045ef] hover:text-[#2d336b] transition-colors">
+          Log in
         </Link>
       </header>
 

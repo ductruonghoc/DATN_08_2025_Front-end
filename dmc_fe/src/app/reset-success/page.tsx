@@ -9,8 +9,8 @@ export default function PasswordResetSuccessPage() {
         <Link href="/" className="flex items-center gap-2">
           <div className="text-[#2e3139] text-xl font-semibold">DMC</div>
         </Link>
-        <Link href="/sign-in" className="text-[#4045ef] hover:text-[#2d336b] transition-colors">
-          Sign-in
+        <Link href="/log-in" className="text-[#4045ef] hover:text-[#2d336b] transition-colors">
+          Log in
         </Link>
       </header>
 
@@ -28,9 +28,9 @@ export default function PasswordResetSuccessPage() {
             <p className="text-[#425583] mb-8">Sign in to your account with your new password</p>
           </div>
 
-          <Link href="/sign-in">
+          <Link href="/log-in">
             <Button className="w-full bg-[#2D336B] hover:bg-[#2d336b]/90 text-white rounded-full py-6">
-              Sign in
+              Log in
             </Button>
           </Link>
         </div>
