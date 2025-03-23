@@ -1,8 +1,16 @@
+<<<<<<<< HEAD:dmc_fe/.next/types/app/forgot-password/page.ts
 // File: D:\testabc\DATN_08_2025_Front-end\dmc_fe\src\app\forgot-password\page.tsx
 import * as entry from '../../../../src/app/forgot-password/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
 type TEntry = typeof import('../../../../src/app/forgot-password/page.js')
+========
+// File: C:\Users\huynh\OneDrive\Local gitHub\DATN_08_2025_Front-end\dmc_fe\src\app\sign-up\page.tsx
+import * as entry from '../../../../src/app/sign-up/page.js'
+import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
+
+type TEntry = typeof import('../../../../src/app/sign-up/page.js')
+>>>>>>>> origin/HLoc:dmc_fe/.next/types/app/sign-up/page.ts
 
 // Check that the entry is a valid entry
 checkFields<Diff<{
