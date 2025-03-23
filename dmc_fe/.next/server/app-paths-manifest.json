@@ -1,6 +1,5 @@
 {
-  "/sign-in/page": "app/sign-in/page.js",
-  "/sign-up/page": "app/sign-up/page.js",
-  "/sign-up/verify/page": "app/sign-up/verify/page.js",
-  "/sign-up/success/page": "app/sign-up/success/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/forgot-password/page": "app/forgot-password/page.js",
+  "/log-in/page": "app/log-in/page.js"
 }
