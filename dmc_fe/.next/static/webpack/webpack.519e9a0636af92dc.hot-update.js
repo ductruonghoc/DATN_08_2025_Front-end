@@ -12,18 +12,28 @@ self["webpackHotUpdate_N_E"]("webpack",{},
 /******/ /* webpack/runtime/getFullHash */
 /******/ !function() {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream:dmc_fe/.next/static/webpack/webpack.080a8f64e7629e21.hot-update.js
+=======
+<<<<<<<< Updated upstream:dmc_fe/.next/static/webpack/webpack.12f0bc93300fa528.hot-update.js
+>>>>>>> Stashed changes
 <<<<<<<< HEAD:dmc_fe/.next/static/webpack/webpack.080a8f64e7629e21.hot-update.js
 /******/ 	__webpack_require__.h = function() { return "c8bb988feb4cdda6"; }
 ========
 /******/ 	__webpack_require__.h = function() { return "0b70045084b41a79"; }
 >>>>>>>> origin/HLoc:dmc_fe/.next/static/webpack/webpack.12f0bc93300fa528.hot-update.js
+<<<<<<< Updated upstream
 =======
 /******/ 	__webpack_require__.h = function() { return "393c782840dbe48e"; }
 >>>>>>> Stashed changes:dmc_fe/.next/static/webpack/webpack.519e9a0636af92dc.hot-update.js
 =======
 <<<<<<<< Updated upstream:dmc_fe/.next/static/webpack/webpack.393c782840dbe48e.hot-update.js
 /******/ 	__webpack_require__.h = function() { return "e77292a52ae5d78b"; }
+========
+/******/ 	__webpack_require__.h = function() { return "393c782840dbe48e"; }
+>>>>>>>> Stashed changes:dmc_fe/.next/static/webpack/webpack.519e9a0636af92dc.hot-update.js
+>>>>>>> Stashed changes
+=======
 ========
 /******/ 	__webpack_require__.h = function() { return "393c782840dbe48e"; }
 >>>>>>>> Stashed changes:dmc_fe/.next/static/webpack/webpack.519e9a0636af92dc.hot-update.js
