@@ -6,6 +6,31 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
+    "/forgot-password/fill-email/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/forgot-password/fill-email/page.js"
+    ],
+    "/forgot-password/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/forgot-password/layout.js"
+    ],
+    "/forgot-password/verify/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/forgot-password/verify/page.js"
+    ],
+    "/forgot-password/reset-password/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/forgot-password/reset-password/page.js"
+    ],
+    "/forgot-password/reset-success/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/forgot-password/reset-success/page.js"
+    ],
     "/_not-found/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
