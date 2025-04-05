@@ -6,30 +6,25 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
-    "/forgot-password/fill-email/page": [
+    "/home/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/forgot-password/fill-email/page.js"
+      "static/chunks/app/home/page.js"
     ],
-    "/forgot-password/layout": [
+    "/home/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/forgot-password/layout.js"
+      "static/chunks/app/home/layout.js"
     ],
-    "/forgot-password/verify/page": [
+    "/home/import/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/forgot-password/verify/page.js"
+      "static/chunks/app/home/import/page.js"
     ],
-    "/forgot-password/reset-password/page": [
+    "/home/import/pdfInformation/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/forgot-password/reset-password/page.js"
-    ],
-    "/forgot-password/reset-success/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/forgot-password/reset-success/page.js"
+      "static/chunks/app/home/import/pdfInformation/page.js"
     ],
     "/_not-found/page": [
       "static/chunks/webpack.js",
