@@ -1,1 +1,1 @@
-self.__REACT_LOADABLE_MANIFEST="{}"
+self.__REACT_LOADABLE_MANIFEST="{\"app\\\\home\\\\import\\\\pdfInformation\\\\page.tsx -> ./pdf-viewer\":{\"id\":\"app\\\\home\\\\import\\\\pdfInformation\\\\page.tsx -> ./pdf-viewer\",\"files\":[\"static/css/_app-pages-browser_src_app_home_import_pdfInformation_pdf-viewer_tsx.css\",\"static/chunks/_app-pages-browser_src_app_home_import_pdfInformation_pdf-viewer_tsx.js\"]}}"

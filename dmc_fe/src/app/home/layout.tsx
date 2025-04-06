@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
-import { Menu, Upload, Plus } from "lucide-react"
+import { Menu, Upload, Plus, FileText, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export default function HomeLayout({
@@ -78,6 +78,28 @@ export default function HomeLayout({
               <Upload className="h-5 w-5 text-[#2d336b]" />
               {sidebarOpen && <span>Upload PDF</span>}
             </Link>
+
+            <Link
+              href="/home/device-management"
+              className={cn(
+                "flex items-center gap-3 rounded-lg hover:bg-white/50",
+                sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
+              )}
+            >
+              <Settings className="h-5 w-5 text-[#2d336b]" />
+              {sidebarOpen && <span>Device Management</span>}
+            </Link>
+
+            <Link
+              href="/home/track-progress"
+              className={cn(
+                "flex items-center gap-3 rounded-lg hover:bg-white/50",
+                sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
+              )}
+            >
+              <FileText className="h-5 w-5 text-[#2d336b]" />
+              {sidebarOpen && <span>Track Progress</span>}
+            </Link>
           </nav>
         </div>
       </div>
@@ -88,7 +110,7 @@ export default function HomeLayout({
       >
         <header className="flex h-16 items-center justify-end border-b px-4">
           <div className="flex items-center gap-4">
-            <Link href="/login" className="text-[#2d336b] hover:underline">
+            <Link href="/Login" className="text-[#2d336b] hover:underline">
               Login
             </Link>
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">

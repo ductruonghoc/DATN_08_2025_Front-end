@@ -1,6 +1,7 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
-  "/home/import/pdfInformation/page": "app/home/import/pdfInformation/page.js",
+  "/home/page": "app/home/page.js",
   "/home/import/page": "app/home/import/page.js",
-  "/home/page": "app/home/page.js"
+  "/home/import/pdfInformation/page": "app/home/import/pdfInformation/page.js",
+  "/home/track-progress/page": "app/home/track-progress/page.js"
 }

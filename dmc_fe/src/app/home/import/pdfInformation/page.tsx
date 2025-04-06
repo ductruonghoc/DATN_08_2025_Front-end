@@ -1,13 +1,43 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, Mail, HelpCircle } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import dynamic from "next/dynamic"
+
+// Dynamically import the PDF viewer to avoid SSR issues
+const PDFViewer = dynamic(() => import("./pdf-viewer"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full w-full">
+      <div className="text-center">
+        <div className="mb-4">Loading PDF viewer...</div>
+        <div className="animate-spin h-8 w-8 border-4 border-[#4045ef] border-t-transparent rounded-full mx-auto"></div>
+      </div>
+    </div>
+  ),
+})
 
 export default function PDFInformationPage() {
   const [currentPage, setCurrentPage] = useState(1)
-  const totalPages = 180
+  const [totalPages, setTotalPages] = useState(1)
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+  const [pdfName, setPdfName] = useState<string>("")
+
+  useEffect(() => {
+    // Get the PDF URL from sessionStorage
+    const storedPdfUrl = sessionStorage.getItem("uploadedPdfUrl")
+    const storedPdfName = sessionStorage.getItem("uploadedPdfName")
+
+    if (storedPdfUrl) {
+      setPdfUrl(storedPdfUrl)
+    }
+
+    if (storedPdfName) {
+      setPdfName(storedPdfName)
+    }
+  }, [])
 
   const nextPage = () => {
     if (currentPage < totalPages) {
@@ -19,6 +49,10 @@ export default function PDFInformationPage() {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1)
     }
+  }
+
+  const handleDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
+    setTotalPages(numPages)
   }
 
   return (
@@ -53,17 +87,14 @@ export default function PDFInformationPage() {
       <div className="flex flex-1 gap-6">
         {/* PDF Preview */}
         <div className="flex-1 flex flex-col">
-          <div className="flex-1 border border-[#d5d5d5] rounded-md flex items-center justify-center bg-white">
-            <div className="w-full max-w-md p-4">
-              {/* Sample PDF content */}
-              <div className="aspect-[1/1.4] bg-white border border-[#d5d5d5] flex flex-col items-center justify-center p-8">
-                <img src="/placeholder.svg?height=80&width=200" alt="ThinkPad Logo" className="mb-8" />
-                <div className="text-center">
-                  <p className="text-lg font-medium mb-4">T570 and P51s User Guide</p>
-                  <img src="/placeholder.svg?height=150&width=150" alt="ThinkPad Logo" className="mx-auto" />
-                </div>
+          <div className="flex-1 border border-[#d5d5d5] rounded-md flex items-center justify-center bg-white overflow-hidden">
+            {pdfUrl ? (
+              <PDFViewer pdfUrl={pdfUrl} currentPage={currentPage} onLoadSuccess={handleDocumentLoadSuccess} />
+            ) : (
+              <div className="text-center p-4">
+                <p>No PDF file loaded. Please upload a PDF file first.</p>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Page Navigation */}
@@ -72,7 +103,8 @@ export default function PDFInformationPage() {
               <button
                 onClick={prevPage}
                 className="p-2 text-[#4045ef] disabled:text-[#a9b5df]"
-                disabled={currentPage === 1}
+                disabled={currentPage === 1 || !pdfUrl}
+                aria-label="Previous page"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
@@ -82,7 +114,8 @@ export default function PDFInformationPage() {
               <button
                 onClick={nextPage}
                 className="p-2 text-[#4045ef] disabled:text-[#a9b5df]"
-                disabled={currentPage === totalPages}
+                disabled={currentPage === totalPages || !pdfUrl}
+                aria-label="Next page"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>

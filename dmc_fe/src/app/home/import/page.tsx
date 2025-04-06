@@ -58,11 +58,12 @@ export default function ImportPDFPage() {
       setIsUploading(true)
 
       try {
-        // Simulate file upload and processing
-        await new Promise((resolve) => setTimeout(resolve, 2000))
+        // Create a blob URL for the PDF file
+        const pdfUrl = URL.createObjectURL(selectedFile)
 
-        // Here you would typically upload the file to your server
-        console.log("Uploaded file:", selectedFile.name)
+        // Store the PDF URL in sessionStorage
+        sessionStorage.setItem("uploadedPdfUrl", pdfUrl)
+        sessionStorage.setItem("uploadedPdfName", selectedFile.name)
 
         // Navigate to the PDF information page
         router.push("/home/import/pdfInformation")

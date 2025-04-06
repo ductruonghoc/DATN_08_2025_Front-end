@@ -26,6 +26,11 @@
       "static/chunks/main-app.js",
       "static/chunks/app/home/import/pdfInformation/page.js"
     ],
+    "/home/track-progress/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/home/track-progress/page.js"
+    ],
     "/_not-found/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
