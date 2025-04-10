@@ -6,6 +6,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { Menu, Upload, Plus, FileText, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { usePathname } from "next/navigation"
 
 export default function HomeLayout({
   children,
@@ -13,6 +14,7 @@ export default function HomeLayout({
   children: React.ReactNode
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const pathname = usePathname()
 
   return (
     <div className="flex min-h-screen bg-white">
@@ -41,7 +43,7 @@ export default function HomeLayout({
                   <polyline points="14 2 14 8 20 8" />
                 </svg>
               </div>
-              <span className="text-xl font-bold text-[#2d336b]">DMC</span>
+              <span className="text-xl font-bold text-[#2d336b]">QueryPDF</span>
             </Link>
           )}
           <button
@@ -71,8 +73,11 @@ export default function HomeLayout({
             <Link
               href="/home/import"
               className={cn(
-                "flex items-center gap-3 rounded-lg hover:bg-white/50",
+                "flex items-center gap-3 rounded-lg hover:bg-white/50 relative",
                 sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
+                pathname.includes("/home/import")
+                  ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
+                  : "",
               )}
             >
               <Upload className="h-5 w-5 text-[#2d336b]" />
@@ -82,8 +87,11 @@ export default function HomeLayout({
             <Link
               href="/home/device-management"
               className={cn(
-                "flex items-center gap-3 rounded-lg hover:bg-white/50",
+                "flex items-center gap-3 rounded-lg hover:bg-white/50 relative",
                 sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
+                pathname.includes("/home/device-management")
+                  ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
+                  : "",
               )}
             >
               <Settings className="h-5 w-5 text-[#2d336b]" />
@@ -93,8 +101,11 @@ export default function HomeLayout({
             <Link
               href="/home/track-progress"
               className={cn(
-                "flex items-center gap-3 rounded-lg hover:bg-white/50",
+                "flex items-center gap-3 rounded-lg hover:bg-white/50 relative",
                 sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
+                pathname.includes("/home/track-progress")
+                  ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
+                  : "",
               )}
             >
               <FileText className="h-5 w-5 text-[#2d336b]" />
@@ -110,8 +121,8 @@ export default function HomeLayout({
       >
         <header className="flex h-16 items-center justify-end border-b px-4">
           <div className="flex items-center gap-4">
-            <Link href="/Login" className="text-[#2d336b] hover:underline">
-              Login
+            <Link href="/donate" className="text-[#2d336b] hover:underline">
+              Donat
             </Link>
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
               <svg
@@ -135,4 +146,3 @@ export default function HomeLayout({
     </div>
   )
 }
-
