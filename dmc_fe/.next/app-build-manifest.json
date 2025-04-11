@@ -6,6 +6,11 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
+    ],
     "/home/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -21,40 +26,35 @@
       "static/chunks/main-app.js",
       "static/chunks/app/home/device-management/page.js"
     ],
-    "/home/device-management/page/[page]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/home/device-management/page/[page]/page.js"
-    ],
     "/home/import/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/home/import/page.js"
-    ],
-    "/home/track-progress/tracking/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/home/track-progress/tracking/page.js"
-    ],
-    "/home/track-progress/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/home/track-progress/page.js"
-    ],
-    "/home/track-progress/finish/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/home/track-progress/finish/page.js"
     ],
     "/home/conservation/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/home/conservation/page.js"
     ],
-    "/home/conservation/chat/page": [
+    "/home/track-progress/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/home/conservation/chat/page.js"
+      "static/chunks/app/home/track-progress/page.js"
+    ],
+    "/home/track-progress/tracking/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/home/track-progress/tracking/page.js"
+    ],
+    "/home/track-progress/finish/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/home/track-progress/finish/page.js"
+    ],
+    "/_not-found/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/_not-found/page.js"
     ]
   }
 }

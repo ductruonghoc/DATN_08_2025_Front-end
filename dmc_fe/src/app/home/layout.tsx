@@ -4,7 +4,8 @@ import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
-import { Menu, Upload, Plus, FileText, Settings } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Menu, Upload, Plus, FileText, Settings, MessageSquare } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePathname } from "next/navigation"
 
@@ -15,6 +16,11 @@ export default function HomeLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const pathname = usePathname()
+  const router = useRouter()
+
+  const handleNewConversation = () => {
+    router.push("/home/conservation")
+  }
 
   return (
     <div className="flex min-h-screen bg-white">
@@ -43,7 +49,7 @@ export default function HomeLayout({
                   <polyline points="14 2 14 8 20 8" />
                 </svg>
               </div>
-              <span className="text-xl font-bold text-[#2d336b]">QueryPDF</span>
+              <span className="text-xl font-bold text-[#2d336b]">DMC</span>
             </Link>
           )}
           <button
@@ -60,9 +66,11 @@ export default function HomeLayout({
         <div className="flex-1 overflow-auto py-4">
           <div className={cn("px-4", sidebarOpen ? "" : "flex justify-center")}>
             <button
+              onClick={handleNewConversation}
               className={cn(
-                "flex items-center gap-2 rounded-full bg-white shadow-sm",
+                "flex items-center gap-2 rounded-full bg-white shadow-sm cursor-pointer hover:bg-gray-50 transition-colors",
                 sidebarOpen ? "w-full px-4 py-2 text-sm text-gray-700" : "h-10 w-10 justify-center",
+                pathname.includes("/home/conservation") ? "ring-2 ring-[#4045ef]/20" : "",
               )}
             >
               <Plus className="h-4 w-4" />
@@ -99,7 +107,7 @@ export default function HomeLayout({
             </Link>
 
             <Link
-              href="/home/track-progress"
+              href="/home/track-progress/tracking"
               className={cn(
                 "flex items-center gap-3 rounded-lg hover:bg-white/50 relative",
                 sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
@@ -111,6 +119,20 @@ export default function HomeLayout({
               <FileText className="h-5 w-5 text-[#2d336b]" />
               {sidebarOpen && <span>Track Progress</span>}
             </Link>
+
+            {/* <Link
+              href="/home/conservation"
+              className={cn(
+                "flex items-center gap-3 rounded-lg hover:bg-white/50 relative",
+                sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
+                pathname.includes("/home/conservation")
+                  ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
+                  : "",
+              )}
+            >
+              <MessageSquare className="h-5 w-5 text-[#2d336b]" />
+              {sidebarOpen && <span>Conservation</span>}
+            </Link> */}
           </nav>
         </div>
       </div>
@@ -121,8 +143,8 @@ export default function HomeLayout({
       >
         <header className="flex h-16 items-center justify-end border-b px-4">
           <div className="flex items-center gap-4">
-            <Link href="/donate" className="text-[#2d336b] hover:underline">
-              Donat
+            <Link href="/login" className="text-[#2d336b] hover:underline">
+              Login
             </Link>
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
               <svg
