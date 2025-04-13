@@ -1,8 +1,12 @@
 {
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   "/_not-found/page": "app/_not-found/page.js",
   "/Text-process/page": "app/Text-process/page.js"
+=======
+  "/_not-found/page": "app/_not-found/page.js"
+>>>>>>> Stashed changes
 =======
   "/_not-found/page": "app/_not-found/page.js"
 >>>>>>> Stashed changes
