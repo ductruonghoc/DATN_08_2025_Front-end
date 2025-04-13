@@ -61,6 +61,8 @@ export default function DocumentProcessor() {
 
       {/* Main Content */}
       <div className={`flex flex-col
+        h-screen
+        overflow-hidden
       ${sidebarOpen ? "pl-[260px]" : "pl-[68px]"} grow`}>
         {/* Header */}
         <header className="bg-white p-4 flex justify-between items-center border-b">
@@ -104,19 +106,20 @@ export default function DocumentProcessor() {
         {/* Document Viewer */}
         <div className="flex-1 p-4 flex flex-col md:flex-row gap-4
         h-[calc(100%-72px-72px-88px)]">
-          <div className="flex-1 bg-white border rounded-md p-4 flex items-center justify-center">
-            <div className="max-w-md">
+          <div className="flex-1 bg-white border rounded-md p-4 flex items-center justify-center
+          overflow-hidden">
+            <div className="max-w-md ">
               <Image
                 src="/text-process.jpg?height=400&width=400"
                 alt="Document Preview"
-                width={400}
-                height={400}
+                width={350}
+                height={350}
                 className="mx-auto"
               />
             </div>
           </div>
 
-          <div className="w-full md:w-96 space-y-4">
+          <div className="w-full md:w-96 space-y-4 h-full">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger
@@ -132,7 +135,7 @@ export default function DocumentProcessor() {
                   Images
                 </TabsTrigger>
               </TabsList>
-              <TabsContent value="texts" className="border rounded-md p-4 bg-white h-[500px] overflow-y-auto">
+              <TabsContent value="texts" className="border rounded-md p-4 bg-white h-[calc(100vh-72px-72px-88px-40px-16px-8px-16px)] overflow-y-auto">
                 <div className="space-y-4">
                   <div className="border rounded-md p-3">
                     <p className="text-sm">
@@ -171,7 +174,7 @@ export default function DocumentProcessor() {
                       src="/image-process.svg?height=300&width=400"
                       alt="Device component"
                       width={400}
-                      height={300}
+                      height={400}
                       className="w-full h-full object-contain p-2"
                     />
                   </div>
