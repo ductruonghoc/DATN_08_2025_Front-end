@@ -1,6 +1,5 @@
 {
-  "/log-in/page": "app/log-in/page.js",
-  "/sign-up/page": "app/sign-up/page.js",
-  "/forgot-password/page": "app/forgot-password/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
   "/Text-process/page": "app/Text-process/page.js"
 }
