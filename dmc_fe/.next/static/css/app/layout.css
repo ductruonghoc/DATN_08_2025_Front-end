@@ -1049,6 +1049,9 @@ video {
 .max-w-4xl {
   max-width: 56rem;
 }
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 .max-w-\[--skeleton-width\] {
   max-width: var(--skeleton-width);
@@ -1168,6 +1171,9 @@ video {
 .grid-cols-4 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 .flex-row {
   flex-direction: row;
@@ -1974,6 +1980,14 @@ video {
 }
 .transition-shadow {
   transition-property: box-shadow;
+<<<<<<< Updated upstream
+=======
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+.transition-transform {
+  transition-property: transform;
+>>>>>>> Stashed changes
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
