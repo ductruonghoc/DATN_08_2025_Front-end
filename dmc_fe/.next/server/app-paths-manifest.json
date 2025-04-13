@@ -1,3 +1,6 @@
 {
-  "/Text-process/page": "app/Text-process/page.js"
+  "/process/page": "app/process/page.js",
+  "/home/page": "app/home/page.js",
+  "/home/import/page": "app/home/import/page.js",
+  "/home/track-progress/page": "app/home/track-progress/page.js"
 }
