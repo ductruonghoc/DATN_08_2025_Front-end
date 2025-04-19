@@ -16,14 +16,15 @@ export default function ConservationPage() {
     inputRef.current?.focus()
   }, [])
 
+  // Update the handleSendMessage function to redirect to the dynamic route
   const handleSendMessage = () => {
     if (!inputValue.trim()) return
 
     // Store the message in sessionStorage to retrieve it on the chat page
     sessionStorage.setItem("initialMessage", inputValue)
 
-    // Navigate to the chat page
-    router.push("/home/conservation/chat")
+    // Navigate to the chat page with a new conversation ID
+    router.push(`/home/conservation/chat/new-conversation`)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -55,7 +56,7 @@ export default function ConservationPage() {
             </button>
           </div>
 
-          {/* <div className="absolute left-14 top-1/2 -translate-y-1/2 flex items-center gap-4">
+          <div className="absolute left-14 top-1/2 -translate-y-1/2 flex items-center gap-4">
             <button className="flex items-center gap-1 text-gray-400 hover:text-gray-600">
               <Globe className="h-4 w-4" />
               <span className="text-sm">Search</span>
@@ -69,7 +70,7 @@ export default function ConservationPage() {
             <button className="text-gray-400 hover:text-gray-600">
               <MoreHorizontal className="h-4 w-4" />
             </button>
-          </div> */}
+          </div>
 
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
             <button className="p-1 text-gray-400 hover:text-gray-600">

@@ -5,9 +5,16 @@ import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Menu, Upload, Plus, FileText, Settings, MessageSquare } from "lucide-react"
+import { Menu, Upload, Plus, FileText, Settings, MessageSquare, MoreHorizontal } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePathname } from "next/navigation"
+
+interface Conversation {
+  id: string
+  title: string
+  lastMessage: string
+  timestamp: Date
+}
 
 export default function HomeLayout({
   children,
@@ -15,11 +22,38 @@ export default function HomeLayout({
   children: React.ReactNode
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [conversations, setConversations] = useState<Conversation[]>([
+    {
+      id: "conv-1",
+      title: "Lenovo Thinkpad T570",
+      lastMessage: "How to get the screen?",
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
+    },
+    {
+      id: "conv-2",
+      title: "Cannon Camera EOS R5",
+      lastMessage: "What's the best lens for portraits?",
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
+    },
+  ])
   const pathname = usePathname()
   const router = useRouter()
 
   const handleNewConversation = () => {
     router.push("/home/conservation")
+  }
+
+  // Format relative time
+  const formatRelativeTime = (date: Date) => {
+    const now = new Date()
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+
+    if (diffInSeconds < 60) return "just now"
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`
+
+    return date.toLocaleDateString()
   }
 
   return (
@@ -120,7 +154,7 @@ export default function HomeLayout({
               {sidebarOpen && <span>Track Progress</span>}
             </Link>
 
-            {/* <Link
+            <Link
               href="/home/conservation"
               className={cn(
                 "flex items-center gap-3 rounded-lg hover:bg-white/50 relative",
@@ -132,8 +166,42 @@ export default function HomeLayout({
             >
               <MessageSquare className="h-5 w-5 text-[#2d336b]" />
               {sidebarOpen && <span>Conservation</span>}
-            </Link> */}
+            </Link>
           </nav>
+
+          {/* Conversation history */}
+          {sidebarOpen && (
+            <div className="mt-8 px-2">
+              <h3 className="px-3 text-xs font-semibold uppercase text-gray-500 mb-2">Your conversations</h3>
+              <div className="space-y-1">
+                {conversations.map((conversation) => (
+                  <Link
+                    key={conversation.id}
+                    href={`/home/conservation/chat/${conversation.id}`}
+                    className={cn(
+                      "flex items-center justify-between rounded-lg px-3 py-2 hover:bg-white/50",
+                      pathname.includes(`/home/conservation/chat/${conversation.id}`) ? "bg-white/50" : "",
+                    )}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center">
+                        <span className="font-medium text-sm truncate">{conversation.title}</span>
+                      </div>
+                      <div className="flex items-center text-xs text-gray-500 mt-1">
+                        <span className="truncate">{conversation.lastMessage}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-xs text-gray-500 ml-2">{formatRelativeTime(conversation.timestamp)}</span>
+                      <button className="ml-1 text-gray-400 hover:text-gray-600">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -143,8 +211,8 @@ export default function HomeLayout({
       >
         <header className="flex h-16 items-center justify-end border-b px-4">
           <div className="flex items-center gap-4">
-            <Link href="/login" className="text-[#2d336b] hover:underline">
-              Login
+            <Link href="/donate" className="text-[#2d336b] hover:underline">
+              Donat
             </Link>
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
               <svg
