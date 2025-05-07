@@ -1,5 +1,6 @@
 {
-  "/home/device-management/page": "app/home/device-management/page.js",
+  "/home/conservation/chat/[id]/page": "app/home/conservation/chat/[id]/page.js",
   "/home/import/page": "app/home/import/page.js",
-  "/home/conservation/chat/[id]/page": "app/home/conservation/chat/[id]/page.js"
+  "/home/conservation/page": "app/home/conservation/page.js",
+  "/home/device-management/page": "app/home/device-management/page.js"
 }

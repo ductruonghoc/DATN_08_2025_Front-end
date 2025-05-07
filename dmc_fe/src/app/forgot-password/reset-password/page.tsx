@@ -211,4 +211,3 @@ export default function SetNewPasswordPage() {
     </div>
   )
 }
-

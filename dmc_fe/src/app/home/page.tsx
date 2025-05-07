@@ -6,7 +6,7 @@ export default function HomePage() {
   return (
     <div className="flex h-full flex-col items-center justify-center">
       <div className="w-full max-w-4xl">
-        <h1 className="mb-6 text-3xl font-bold text-center text-[#2d336b]">Welcome to DMC</h1>
+        <h1 className="mb-6 text-3xl font-bold text-center text-[#2d336b]">Welcome to QueryPDF</h1>
         <p className="mb-12 text-center text-gray-600">
           Your intelligent PDF assistant. Upload, manage, and interact with your documents.
         </p>
@@ -34,7 +34,7 @@ export default function HomePage() {
               </div>
               <h2 className="text-xl font-semibold text-[#2e3139]">New Conversation</h2>
             </div>
-            <p className="text-gray-600 mb-6">Start a new conversation with your own AI personal PDF assistant.</p>
+            <p className="text-gray-600 mb-6">Start a new conversation with your PDF assistant.</p>
             <Link href="/home/conservation">
               <Button className="w-full rounded-md bg-[#4045ef] text-white hover:bg-[#2d336b]/90">
                 Start Conversation

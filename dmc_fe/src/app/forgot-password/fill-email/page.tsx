@@ -28,6 +28,7 @@ export default function ForgotPasswordPage() {
       const result = await submitEmail(formData)
 
       if (result.success) {
+        // Store email in sessionStorage for later use
         sessionStorage.setItem("resetEmail", email)
         router.push("/forgot-password/verify")
       } else {
@@ -96,4 +97,3 @@ export default function ForgotPasswordPage() {
     </div>
   )
 }
-

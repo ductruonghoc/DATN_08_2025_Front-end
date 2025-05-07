@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { User, Bot, Paperclip, FileText, MoreVertical, Menu } from "lucide-react"
+import { User, Bot, Paperclip, Sun, Settings } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 
@@ -32,6 +32,9 @@ export default function ChatPage({ params }: { params: { id: string } }) {
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [notesOpen, setNotesOpen] = useState(true)
+  const [isDarkMode, setIsDarkMode] = useState(false)
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
   const [notes, setNotes] = useState<Note[]>([
     {
       id: "note-1",
@@ -49,6 +52,8 @@ export default function ChatPage({ params }: { params: { id: string } }) {
   const [deviceName, setDeviceName] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const settingsRef = useRef<HTMLDivElement>(null)
+  const userMenuRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
   // Mock conversations data
@@ -103,6 +108,23 @@ export default function ChatPage({ params }: { params: { id: string } }) {
       ],
     },
   }
+
+  // Close menus when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
+        setShowSettingsMenu(false)
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [])
 
   // Load conversation based on ID
   useEffect(() => {
@@ -164,6 +186,16 @@ export default function ChatPage({ params }: { params: { id: string } }) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
+  // Check for system dark mode preference on initial load
+  useEffect(() => {
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+    setIsDarkMode(prefersDark)
+
+    if (prefersDark) {
+      document.documentElement.classList.add("dark")
+    }
+  }, [])
+
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return
 
@@ -190,7 +222,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
       ]
 
       const randomResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)]
-      
+
       const aiMessage: Message = {
         id: Date.now().toString(),
         content: randomResponse,
@@ -219,44 +251,111 @@ export default function ChatPage({ params }: { params: { id: string } }) {
     console.log("Saving note...")
   }
 
-  const toggleNotes = () => {
-    setNotesOpen(!notesOpen)
+  const toggleDarkMode = () => {
+    const newMode = !isDarkMode
+    setIsDarkMode(newMode)
+
+    // Apply dark mode to the entire document
+    if (newMode) {
+      document.documentElement.classList.add("dark")
+    } else {
+      document.documentElement.classList.remove("dark")
+    }
+  }
+
+  const toggleSettingsMenu = () => {
+    setShowSettingsMenu(!showSettingsMenu)
+    if (showUserMenu) setShowUserMenu(false)
+  }
+
+  const toggleUserMenu = () => {
+    setShowUserMenu(!showUserMenu)
+    if (showSettingsMenu) setShowSettingsMenu(false)
   }
 
   return (
     <div className="flex h-full">
-      {/* Main chat area */}
-      <div className="flex-1 flex flex-col bg-white rounded-lg shadow-sm overflow-hidden">
+      {/* Main chat area with rigid layout */}
+      <div className="flex-1 flex flex-col h-full relative bg-white dark:bg-gray-900">
         {/* Chat header - fixed */}
-        <div className="flex items-center justify-between p-4 border-b bg-white z-10">
-          <h1 className="text-lg font-medium text-[#2e3139]">{deviceName}</h1>
+        <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 border-b z-10 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-[#2d336b] dark:text-white">
+          <div className="flex items-center gap-3">
+            <h1 className="text-lg font-medium">{deviceName || "New Conversation"}</h1>
+          </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="text-gray-500 hover:text-[#4045ef]" aria-label="Bookmark">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
-              </svg>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-[#2d336b] hover:text-[#4045ef] dark:text-white dark:hover:text-gray-300"
+              aria-label={isDarkMode ? "Light mode" : "Dark mode"}
+              onClick={toggleDarkMode}
+            >
+              <Sun className="h-5 w-5" />
             </Button>
+
+            <div className="relative" ref={settingsRef}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-[#2d336b] hover:text-[#4045ef] dark:text-white dark:hover:text-gray-300"
+                aria-label="Settings"
+                onClick={toggleSettingsMenu}
+              >
+                <Settings className="h-5 w-5" />
+              </Button>
+
+              {showSettingsMenu && (
+                <div
+                  className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg z-50 ${
+                    isDarkMode ? "bg-gray-800 border border-gray-700" : "bg-white border border-gray-200"
+                  }`}
+                >
+                  <div className="py-1">
+                    <button
+                      className={`block px-4 py-2 text-sm w-full text-left ${
+                        isDarkMode ? "text-white hover:bg-gray-700" : "text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      Account Settings
+                    </button>
+                    <button
+                      className={`block px-4 py-2 text-sm w-full text-left ${
+                        isDarkMode ? "text-white hover:bg-gray-700" : "text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      Preferences
+                    </button>
+                    <button
+                      className={`block px-4 py-2 text-sm w-full text-left ${
+                        isDarkMode ? "text-white hover:bg-gray-700" : "text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      Privacy
+                    </button>
+                    <button
+                      className={`block px-4 py-2 text-sm w-full text-left ${
+                        isDarkMode ? "text-white hover:bg-gray-700" : "text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      Help & Support
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Chat content - scrollable */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        {/* Chat content - scrollable area */}
+        <div className="absolute top-[65px] bottom-[65px] left-0 right-0 overflow-y-auto p-4 space-y-6 bg-white dark:bg-gray-900">
           {messages.map((message) => (
             <div key={message.id} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
               <div className={`flex max-w-[80%] ${message.sender === "user" ? "flex-row-reverse" : "flex-row"}`}>
                 <div
                   className={`flex items-center justify-center h-8 w-8 rounded-full flex-shrink-0 ${
-                    message.sender === "user" ? "ml-3 bg-[#4045ef]" : "mr-3 bg-gray-200"
+                    message.sender === "user"
+                      ? "ml-3 bg-[#4045ef]"
+                      : `mr-3 ${isDarkMode ? "bg-gray-700" : "bg-gray-200"}`
                   }`}
                 >
                   {message.sender === "user" ? (
@@ -267,11 +366,19 @@ export default function ChatPage({ params }: { params: { id: string } }) {
                 </div>
                 <div
                   className={`rounded-2xl px-4 py-3 ${
-                    message.sender === "user" ? "bg-[#4045ef] text-white" : "bg-gray-100 text-[#2e3139]"
+                    message.sender === "user"
+                      ? "bg-[#4045ef] text-white"
+                      : isDarkMode
+                        ? "bg-gray-800 text-white"
+                        : "bg-gray-100 text-[#2d336b]"
                   }`}
                 >
                   <div className="text-sm whitespace-pre-line">{message.content}</div>
-                  <div className={`text-xs mt-1 ${message.sender === "user" ? "text-blue-100" : "text-gray-500"}`}>
+                  <div
+                    className={`text-xs mt-1 ${
+                      message.sender === "user" ? "text-blue-100" : isDarkMode ? "text-gray-400" : "text-[#2d336b]/70"
+                    }`}
+                  >
                     {formatTime(message.timestamp)}
                   </div>
                 </div>
@@ -282,21 +389,25 @@ export default function ChatPage({ params }: { params: { id: string } }) {
           {isLoading && (
             <div className="flex justify-start">
               <div className="flex flex-row">
-                <div className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-200 mr-3">
+                <div
+                  className={`flex items-center justify-center h-8 w-8 rounded-full mr-3 ${
+                    isDarkMode ? "bg-gray-700" : "bg-gray-200"
+                  }`}
+                >
                   <Bot className="h-5 w-5 text-[#4045ef]" />
                 </div>
-                <div className="bg-gray-100 rounded-2xl px-4 py-3">
+                <div className={`rounded-2xl px-4 py-3 ${isDarkMode ? "bg-gray-800" : "bg-gray-100"}`}>
                   <div className="flex space-x-2">
                     <div
-                      className="w-2 h-2 rounded-full bg-gray-300 animate-bounce"
+                      className={`w-2 h-2 rounded-full animate-bounce ${isDarkMode ? "bg-gray-500" : "bg-gray-300"}`}
                       style={{ animationDelay: "0ms" }}
                     />
                     <div
-                      className="w-2 h-2 rounded-full bg-gray-300 animate-bounce"
+                      className={`w-2 h-2 rounded-full animate-bounce ${isDarkMode ? "bg-gray-500" : "bg-gray-300"}`}
                       style={{ animationDelay: "300ms" }}
                     />
                     <div
-                      className="w-2 h-2 rounded-full bg-gray-300 animate-bounce"
+                      className={`w-2 h-2 rounded-full animate-bounce ${isDarkMode ? "bg-gray-500" : "bg-gray-300"}`}
                       style={{ animationDelay: "600ms" }}
                     />
                   </div>
@@ -309,13 +420,13 @@ export default function ChatPage({ params }: { params: { id: string } }) {
         </div>
 
         {/* Input area - fixed at bottom */}
-        <div className="border-t p-4 bg-white">
-          <div className="flex items-center bg-white border rounded-full overflow-hidden pr-2">
+        <div className="absolute bottom-0 left-0 right-0 border-t p-4 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+          <div className="flex items-center border rounded-full overflow-hidden pr-2 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="text-gray-500 hover:text-[#4045ef]"
+              className="text-[#2d336b] hover:text-[#4045ef] dark:text-gray-300 dark:hover:text-white"
               aria-label="Attach file"
             >
               <Paperclip className="h-5 w-5" />
@@ -324,7 +435,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
               ref={inputRef}
               type="text"
               placeholder="Ask me anything"
-              className="flex-1 border-0 focus:outline-none px-2 py-2"
+              className="flex-1 border-0 focus:outline-none px-2 py-2 bg-white dark:bg-gray-700 text-[#2d336b] dark:text-white dark:placeholder-gray-400"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -332,7 +443,12 @@ export default function ChatPage({ params }: { params: { id: string } }) {
             <Button
               type="button"
               size="icon"
-              className="bg-transparent text-gray-400 hover:text-[#4045ef] rounded-full h-8 w-8"
+              className={cn(
+                "rounded-full h-8 w-8 flex items-center justify-center",
+                inputValue.trim() && !isLoading
+                  ? "bg-[#4045ef] text-white hover:bg-[#3035df]"
+                  : "bg-transparent text-[#2d336b]/50 dark:text-gray-500",
+              )}
               onClick={handleSendMessage}
               disabled={!inputValue.trim() || isLoading}
               aria-label="Send message"
@@ -345,73 +461,59 @@ export default function ChatPage({ params }: { params: { id: string } }) {
         </div>
       </div>
 
-      {/* Notes toggle button */}
-      <div className="flex items-start">
-        <Button
-          onClick={toggleNotes}
-          variant="ghost"
-          size="icon"
-          className="text-gray-500 hover:text-[#4045ef] mt-4 mr-2"
-          aria-label={notesOpen ? "Close notes" : "Open notes"}
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
+      {/* Notes panel - right sidebar */}
+      <div
+        className={cn(
+          "h-full border-l flex flex-col transition-all duration-300 ease-in-out",
+          notesOpen ? "w-80" : "w-0 opacity-0 overflow-hidden",
+          "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700",
+        )}
+      >
+        {/* Notes header */}
+        <div className="p-4 border-b flex items-center justify-between bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+          <h2 className="font-bold text-[#2d336b] dark:text-white">YOUR NOTES</h2>
+        </div>
 
-        {/* Notes panel - retractable */}
-        <div
-          className={cn(
-            "bg-white rounded-lg shadow-sm overflow-hidden flex flex-col transition-all duration-300 ease-in-out",
-            notesOpen ? "w-80 opacity-100" : "w-0 opacity-0",
-          )}
-        >
-          {/* Notes header - fixed */}
-          <div className="flex items-center justify-between p-4 border-b bg-white">
-            <h2 className="font-bold text-[#2e3139]">YOUR NOTES</h2>
-            <Button variant="ghost" size="icon" className="text-gray-500">
-              <MoreVertical className="h-5 w-5" />
-            </Button>
-          </div>
-
-          {/* Notes content - scrollable */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="p-4 space-y-4">
-              {notes.map((note) => (
-                <div key={note.id} className="border-b pb-4">
-                  <div className="flex items-start gap-3">
-                    <FileText className="h-5 w-5 text-[#2e3139] mt-1" />
-                    <div>
-                      <h3 className="font-medium text-[#2e3139]">{note.title}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{note.content}</p>
-                    </div>
+        {/* Notes content - scrollable */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4 space-y-4">
+            {notes.map((note) => (
+              <div key={note.id} className={`border-b pb-4 ${isDarkMode ? "border-gray-700" : "border-gray-200"}`}>
+                <div className="flex items-start gap-3">
+                  <div className={isDarkMode ? "text-white mt-1" : "text-[#2d336b] mt-1"}>•</div>
+                  <div>
+                    <h3 className={`font-medium ${isDarkMode ? "text-white" : "text-[#2d336b]"}`}>{note.title}</h3>
+                    <p className={`text-sm mt-1 ${isDarkMode ? "text-gray-300" : "text-[#2d336b]"}`}>{note.content}</p>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
+        </div>
 
-          {/* Notes footer - fixed */}
-          <div className="p-4 border-t bg-white">
-            <Button
-              onClick={handleSaveNote}
-              className="flex items-center gap-2 text-[#4045ef] hover:bg-[#f1f6ff] w-full justify-start px-3 py-2 rounded-md"
+        {/* Notes footer */}
+        <div className="p-4 border-t bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+          <Button
+            onClick={handleSaveNote}
+            className="flex items-center gap-2 w-full justify-start px-3 py-2 rounded-md bg-white dark:bg-gray-700 text-[#4045ef] hover:bg-[#f1f6ff] dark:hover:bg-gray-600 border border-[#4045ef] dark:border-gray-600"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-[#4045ef]"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M12 5v14" />
-                <path d="M5 12h14" />
-              </svg>
-              <span>Save as note</span>
-            </Button>
-          </div>
+              <path d="M12 5v14" />
+              <path d="M5 12h14" />
+            </svg>
+            <span className="text-[#4045ef]">Save as note</span>
+          </Button>
         </div>
       </div>
     </div>

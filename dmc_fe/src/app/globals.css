@@ -10,9 +10,6 @@ body {
   .text-balance {
     text-wrap: balance;
   }
-  .bg-background {
-    background-color: hsl(var(--background)); 
-  }
 }
 
 @layer base {
@@ -92,6 +89,11 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-white dark:bg-gray-900 text-foreground;
   }
+}
+
+/* Override the default shadcn select trigger to hide the chevron */
+.select-trigger [data-icon] {
+  display: none;
 }
