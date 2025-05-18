@@ -1,4 +1,6 @@
 "use client";
+
+import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -7,31 +9,12 @@ import { Mail, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export default function LogInPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+export default function SignInPage() {
   const router = useRouter();
+  const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError(null);
-
-    try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Invalid email or password");
-      }
-
-      router.push("/dashboard");
-    } catch (err) {
-      setError("Invalid email or password");
-    }
+  const handleGoogleLogin = async () => {
+    signIn("google", { callbackUrl: "/" }); // Chuyển hướng sau khi đăng nhập
   };
 
   return (
@@ -50,7 +33,7 @@ export default function LogInPage() {
             <p className="text-muted-foreground mt-2">Enter your email and password to log in</p>
           </div>
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-6">
             <div className="space-y-2">
               <label htmlFor="email" className="block text-sm font-medium">
                 Email
@@ -64,8 +47,6 @@ export default function LogInPage() {
                   name="email"
                   type="email"
                   placeholder="example@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                   className="pl-10 rounded-full border-2 border-[#a9b5df] focus:border-[#4045ef] w-full placeholder:text-gray-300 py-[22px]"
                   required
                 />
@@ -85,13 +66,10 @@ export default function LogInPage() {
                   name="password"
                   type="password"
                   placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 rounded-full border-2 border-[#a9b5df] focus:border-[#4045ef] w-full placeholder:text-gray-300 py-[22px]"
+                  className="pl-10 rounded-full border-2 border-[#a9b5df] focus:border-[#4045ef] w-full placeholder:text-gray-300 py-[22px] "
                   required
                 />
               </div>
-              {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
             </div>
 
             <Button type="submit" className="w-full bg-[#2e3470] text-white hover:bg-[#232759] rounded-full py-[22px]">
@@ -100,9 +78,12 @@ export default function LogInPage() {
           </form>
 
           <div className="flex justify-between text-sm mt-4">
-            <Link href="/sign-up" className="text-[#2e3470] font-medium hover:underline">
-              Don't have an account? Sign up
-            </Link>
+            <p>
+              Don't have an account?
+              <Link href="/sign-up" className="ml-1 text-[#2e3470] font-medium hover:underline">
+                Sign up
+              </Link>
+            </p>
             <Link href="/forgot-password" className="text-[#2e3470] font-medium hover:underline">
               Forgot password?
             </Link>
@@ -115,6 +96,7 @@ export default function LogInPage() {
           </div>
 
           <Button
+            onClick={handleGoogleLogin}
             variant="outline"
             className="mt-4 w-full flex items-center justify-center gap-2 border border-[#a9b5df] focus:border-[#4045ef] rounded-full py-[22px]"
           >
