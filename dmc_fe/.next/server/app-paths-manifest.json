@@ -1,6 +1,11 @@
 {
-  "/home/conservation/chat/[id]/page": "app/home/conservation/chat/[id]/page.js",
+  "/page": "app/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/home/page": "app/home/page.js",
   "/home/import/page": "app/home/import/page.js",
+  "/home/device-management/page": "app/home/device-management/page.js",
+  "/home/track-progress/tracking/page": "app/home/track-progress/tracking/page.js",
+  "/home/admin-management/page": "app/home/admin-management/page.js",
   "/home/conservation/page": "app/home/conservation/page.js",
-  "/home/device-management/page": "app/home/device-management/page.js"
+  "/home/conservation/chat/[id]/page": "app/home/conservation/chat/[id]/page.js"
 }

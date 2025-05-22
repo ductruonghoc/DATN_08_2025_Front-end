@@ -16,6 +16,9 @@ import {
   ChevronDown,
   LogOut,
   UserIcon,
+  Sun,
+  Moon,
+  Users,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePathname } from "next/navigation"
@@ -34,6 +37,7 @@ export default function HomeLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(false)
   const [conversations, setConversations] = useState<Conversation[]>([
     {
       id: "conv-1",
@@ -70,6 +74,33 @@ export default function HomeLayout({
     }
   }, [])
 
+  // Check for system dark mode preference on initial load
+  useEffect(() => {
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+    setIsDarkMode(prefersDark)
+
+    if (prefersDark) {
+      document.documentElement.classList.add("dark")
+    } else {
+      document.documentElement.classList.remove("dark")
+    }
+
+    // Listen for changes in color scheme preference
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
+    const handleChange = (e: MediaQueryListEvent) => {
+      const newDarkMode = e.matches
+      setIsDarkMode(newDarkMode)
+      if (newDarkMode) {
+        document.documentElement.classList.add("dark")
+      } else {
+        document.documentElement.classList.remove("dark")
+      }
+    }
+
+    mediaQuery.addEventListener("change", handleChange)
+    return () => mediaQuery.removeEventListener("change", handleChange)
+  }, [])
+
   // Format relative time
   const formatRelativeTime = (date: Date) => {
     const now = new Date()
@@ -87,8 +118,23 @@ export default function HomeLayout({
     setShowUserMenu(!showUserMenu)
   }
 
+  const toggleDarkMode = () => {
+    const newMode = !isDarkMode
+    setIsDarkMode(newMode)
+
+    // Apply dark mode to the entire document
+    if (newMode) {
+      document.documentElement.classList.add("dark")
+    } else {
+      document.documentElement.classList.remove("dark")
+    }
+
+    // Store preference in localStorage
+    localStorage.setItem("darkMode", newMode ? "true" : "false")
+  }
+
   return (
-    <div className="flex min-h-screen bg-white dark:bg-gray-900">
+    <div className="flex h-full overflow-hidden bg-white dark:bg-gray-900">
       {/* Sidebar - collapses to icon-only mode */}
       <div
         className={cn(
@@ -99,7 +145,7 @@ export default function HomeLayout({
         <div className={cn("flex h-16 items-center px-4", sidebarOpen ? "justify-between" : "justify-center")}>
           {sidebarOpen && (
             <Link href="/home" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded bg-[#4045ef] text-white">
+              <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-[#4045ef] text-white">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
@@ -120,7 +166,7 @@ export default function HomeLayout({
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className={cn(
-              "flex items-center justify-center rounded-md p-2 hover:bg-white/50 dark:hover:bg-gray-700/50",
+              "flex items-center justify-center rounded-[10px] p-2 hover:bg-white/50 dark:hover:bg-gray-700/50",
               sidebarOpen ? "" : "mx-auto",
             )}
             aria-label="Toggle sidebar"
@@ -133,7 +179,7 @@ export default function HomeLayout({
             <button
               onClick={handleNewConversation}
               className={cn(
-                "flex items-center gap-2 rounded-full bg-white dark:bg-gray-700 shadow-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors",
+                "flex items-center gap-2 rounded-[10px] bg-white dark:bg-gray-700 shadow-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors",
                 sidebarOpen ? "w-full px-4 py-2 text-sm text-[#2d336b] dark:text-white" : "h-10 w-10 justify-center",
                 pathname.includes("/home/conservation") ? "ring-2 ring-[#4045ef]/20" : "",
               )}
@@ -146,7 +192,7 @@ export default function HomeLayout({
             <Link
               href="/home/import"
               className={cn(
-                "flex items-center gap-3 rounded-lg hover:bg-white/50 dark:hover:bg-gray-700/50 relative",
+                "flex items-center gap-3 rounded-[10px] hover:bg-white/50 dark:hover:bg-gray-700/50 relative",
                 sidebarOpen ? "px-3 py-2 text-[#2d336b] dark:text-white" : "h-10 w-10 justify-center my-2",
                 pathname.includes("/home/import")
                   ? "bg-white/50 dark:bg-gray-700/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black dark:before:bg-white"
@@ -160,7 +206,7 @@ export default function HomeLayout({
             <Link
               href="/home/device-management"
               className={cn(
-                "flex items-center gap-3 rounded-lg hover:bg-white/50 dark:hover:bg-gray-700/50 relative",
+                "flex items-center gap-3 rounded-[10px] hover:bg-white/50 dark:hover:bg-gray-700/50 relative",
                 sidebarOpen ? "px-3 py-2 text-[#2d336b] dark:text-white" : "h-10 w-10 justify-center my-2",
                 pathname.includes("/home/device-management")
                   ? "bg-white/50 dark:bg-gray-700/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black dark:before:bg-white"
@@ -174,7 +220,7 @@ export default function HomeLayout({
             <Link
               href="/home/track-progress/tracking"
               className={cn(
-                "flex items-center gap-3 rounded-lg hover:bg-white/50 dark:hover:bg-gray-700/50 relative",
+                "flex items-center gap-3 rounded-[10px] hover:bg-white/50 dark:hover:bg-gray-700/50 relative",
                 sidebarOpen ? "px-3 py-2 text-[#2d336b] dark:text-white" : "h-10 w-10 justify-center my-2",
                 pathname.includes("/home/track-progress")
                   ? "bg-white/50 dark:bg-gray-700/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black dark:before:bg-white"
@@ -188,7 +234,7 @@ export default function HomeLayout({
             <Link
               href="/home/conservation"
               className={cn(
-                "flex items-center gap-3 rounded-lg hover:bg-white/50 dark:hover:bg-gray-700/50 relative",
+                "flex items-center gap-3 rounded-[10px] hover:bg-white/50 dark:hover:bg-gray-700/50 relative",
                 sidebarOpen ? "px-3 py-2 text-[#2d336b] dark:text-white" : "h-10 w-10 justify-center my-2",
                 pathname.includes("/home/conservation")
                   ? "bg-white/50 dark:bg-gray-700/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black dark:before:bg-white"
@@ -197,6 +243,20 @@ export default function HomeLayout({
             >
               <MessageSquare className="h-5 w-5 text-[#2d336b] dark:text-white" />
               {sidebarOpen && <span>Conservation</span>}
+            </Link>
+
+            <Link
+              href="/home/admin-management"
+              className={cn(
+                "flex items-center gap-3 rounded-[10px] hover:bg-white/50 dark:hover:bg-gray-700/50 relative",
+                sidebarOpen ? "px-3 py-2 text-[#2d336b] dark:text-white" : "h-10 w-10 justify-center my-2",
+                pathname.includes("/home/admin-management")
+                  ? "bg-white/50 dark:bg-gray-700/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black dark:before:bg-white"
+                  : "",
+              )}
+            >
+              <Users className="h-5 w-5 text-[#2d336b] dark:text-white" />
+              {sidebarOpen && <span>Admin Management</span>}
             </Link>
           </nav>
 
@@ -212,7 +272,7 @@ export default function HomeLayout({
                     key={conversation.id}
                     href={`/home/conservation/chat/${conversation.id}`}
                     className={cn(
-                      "flex items-center justify-between rounded-lg px-3 py-2 hover:bg-white/50 dark:hover:bg-gray-700/50",
+                      "flex items-center justify-between rounded-[10px] px-3 py-2 hover:bg-white/50 dark:hover:bg-gray-700/50",
                       pathname.includes(`/home/conservation/chat/${conversation.id}`)
                         ? "bg-white/50 dark:bg-gray-700/50"
                         : "",
@@ -246,11 +306,23 @@ export default function HomeLayout({
 
       {/* Main content area with top bar */}
       <div
-        className={cn("flex flex-1 flex-col transition-all duration-300 ease-in-out", sidebarOpen ? "ml-64" : "ml-16")}
+        className={cn(
+          "flex flex-1 flex-col transition-all duration-300 ease-in-out h-full",
+          sidebarOpen ? "ml-64" : "ml-16",
+        )}
       >
         {/* Top horizontal bar */}
         <div className="h-16 border-b bg-white dark:bg-gray-800 dark:border-gray-700 flex justify-end items-center px-4 sticky top-0 z-40">
+          {/* User menu content */}
           <div className="flex items-center gap-4 relative" ref={userMenuRef}>
+            <button
+              onClick={toggleDarkMode}
+              className="flex items-center justify-center h-8 w-8 rounded-full text-[#2d336b] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+              aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
+
             <button
               onClick={toggleUserMenu}
               className="flex items-center gap-2 text-[#2d336b] dark:text-white hover:underline"
@@ -260,7 +332,7 @@ export default function HomeLayout({
             </button>
 
             {showUserMenu && (
-              <div className="absolute right-0 top-full mt-1 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 z-50">
+              <div className="absolute right-0 top-full mt-1 w-48 rounded-[10px] shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 z-50">
                 <div className="py-1">
                   <button className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left">
                     <UserIcon className="h-4 w-4" />
@@ -297,8 +369,8 @@ export default function HomeLayout({
           </div>
         </div>
 
-        {/* Main content */}
-        <main className="flex-1 overflow-auto p-4">{children}</main>
+        {/* Main content - Change from overflow-hidden to overflow-auto */}
+        <main className="flex-1 overflow-auto">{children}</main>
       </div>
     </div>
   )

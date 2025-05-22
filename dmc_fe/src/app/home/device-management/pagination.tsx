@@ -42,28 +42,32 @@ export default function Pagination({ currentPage, totalPages }: PaginationProps)
   }
 
   return (
-    <div className="flex justify-center items-center">
+    <div className="flex justify-center items-center mt-6 mb-4">
       <Link
         href={currentPage > 1 ? `/home/device-management/page/${currentPage - 1}` : "#"}
-        className={`w-8 h-8 flex items-center justify-center rounded-md border border-gray-300 mr-2 ${
-          currentPage === 1 ? "opacity-50 pointer-events-none bg-gray-100" : "bg-white"
+        className={`w-8 h-8 flex items-center justify-center rounded-[10px] border border-gray-300 dark:border-gray-700 mr-2 ${
+          currentPage === 1
+            ? "opacity-50 pointer-events-none bg-gray-100 dark:bg-gray-700"
+            : "bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
         }`}
         aria-label="Previous page"
       >
-        <ChevronLeft className="h-4 w-4" />
+        <ChevronLeft className="h-4 w-4 text-[#2e3139] dark:text-white" />
       </Link>
 
       {getPaginationNumbers().map((number, index) =>
         number === "..." ? (
-          <span key={`ellipsis-${index}`} className="mx-1">
+          <span key={`ellipsis-${index}`} className="mx-1 text-[#2e3139] dark:text-white">
             ...
           </span>
         ) : (
           <Link
             key={`page-${number}`}
             href={`/home/device-management/page/${number}`}
-            className={`w-8 h-8 flex items-center justify-center rounded-md mx-1 ${
-              currentPage === number ? "bg-[#2d336b] text-white" : "border border-gray-300 hover:bg-gray-100 bg-white"
+            className={`w-8 h-8 flex items-center justify-center rounded-[10px] mx-1 ${
+              currentPage === number
+                ? "bg-[#4045ef] text-white"
+                : "border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 bg-white dark:bg-gray-800 text-[#2e3139] dark:text-white"
             }`}
           >
             {number}
@@ -73,12 +77,14 @@ export default function Pagination({ currentPage, totalPages }: PaginationProps)
 
       <Link
         href={currentPage < totalPages ? `/home/device-management/page/${currentPage + 1}` : "#"}
-        className={`w-8 h-8 flex items-center justify-center rounded-md border border-gray-300 ml-2 ${
-          currentPage === totalPages ? "opacity-50 pointer-events-none bg-gray-100" : "bg-white"
+        className={`w-8 h-8 flex items-center justify-center rounded-[10px] border border-gray-300 dark:border-gray-700 ml-2 ${
+          currentPage === totalPages
+            ? "opacity-50 pointer-events-none bg-gray-100 dark:bg-gray-700"
+            : "bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
         }`}
         aria-label="Next page"
       >
-        <ChevronRight className="h-4 w-4" />
+        <ChevronRight className="h-4 w-4 text-[#2e3139] dark:text-white" />
       </Link>
     </div>
   )

@@ -1,13 +1,12 @@
 "use client"
 
-import { useState } from "react"
-import { Search, ChevronDown, ChevronUp } from "lucide-react"
+import type React from "react"
+
+import { useState, useRef, useEffect } from "react"
+import { Search, MoreVertical, Pen, Trash2, ChevronDown, Plus } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
-import Pagination from "./pagination"
 import { Button } from "@/components/ui/button"
-import CategoryFilter from "./category-filter"
-import BrandFilter from "./brand-filter"
 
 interface Device {
   id: string
@@ -16,228 +15,517 @@ interface Device {
   brand: string
 }
 
+interface Category {
+  id: string
+  name: string
+}
+
+interface Brand {
+  id: string
+  name: string
+}
+
 export default function DeviceManagementPage() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
-  const [showCategoryFilter, setShowCategoryFilter] = useState(false)
-  const [showBrandFilter, setShowBrandFilter] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [selectedBrand, setSelectedBrand] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState("device")
+  const [activeMenu, setActiveMenu] = useState<string | null>(null)
+  const [activeCategoryMenu, setActiveCategoryMenu] = useState<string | null>(null)
+  const [activeBrandMenu, setActiveBrandMenu] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const menuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
+  const categoryMenuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
+  const brandMenuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
+
+  const [categorySearchQuery, setCategorySearchQuery] = useState("")
+  const [brandSearchQuery, setBrandSearchQuery] = useState("")
 
   // Mock devices data
   const devices: Device[] = [
     {
       id: "device-1",
-      name: "Galaxy S24 FE",
+      name: "Galaxy S25 Ultra",
       category: "Smartphone",
       brand: "Samsung",
     },
     {
       id: "device-2",
-      name: "Sprint Samsung Galaxy S II Epic 4G Touch",
-      category: "Smartphone",
-      brand: "Samsung",
+      name: "Titan 18V 1 × 5Ah Li-Ion EXT Cordless Lawnmower & Grass Trimmer Set",
+      category: "Lawnmower",
+      brand: "Titan",
     },
     {
       id: "device-3",
-      name: "Webcam Logitech C270 720p HD",
-      category: "Webcam",
-      brand: "Logitech",
+      name: "Bosch EasyGrassCut / EasyMower 18V 1 × 4.0Ah Li-Ion Power for All Cordless Landscape",
+      category: "Lawnmower",
+      brand: "Bosch",
     },
     {
       id: "device-4",
-      name: "Nexaris Galaxy QuantumSync XQ-9000 UltraEdge HyperTouch",
-      category: "Smartphone",
-      brand: "NEXARIS",
+      name: "Aspire Vero 14 Laptop - AV14-52P-55N4",
+      category: "Laptop",
+      brand: "Acer",
     },
     {
       id: "device-5",
-      name: "Webcam Logitech C270 720p HD",
-      category: "Webcam",
-      brand: "Logitech",
+      name: "TV LG QNED 75QNED80TSA",
+      category: "Smart TV",
+      brand: "LG",
     },
     {
       id: "device-6",
-      name: "Webcam Logitech C270 720p HD",
-      category: "Webcam",
-      brand: "Logitech",
+      name: "AQUA Refrigerator Inverter AQR-T238FA(FB)",
+      category: "Refrigerator",
+      brand: "Aqua",
     },
     {
       id: "device-7",
-      name: "Webcam Logitech C270 720p HD",
-      category: "Webcam",
-      brand: "Logitech",
+      name: "Toshiba AW-DUN1600MV(SG)",
+      category: "Washing Machine",
+      brand: "Toshiba",
     },
     {
       id: "device-8",
-      name: "Webcam Logitech C270 720p HD",
-      category: "Webcam",
-      brand: "Logitech",
+      name: "MITSUBISHI ELECTRIC MSY-JW60VF",
+      category: "Air Conditioner",
+      brand: "Mitsubishi",
     },
     {
       id: "device-9",
-      name: "Webcam Logitech C270 720p HD",
-      category: "Webcam",
-      brand: "Logitech",
+      name: "Dell Inspiron 15 3520",
+      category: "Laptop",
+      brand: "Dell",
+    },
+    {
+      id: "device-10",
+      name: "Xiaomi Redmi Note 14 Pro+",
+      category: "Smartphone",
+      brand: "Xiaomi",
     },
   ]
 
-  // Filter devices based on selected category and brand
-  const filteredDevices = devices.filter((device) => {
-    let matchesCategory = true
-    let matchesBrand = true
+  // Mock categories data
+  const categories: Category[] = [
+    { id: "cat-1", name: "Air Conditioner" },
+    { id: "cat-2", name: "Alarm Clock" },
+    { id: "cat-3", name: "Air Conditioner" },
+    { id: "cat-4", name: "Air Conditioner" },
+    { id: "cat-5", name: "Air Conditioner" },
+    { id: "cat-6", name: "Air Conditioner" },
+    { id: "cat-7", name: "Air Conditioner" },
+    { id: "cat-8", name: "Air Conditioner" },
+    { id: "cat-9", name: "Air Conditioner" },
+    { id: "cat-10", name: "Air Conditioner" },
+    { id: "cat-11", name: "Air Conditioner" },
+    { id: "cat-12", name: "Air Conditioner" },
+  ]
 
-    if (selectedCategory) {
-      matchesCategory = device.category === selectedCategory
+  // Mock brands data
+  const brands: Brand[] = [
+    { id: "brand-1", name: "Lenovo" },
+    { id: "brand-2", name: "LG" },
+    { id: "brand-3", name: "Logitech" },
+  ]
+
+  // Filter categories based on search query
+  const filteredCategories = categories.filter((category) => {
+    if (categorySearchQuery) {
+      return category.name.toLowerCase().includes(categorySearchQuery.toLowerCase())
     }
-
-    if (selectedBrand) {
-      matchesBrand = device.brand === selectedBrand
-    }
-
-    return matchesCategory && matchesBrand
+    return true
   })
 
-  // Total number of pages (for pagination)
-  const totalPages = 10
+  // Filter brands based on search query
+  const filteredBrands = brands.filter((brand) => {
+    if (brandSearchQuery) {
+      return brand.name.toLowerCase().includes(brandSearchQuery.toLowerCase())
+    }
+    return true
+  })
 
-  const toggleCategoryFilter = () => {
-    setShowCategoryFilter(!showCategoryFilter)
-    if (showBrandFilter) setShowBrandFilter(false)
+  // Filter devices based on search query
+  const filteredDevices = devices.filter((device) => {
+    if (searchQuery) {
+      return (
+        device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        device.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        device.brand.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    }
+    return true
+  })
+
+  // Pagination
+  const itemsPerPage = 10
+  const totalPages = Math.ceil(filteredDevices.length / itemsPerPage)
+  const paginatedDevices = filteredDevices.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+
+  const toggleMenu = (deviceId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setActiveMenu(activeMenu === deviceId ? null : deviceId)
   }
 
-  const toggleBrandFilter = () => {
-    setShowBrandFilter(!showBrandFilter)
-    if (showCategoryFilter) setShowCategoryFilter(false)
+  const toggleCategoryMenu = (categoryId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setActiveCategoryMenu(activeCategoryMenu === categoryId ? null : categoryId)
   }
 
-  const handleCategorySelect = (category: string) => {
-    setSelectedCategory(category)
+  const toggleBrandMenu = (brandId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setActiveBrandMenu(activeBrandMenu === brandId ? null : brandId)
   }
 
-  const handleBrandSelect = (brand: string) => {
-    setSelectedBrand(brand)
+  const handleEditDevice = (deviceId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    console.log("Edit device:", deviceId)
+    setActiveMenu(null)
   }
+
+  const handleDeleteDevice = (deviceId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    console.log("Delete device:", deviceId)
+    setActiveMenu(null)
+  }
+
+  const handleEditCategory = (categoryId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    console.log("Edit category:", categoryId)
+    setActiveCategoryMenu(null)
+  }
+
+  const handleDeleteCategory = (categoryId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    console.log("Delete category:", categoryId)
+    setActiveCategoryMenu(null)
+  }
+
+  const handleEditBrand = (brandId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    console.log("Edit brand:", brandId)
+    setActiveBrandMenu(null)
+  }
+
+  const handleDeleteBrand = (brandId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    console.log("Delete brand:", brandId)
+    setActiveBrandMenu(null)
+  }
+
+  // Close menus when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (activeMenu && !menuRefs.current[activeMenu]?.contains(event.target as Node)) {
+        setActiveMenu(null)
+      }
+      if (activeCategoryMenu && !categoryMenuRefs.current[activeCategoryMenu]?.contains(event.target as Node)) {
+        setActiveCategoryMenu(null)
+      }
+      if (activeBrandMenu && !brandMenuRefs.current[activeBrandMenu]?.contains(event.target as Node)) {
+        setActiveBrandMenu(null)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [activeMenu, activeCategoryMenu, activeBrandMenu])
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 h-full">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-[#2e3139]">Choose your device</h1>
-
-        <div className="relative w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Search"
-            className="pl-9 pr-4 py-2 rounded-full border-gray-200 bg-[#f5f6fa]"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm h-full overflow-auto">
+      {/* Tab Navigation */}
+      <div className="flex border-b">
+        <button
+          className={`px-6 py-3 text-center ${
+            activeTab === "device"
+              ? "bg-[#2d336b] text-white"
+              : "bg-white text-[#2d336b] hover:bg-gray-100 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+          }`}
+          onClick={() => setActiveTab("device")}
+        >
+          Device
+        </button>
+        <button
+          className={`px-6 py-3 text-center ${
+            activeTab === "brand-category"
+              ? "bg-[#2d336b] text-white"
+              : "bg-white text-[#2d336b] hover:bg-gray-100 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+          }`}
+          onClick={() => setActiveTab("brand-category")}
+        >
+          Brand & Category
+        </button>
       </div>
 
-      {/* Filter Buttons */}
-      <div className="flex mb-6 gap-4">
-        <Button
-          variant="outline"
-          className={`border-gray-200 rounded-md px-6 py-2 flex items-center justify-between w-52 ${
-            showCategoryFilter ? "bg-[#2d336b] text-white" : "bg-gray-100 text-black"
-          }`}
-          onClick={toggleCategoryFilter}
-        >
-          <div className="flex items-center gap-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="lucide lucide-layout-grid"
-            >
-              <rect width="7" height="7" x="3" y="3" rx="1" />
-              <rect width="7" height="7" x="14" y="3" rx="1" />
-              <rect width="7" height="7" x="14" y="14" rx="1" />
-              <rect width="7" height="7" x="3" y="14" rx="1" />
-            </svg>
-            <span>Category</span>
+      {/* Device Tab Content */}
+      {activeTab === "device" && (
+        <div>
+          <div className="p-4 bg-gray-50 dark:bg-gray-900">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="relative w-full md:w-80">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search device"
+                  className="pl-9 pr-4 py-2 rounded-full border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-500">Sort by:</span>
+                <div className="flex gap-2">
+                  <Button variant="outline" className="flex items-center gap-1 rounded-full border-gray-200">
+                    Category
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" className="flex items-center gap-1 rounded-full border-gray-200">
+                    Brand
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
-          {showCategoryFilter ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </Button>
 
-        <Button
-          variant="outline"
-          className={`border-gray-200 rounded-md px-6 py-2 flex items-center justify-between w-52 ${
-            showBrandFilter ? "bg-[#2d336b] text-white" : "bg-gray-100 text-black"
-          }`}
-          onClick={toggleBrandFilter}
-        >
-          <div className="flex items-center gap-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="lucide lucide-tag"
-            >
-              <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z" />
-              <path d="M7 7h.01" />
-            </svg>
-            <span>Brand</span>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200 dark:border-gray-700">
+                  <th className="text-left py-3 px-4 font-medium text-gray-500">Device</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500">Category</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500">Brand</th>
+                  <th className="w-10"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedDevices.map((device) => (
+                  <tr
+                    key={device.id}
+                    className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  >
+                    <td className="py-3 px-4 text-[#2e3139] dark:text-white">{device.name}</td>
+                    <td className="py-3 px-4 text-[#2e3139] dark:text-white">{device.category}</td>
+                    <td className="py-3 px-4 text-[#2e3139] dark:text-white">{device.brand}</td>
+                    <td className="py-3 px-4 relative">
+                      <button
+                        onClick={(e) => toggleMenu(device.id, e)}
+                        className="text-gray-500 hover:text-[#4045ef] dark:text-gray-400 dark:hover:text-white"
+                      >
+                        <MoreVertical className="h-5 w-5" />
+                      </button>
+
+                      {activeMenu === device.id && (
+                        <div
+                          ref={(el) => (menuRefs.current[device.id] = el)}
+                          className="absolute right-10 top-4 z-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 w-40"
+                        >
+                          <button
+                            onClick={(e) => handleEditDevice(device.id, e)}
+                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[#2e3139] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            <Pen className="h-4 w-4" />
+                            <span>Edit device</span>
+                          </button>
+                          <button
+                            onClick={(e) => handleDeleteDevice(device.id, e)}
+                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span>Delete device</span>
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          {showBrandFilter ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </Button>
-      </div>
 
-      {/* Category Filter */}
-      {showCategoryFilter && (
-        <div className="mb-6">
-          <CategoryFilter onSelect={handleCategorySelect} onClose={() => setShowCategoryFilter(false)} />
-        </div>
-      )}
-
-      {/* Brand Filter */}
-      {showBrandFilter && (
-        <div className="mb-6">
-          <BrandFilter onSelect={handleBrandSelect} onClose={() => setShowBrandFilter(false)} />
-        </div>
-      )}
-
-      {/* Device Table */}
-      <div className="border border-gray-200 rounded-md overflow-hidden mb-6">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-[#2d336b] text-white">
-              <th className="text-left py-3 px-4 font-medium">Device</th>
-              <th className="text-left py-3 px-4 font-medium">Category</th>
-              <th className="text-left py-3 px-4 font-medium">Brand</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredDevices.map((device, index) => (
-              <tr
-                key={device.id}
-                className={index % 2 === 0 ? "bg-white" : "bg-gray-100"}
-                onClick={() => router.push(`/home/device-management/device/${device.id}`)}
+          {/* Pagination */}
+          <div className="flex justify-center items-center p-4">
+            <div className="flex items-center space-x-2">
+              <Button variant="outline" size="sm" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
+                «
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1}
               >
-                <td className="py-3 px-4 border-t border-gray-200">{device.name}</td>
-                <td className="py-3 px-4 border-t border-gray-200">{device.category}</td>
-                <td className="py-3 px-4 border-t border-gray-200">{device.brand}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                ‹
+              </Button>
 
-      {/* Pagination */}
-      <Pagination currentPage={1} totalPages={totalPages} />
+              {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
+                const pageNumber = i + 1
+                return (
+                  <Button
+                    key={pageNumber}
+                    variant={currentPage === pageNumber ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(pageNumber)}
+                    className={currentPage === pageNumber ? "bg-[#2d336b]" : ""}
+                  >
+                    {pageNumber}
+                  </Button>
+                )
+              })}
+
+              {totalPages > 5 && <span>...</span>}
+
+              {totalPages > 5 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(10)}
+                  className={currentPage === 10 ? "bg-[#2d336b] text-white" : ""}
+                >
+                  10
+                </Button>
+              )}
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                ›
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+              >
+                »
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Brand & Category Tab Content */}
+      {activeTab === "brand-category" && (
+        <div className="p-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            {/* Category Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+              <h2 className="text-2xl font-bold mb-6 text-center">Category</h2>
+              <div className="relative mb-6">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search"
+                  className="pl-9 pr-4 py-2 rounded-md border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                  value={categorySearchQuery}
+                  onChange={(e) => setCategorySearchQuery(e.target.value)}
+                />
+              </div>
+              <div className="border rounded-md overflow-hidden">
+                {filteredCategories.map((category) => (
+                  <div
+                    key={category.id}
+                    className="flex items-center justify-between p-3 border-b last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  >
+                    <span className="text-[#2e3139] dark:text-white">{category.name}</span>
+                    <div className="relative">
+                      <button
+                        onClick={(e) => toggleCategoryMenu(category.id, e)}
+                        className="text-gray-500 hover:text-[#4045ef] dark:text-gray-400 dark:hover:text-white"
+                      >
+                        <MoreVertical className="h-5 w-5" />
+                      </button>
+
+                      {activeCategoryMenu === category.id && (
+                        <div
+                          ref={(el) => (categoryMenuRefs.current[category.id] = el)}
+                          className="absolute right-0 top-full mt-1 z-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 w-40"
+                        >
+                          <button
+                            onClick={(e) => handleEditCategory(category.id, e)}
+                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[#2e3139] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            <Pen className="h-4 w-4" />
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            onClick={(e) => handleDeleteCategory(category.id, e)}
+                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Brand Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+              <h2 className="text-2xl font-bold mb-6 text-center">Brand</h2>
+              <div className="flex justify-between items-center mb-6">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search"
+                    className="pl-9 pr-4 py-2 rounded-md border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                    value={brandSearchQuery}
+                    onChange={(e) => setBrandSearchQuery(e.target.value)}
+                  />
+                </div>
+                <Button className="ml-2 bg-white border border-gray-200 rounded-md p-2">
+                  <Plus className="h-5 w-5 text-blue-600" />
+                </Button>
+              </div>
+              <div className="border rounded-md overflow-hidden">
+                {filteredBrands.map((brand) => (
+                  <div
+                    key={brand.id}
+                    className="flex items-center justify-between p-3 border-b last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  >
+                    <span className="text-[#2e3139] dark:text-white">{brand.name}</span>
+                    <div className="relative">
+                      <button
+                        onClick={(e) => toggleBrandMenu(brand.id, e)}
+                        className="text-gray-500 hover:text-[#4045ef] dark:text-gray-400 dark:hover:text-white"
+                      >
+                        <MoreVertical className="h-5 w-5" />
+                      </button>
+
+                      {activeBrandMenu === brand.id && (
+                        <div
+                          ref={(el) => (brandMenuRefs.current[brand.id] = el)}
+                          className="absolute right-0 top-full mt-1 z-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 w-40"
+                        >
+                          <button
+                            onClick={(e) => handleEditBrand(brand.id, e)}
+                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[#2e3139] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            <Pen className="h-4 w-4" />
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            onClick={(e) => handleDeleteBrand(brand.id, e)}
+                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

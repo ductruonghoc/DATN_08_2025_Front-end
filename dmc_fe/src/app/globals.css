@@ -4,6 +4,7 @@
 
 body {
   font-family: Arial, Helvetica, sans-serif;
+  overflow: hidden; /* Prevent body scrolling */
 }
 
 @layer utilities {
@@ -96,4 +97,54 @@ body {
 /* Override the default shadcn select trigger to hide the chevron */
 .select-trigger [data-icon] {
   display: none;
+}
+
+/* Custom scrollbar styles */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 3px;
+}
+
+.dark .scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
+  background-color: #4b5563;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: #9ca3af;
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: #6b7280;
+}
+
+/* Remove or modify these lines that are preventing scrolling */
+html,
+body,
+#__next,
+main {
+  height: 100%;
+  /* Change from overflow: hidden to overflow: auto for the html and body */
+}
+
+html,
+body {
+  overflow-y: auto;
+}
+
+/* Keep the main layout container with overflow hidden to prevent double scrollbars */
+#__next,
+main {
+  overflow: hidden;
 }

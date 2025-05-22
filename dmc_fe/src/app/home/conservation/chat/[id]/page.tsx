@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { User, Bot, Paperclip, Sun, Settings } from "lucide-react"
+import { User, Bot, Paperclip, Copy, Save, FileText, Trash2, Menu } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 
@@ -32,21 +32,73 @@ export default function ChatPage({ params }: { params: { id: string } }) {
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [notesOpen, setNotesOpen] = useState(true)
+  const [notesCollapsed, setNotesCollapsed] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [deleteNoteId, setDeleteNoteId] = useState<string | null>(null)
   const [notes, setNotes] = useState<Note[]>([
     {
       id: "note-1",
-      title: "Lorem ipsum dolor sit amet",
+      title: "How to get the screen?",
       content:
-        "Consectetur adipiscing elit. Phasellus feugiat mauris a lectus venenatis elementum. Pellentesque sit amet elit tellus. Fusce fermentum arcu felis, quis",
+        "To get the screen for your Lenovo Thinkpad T570, you'll need to order a replacement LCD panel. Make sure to get the correct resolution and type (touch or non-touch) that matches your model. You can find compatible screens on Lenovo's parts website or through authorized resellers.",
     },
     {
       id: "note-2",
-      title: "Lorem ipsum dolor sit amet",
+      title: "What's the best lens for portraits?",
       content:
-        "Consectetur adipiscing elit. Phasellus feugiat mauris a lectus venenatis elementum. Pellentesque sit amet elit tellus. Fusce fermentum arcu felis, quis",
+        "For portrait photography with the Canon EOS R5, I would recommend the RF 85mm f/1.2L USM. It's considered one of the best portrait lenses due to its ideal focal length and exceptional bokeh. The wide aperture creates beautiful background blur while keeping your subject tack sharp.",
+    },
+    {
+      id: "note-3",
+      title: "Battery replacement",
+      content: "The battery can be replaced by removing the bottom panel and disconnecting the old battery.",
+    },
+    {
+      id: "note-4",
+      title: "Screen resolution settings",
+      content: "To change screen resolution, go to Settings > Display > Screen Resolution.",
+    },
+    {
+      id: "note-5",
+      title: "Keyboard shortcuts",
+      content: "Ctrl+Alt+Delete: Task Manager, Alt+Tab: Switch applications, Windows+L: Lock computer",
+    },
+    {
+      id: "note-6",
+      title: "Wi-Fi troubleshooting",
+      content: "Try restarting the router, forgetting the network and reconnecting, or updating drivers.",
+    },
+    {
+      id: "note-7",
+      title: "Printer setup",
+      content: "Connect the printer to the same network, add it in Settings > Devices > Printers & scanners.",
+    },
+    {
+      id: "note-8",
+      title: "Software updates",
+      content: "Check for updates in Settings > Update & Security > Windows Update.",
+    },
+    {
+      id: "note-9",
+      title: "Backup procedures",
+      content: "Use Windows Backup or third-party software to create regular backups of important files.",
+    },
+    {
+      id: "note-10",
+      title: "Storage management",
+      content: "Clean up disk space using Disk Cleanup or by uninstalling unused applications.",
+    },
+    {
+      id: "note-11",
+      title: "Security recommendations",
+      content: "Use strong passwords, enable two-factor authentication, and keep software updated.",
+    },
+    {
+      id: "note-12",
+      title: "Performance optimization",
+      content: "Close unused applications, disable startup programs, and consider adding more RAM.",
     },
   ])
   const [deviceName, setDeviceName] = useState("")
@@ -246,9 +298,35 @@ export default function ChatPage({ params }: { params: { id: string } }) {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
   }
 
-  const handleSaveNote = () => {
-    // Implement save note functionality
-    console.log("Saving note...")
+  const handleSaveNote = (message: Message) => {
+    // Create a new note from the message
+    const newNote: Note = {
+      id: `note-${Date.now()}`,
+      title:
+        message.sender === "user"
+          ? message.content
+          : messages.find((m) => m.sender === "user" && m.timestamp < message.timestamp)?.content || "Untitled",
+      content: message.content,
+    }
+
+    setNotes((prev) => [...prev, newNote])
+  }
+
+  const handleCopyMessage = (content: string) => {
+    navigator.clipboard
+      .writeText(content)
+      .then(() => {
+        // Could add a toast notification here
+        console.log("Text copied to clipboard")
+      })
+      .catch((err) => {
+        console.error("Failed to copy text: ", err)
+      })
+  }
+
+  const handleDeleteNote = (id: string) => {
+    setNotes((prev) => prev.filter((note) => note.id !== id))
+    setDeleteNoteId(null)
   }
 
   const toggleDarkMode = () => {
@@ -273,81 +351,23 @@ export default function ChatPage({ params }: { params: { id: string } }) {
     if (showSettingsMenu) setShowSettingsMenu(false)
   }
 
+  const toggleNotesPanel = () => {
+    setNotesCollapsed(!notesCollapsed)
+  }
+
   return (
-    <div className="flex h-full">
+    <div className="flex h-full overflow-auto p-4 gap-4 bg-[#E6D9D9] dark:bg-gray-900">
       {/* Main chat area with rigid layout */}
-      <div className="flex-1 flex flex-col h-full relative bg-white dark:bg-gray-900">
+      <div className="flex-1 flex flex-col h-full relative bg-white dark:bg-gray-900 overflow-hidden rounded-[10px] border border-gray-200 dark:border-gray-700 shadow-sm">
         {/* Chat header - fixed */}
-        <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 border-b z-10 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-[#2d336b] dark:text-white">
+        <div className="flex items-center justify-between p-4 border-b z-10 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-[#2d336b] dark:text-white rounded-t-[10px]">
           <div className="flex items-center gap-3">
             <h1 className="text-lg font-medium">{deviceName || "New Conversation"}</h1>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-[#2d336b] hover:text-[#4045ef] dark:text-white dark:hover:text-gray-300"
-              aria-label={isDarkMode ? "Light mode" : "Dark mode"}
-              onClick={toggleDarkMode}
-            >
-              <Sun className="h-5 w-5" />
-            </Button>
-
-            <div className="relative" ref={settingsRef}>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-[#2d336b] hover:text-[#4045ef] dark:text-white dark:hover:text-gray-300"
-                aria-label="Settings"
-                onClick={toggleSettingsMenu}
-              >
-                <Settings className="h-5 w-5" />
-              </Button>
-
-              {showSettingsMenu && (
-                <div
-                  className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg z-50 ${
-                    isDarkMode ? "bg-gray-800 border border-gray-700" : "bg-white border border-gray-200"
-                  }`}
-                >
-                  <div className="py-1">
-                    <button
-                      className={`block px-4 py-2 text-sm w-full text-left ${
-                        isDarkMode ? "text-white hover:bg-gray-700" : "text-gray-700 hover:bg-gray-100"
-                      }`}
-                    >
-                      Account Settings
-                    </button>
-                    <button
-                      className={`block px-4 py-2 text-sm w-full text-left ${
-                        isDarkMode ? "text-white hover:bg-gray-700" : "text-gray-700 hover:bg-gray-100"
-                      }`}
-                    >
-                      Preferences
-                    </button>
-                    <button
-                      className={`block px-4 py-2 text-sm w-full text-left ${
-                        isDarkMode ? "text-white hover:bg-gray-700" : "text-gray-700 hover:bg-gray-100"
-                      }`}
-                    >
-                      Privacy
-                    </button>
-                    <button
-                      className={`block px-4 py-2 text-sm w-full text-left ${
-                        isDarkMode ? "text-white hover:bg-gray-700" : "text-gray-700 hover:bg-gray-100"
-                      }`}
-                    >
-                      Help & Support
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
 
-        {/* Chat content - scrollable area */}
-        <div className="absolute top-[65px] bottom-[65px] left-0 right-0 overflow-y-auto p-4 space-y-6 bg-white dark:bg-gray-900">
+        {/* Chat content - scrollable area - ensure this has overflow-y: auto */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-white dark:bg-gray-900">
           {messages.map((message) => (
             <div key={message.id} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
               <div className={`flex max-w-[80%] ${message.sender === "user" ? "flex-row-reverse" : "flex-row"}`}>
@@ -364,23 +384,49 @@ export default function ChatPage({ params }: { params: { id: string } }) {
                     <Bot className="h-5 w-5 text-[#4045ef]" />
                   )}
                 </div>
-                <div
-                  className={`rounded-2xl px-4 py-3 ${
-                    message.sender === "user"
-                      ? "bg-[#4045ef] text-white"
-                      : isDarkMode
-                        ? "bg-gray-800 text-white"
-                        : "bg-gray-100 text-[#2d336b]"
-                  }`}
-                >
-                  <div className="text-sm whitespace-pre-line">{message.content}</div>
+                <div className="flex flex-col">
                   <div
-                    className={`text-xs mt-1 ${
-                      message.sender === "user" ? "text-blue-100" : isDarkMode ? "text-gray-400" : "text-[#2d336b]/70"
+                    className={`rounded-[10px] px-4 py-3 ${
+                      message.sender === "user"
+                        ? "bg-[#4045ef] text-white"
+                        : isDarkMode
+                          ? "bg-gray-800 text-white"
+                          : "bg-white text-[#2e3139] border border-gray-200" // Added border for separation
                     }`}
                   >
-                    {formatTime(message.timestamp)}
+                    <div className="text-sm whitespace-pre-line">{message.content}</div>
+                    <div
+                      className={`text-xs mt-1 ${
+                        message.sender === "user" ? "text-blue-100" : isDarkMode ? "text-gray-400" : "text-[#2e3139]/70"
+                      }`}
+                    >
+                      {formatTime(message.timestamp)}
+                    </div>
                   </div>
+
+                  {/* Action buttons for AI messages */}
+                  {message.sender === "ai" && (
+                    <div className="flex mt-2 space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#4045ef] dark:text-gray-400 dark:hover:text-white"
+                        onClick={() => handleSaveNote(message)}
+                      >
+                        <Save className="h-3.5 w-3.5" />
+                        <span>Save as note</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#4045ef] dark:text-gray-400 dark:hover:text-white"
+                        onClick={() => handleCopyMessage(message.content)}
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                        <span>Copy</span>
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -396,7 +442,9 @@ export default function ChatPage({ params }: { params: { id: string } }) {
                 >
                   <Bot className="h-5 w-5 text-[#4045ef]" />
                 </div>
-                <div className={`rounded-2xl px-4 py-3 ${isDarkMode ? "bg-gray-800" : "bg-gray-100"}`}>
+                <div
+                  className={`rounded-[10px] px-4 py-3 ${isDarkMode ? "bg-gray-800" : "bg-white border border-gray-200"}`}
+                >
                   <div className="flex space-x-2">
                     <div
                       className={`w-2 h-2 rounded-full animate-bounce ${isDarkMode ? "bg-gray-500" : "bg-gray-300"}`}
@@ -420,8 +468,8 @@ export default function ChatPage({ params }: { params: { id: string } }) {
         </div>
 
         {/* Input area - fixed at bottom */}
-        <div className="absolute bottom-0 left-0 right-0 border-t p-4 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-          <div className="flex items-center border rounded-full overflow-hidden pr-2 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
+        <div className="border-t p-4 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-b-[10px]">
+          <div className="flex items-center border rounded-[10px] overflow-hidden pr-2 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
             <Button
               type="button"
               variant="ghost"
@@ -462,60 +510,110 @@ export default function ChatPage({ params }: { params: { id: string } }) {
       </div>
 
       {/* Notes panel - right sidebar */}
-      <div
-        className={cn(
-          "h-full border-l flex flex-col transition-all duration-300 ease-in-out",
-          notesOpen ? "w-80" : "w-0 opacity-0 overflow-hidden",
-          "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700",
-        )}
-      >
-        {/* Notes header */}
-        <div className="p-4 border-b flex items-center justify-between bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-          <h2 className="font-bold text-[#2d336b] dark:text-white">YOUR NOTES</h2>
+      {notesCollapsed ? (
+        <div className="w-12 h-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-[10px] shadow-sm flex flex-col items-center py-4 space-y-4">
+          <button
+            onClick={toggleNotesPanel}
+            className="p-2 text-[#2e3139] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <button className="p-2 text-[#2e3139] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">
+            <FileText className="h-5 w-5" />
+          </button>
         </div>
+      ) : (
+        <div
+          className={cn(
+            "h-full flex flex-col transition-all duration-300 ease-in-out",
+            notesOpen ? "w-80" : "w-0 opacity-0 overflow-hidden",
+            "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-[10px] shadow-sm",
+          )}
+        >
+          {/* Notes header - fixed */}
+          <div className="p-4 border-b flex items-center justify-between bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-t-[10px]">
+            <h2 className="font-bold text-[#2e3139] dark:text-white">YOUR NOTES</h2>
+            <button
+              onClick={toggleNotesPanel}
+              className="text-[#2e3139] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1 rounded-md"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          </div>
 
-        {/* Notes content - scrollable */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-4 space-y-4">
-            {notes.map((note) => (
-              <div key={note.id} className={`border-b pb-4 ${isDarkMode ? "border-gray-700" : "border-gray-200"}`}>
-                <div className="flex items-start gap-3">
-                  <div className={isDarkMode ? "text-white mt-1" : "text-[#2d336b] mt-1"}>•</div>
-                  <div>
-                    <h3 className={`font-medium ${isDarkMode ? "text-white" : "text-[#2d336b]"}`}>{note.title}</h3>
-                    <p className={`text-sm mt-1 ${isDarkMode ? "text-gray-300" : "text-[#2d336b]"}`}>{note.content}</p>
+          {/* Notes content - scrollable - ensure this has overflow-y: auto */}
+          <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+            <div className="p-4 space-y-4">
+              {notes.map((note) => (
+                <div key={note.id} className={`border-b pb-4 ${isDarkMode ? "border-gray-700" : "border-gray-200"}`}>
+                  <div className="flex items-start gap-3">
+                    <div className={isDarkMode ? "text-white mt-1" : "text-[#2e3139] mt-1"}>•</div>
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between">
+                        <h3 className={`font-bold text-[#2e3139] dark:text-white`}>{note.title}</h3>
+                        <button
+                          onClick={() => setDeleteNoteId(deleteNoteId === note.id ? null : note.id)}
+                          className="text-gray-500 hover:text-[#4045ef] dark:text-gray-400 dark:hover:text-white"
+                        >
+                          <FileText className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <p className={`text-sm mt-1 text-[#2e3139] dark:text-gray-300`}>{note.content}</p>
+
+                      {/* Delete note confirmation */}
+                      {deleteNoteId === note.id && (
+                        <div className="mt-2 p-2 bg-red-100 dark:bg-red-900 rounded-[10px] flex items-center justify-between">
+                          <span className="text-xs text-red-600 dark:text-red-200">Delete this note?</span>
+                          <button
+                            onClick={() => handleDeleteNote(note.id)}
+                            className="text-red-600 dark:text-red-200 hover:text-red-800 dark:hover:text-red-100"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+
+          {/* Notes footer - fixed */}
+          <div className="p-4 border-t bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-b-[10px]">
+            <Button
+              onClick={() =>
+                handleSaveNote(
+                  messages[messages.length - 1] || {
+                    id: "new",
+                    content: "New note",
+                    sender: "ai",
+                    timestamp: new Date(),
+                  },
+                )
+              }
+              className="flex items-center gap-2 w-full justify-start px-3 py-2 rounded-[10px] bg-white dark:bg-gray-700 border border-[#4045ef] dark:border-gray-600 hover:bg-[#f1f6ff] dark:hover:bg-gray-600"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-[#4045ef] dark:text-white"
+              >
+                <path d="M12 5v14" />
+                <path d="M5 12h14" />
+              </svg>
+              <span className="text-[#4045ef] dark:text-white">Save as note</span>
+            </Button>
           </div>
         </div>
-
-        {/* Notes footer */}
-        <div className="p-4 border-t bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-          <Button
-            onClick={handleSaveNote}
-            className="flex items-center gap-2 w-full justify-start px-3 py-2 rounded-md bg-white dark:bg-gray-700 text-[#4045ef] hover:bg-[#f1f6ff] dark:hover:bg-gray-600 border border-[#4045ef] dark:border-gray-600"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-[#4045ef]"
-            >
-              <path d="M12 5v14" />
-              <path d="M5 12h14" />
-            </svg>
-            <span className="text-[#4045ef]">Save as note</span>
-          </Button>
-        </div>
-      </div>
+      )}
     </div>
   )
 }
