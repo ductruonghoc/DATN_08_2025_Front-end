@@ -232,14 +232,12 @@ export default function DeviceManagementPage() {
   }, [activeMenu, activeCategoryMenu, activeBrandMenu])
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm h-full overflow-auto">
+    <div className="bg-white rounded-lg shadow-sm h-full overflow-auto">
       {/* Tab Navigation */}
       <div className="flex border-b">
         <button
           className={`px-6 py-3 text-center ${
-            activeTab === "device"
-              ? "bg-[#2d336b] text-white"
-              : "bg-white text-[#2d336b] hover:bg-gray-100 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+            activeTab === "device" ? "bg-[#2d336b] text-white" : "bg-white text-[#2d336b] hover:bg-gray-100"
           }`}
           onClick={() => setActiveTab("device")}
         >
@@ -247,9 +245,7 @@ export default function DeviceManagementPage() {
         </button>
         <button
           className={`px-6 py-3 text-center ${
-            activeTab === "brand-category"
-              ? "bg-[#2d336b] text-white"
-              : "bg-white text-[#2d336b] hover:bg-gray-100 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+            activeTab === "brand-category" ? "bg-[#2d336b] text-white" : "bg-white text-[#2d336b] hover:bg-gray-100"
           }`}
           onClick={() => setActiveTab("brand-category")}
         >
@@ -260,13 +256,13 @@ export default function DeviceManagementPage() {
       {/* Device Tab Content */}
       {activeTab === "device" && (
         <div>
-          <div className="p-4 bg-gray-50 dark:bg-gray-900">
+          <div className="p-4 bg-gray-50">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div className="relative w-full md:w-80">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder="Search device"
-                  className="pl-9 pr-4 py-2 rounded-full border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                  className="pl-9 pr-4 py-2 rounded-full border-gray-200 bg-white"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -291,7 +287,7 @@ export default function DeviceManagementPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-700">
+                <tr className="border-b border-gray-200">
                   <th className="text-left py-3 px-4 font-medium text-gray-500">Device</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-500">Category</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-500">Brand</th>
@@ -300,36 +296,30 @@ export default function DeviceManagementPage() {
               </thead>
               <tbody>
                 {paginatedDevices.map((device) => (
-                  <tr
-                    key={device.id}
-                    className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-                  >
-                    <td className="py-3 px-4 text-[#2e3139] dark:text-white">{device.name}</td>
-                    <td className="py-3 px-4 text-[#2e3139] dark:text-white">{device.category}</td>
-                    <td className="py-3 px-4 text-[#2e3139] dark:text-white">{device.brand}</td>
+                  <tr key={device.id} className="border-b border-gray-200 hover:bg-gray-50">
+                    <td className="py-3 px-4 text-[#2e3139]">{device.name}</td>
+                    <td className="py-3 px-4 text-[#2e3139]">{device.category}</td>
+                    <td className="py-3 px-4 text-[#2e3139]">{device.brand}</td>
                     <td className="py-3 px-4 relative">
-                      <button
-                        onClick={(e) => toggleMenu(device.id, e)}
-                        className="text-gray-500 hover:text-[#4045ef] dark:text-gray-400 dark:hover:text-white"
-                      >
+                      <button onClick={(e) => toggleMenu(device.id, e)} className="text-gray-500 hover:text-[#4045ef]">
                         <MoreVertical className="h-5 w-5" />
                       </button>
 
                       {activeMenu === device.id && (
                         <div
                           ref={(el) => (menuRefs.current[device.id] = el)}
-                          className="absolute right-10 top-4 z-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 w-40"
+                          className="absolute right-10 top-4 z-10 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40"
                         >
                           <button
                             onClick={(e) => handleEditDevice(device.id, e)}
-                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[#2e3139] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[#2e3139] hover:bg-gray-100"
                           >
                             <Pen className="h-4 w-4" />
                             <span>Edit device</span>
                           </button>
                           <button
                             onClick={(e) => handleDeleteDevice(device.id, e)}
-                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                           >
                             <Trash2 className="h-4 w-4" />
                             <span>Delete device</span>
@@ -412,13 +402,13 @@ export default function DeviceManagementPage() {
         <div className="p-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             {/* Category Section */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="text-2xl font-bold mb-6 text-center">Category</h2>
               <div className="relative mb-6">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder="Search"
-                  className="pl-9 pr-4 py-2 rounded-md border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                  className="pl-9 pr-4 py-2 rounded-md border-gray-200 bg-white"
                   value={categorySearchQuery}
                   onChange={(e) => setCategorySearchQuery(e.target.value)}
                 />
@@ -427,13 +417,13 @@ export default function DeviceManagementPage() {
                 {filteredCategories.map((category) => (
                   <div
                     key={category.id}
-                    className="flex items-center justify-between p-3 border-b last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    className="flex items-center justify-between p-3 border-b last:border-b-0 hover:bg-gray-50"
                   >
-                    <span className="text-[#2e3139] dark:text-white">{category.name}</span>
+                    <span className="text-[#2e3139]">{category.name}</span>
                     <div className="relative">
                       <button
                         onClick={(e) => toggleCategoryMenu(category.id, e)}
-                        className="text-gray-500 hover:text-[#4045ef] dark:text-gray-400 dark:hover:text-white"
+                        className="text-gray-500 hover:text-[#4045ef]"
                       >
                         <MoreVertical className="h-5 w-5" />
                       </button>
@@ -441,18 +431,18 @@ export default function DeviceManagementPage() {
                       {activeCategoryMenu === category.id && (
                         <div
                           ref={(el) => (categoryMenuRefs.current[category.id] = el)}
-                          className="absolute right-0 top-full mt-1 z-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 w-40"
+                          className="absolute right-0 top-full mt-1 z-10 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40"
                         >
                           <button
                             onClick={(e) => handleEditCategory(category.id, e)}
-                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[#2e3139] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[#2e3139] hover:bg-gray-100"
                           >
                             <Pen className="h-4 w-4" />
                             <span>Edit</span>
                           </button>
                           <button
                             onClick={(e) => handleDeleteCategory(category.id, e)}
-                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                           >
                             <Trash2 className="h-4 w-4" />
                             <span>Delete</span>
@@ -466,14 +456,14 @@ export default function DeviceManagementPage() {
             </div>
 
             {/* Brand Section */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="text-2xl font-bold mb-6 text-center">Brand</h2>
               <div className="flex justify-between items-center mb-6">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     placeholder="Search"
-                    className="pl-9 pr-4 py-2 rounded-md border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                    className="pl-9 pr-4 py-2 rounded-md border-gray-200 bg-white"
                     value={brandSearchQuery}
                     onChange={(e) => setBrandSearchQuery(e.target.value)}
                   />
@@ -486,13 +476,13 @@ export default function DeviceManagementPage() {
                 {filteredBrands.map((brand) => (
                   <div
                     key={brand.id}
-                    className="flex items-center justify-between p-3 border-b last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    className="flex items-center justify-between p-3 border-b last:border-b-0 hover:bg-gray-50"
                   >
-                    <span className="text-[#2e3139] dark:text-white">{brand.name}</span>
+                    <span className="text-[#2e3139]">{brand.name}</span>
                     <div className="relative">
                       <button
                         onClick={(e) => toggleBrandMenu(brand.id, e)}
-                        className="text-gray-500 hover:text-[#4045ef] dark:text-gray-400 dark:hover:text-white"
+                        className="text-gray-500 hover:text-[#4045ef]"
                       >
                         <MoreVertical className="h-5 w-5" />
                       </button>
@@ -500,18 +490,18 @@ export default function DeviceManagementPage() {
                       {activeBrandMenu === brand.id && (
                         <div
                           ref={(el) => (brandMenuRefs.current[brand.id] = el)}
-                          className="absolute right-0 top-full mt-1 z-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 w-40"
+                          className="absolute right-0 top-full mt-1 z-10 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40"
                         >
                           <button
                             onClick={(e) => handleEditBrand(brand.id, e)}
-                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[#2e3139] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[#2e3139] hover:bg-gray-100"
                           >
                             <Pen className="h-4 w-4" />
                             <span>Edit</span>
                           </button>
                           <button
                             onClick={(e) => handleDeleteBrand(brand.id, e)}
-                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                           >
                             <Trash2 className="h-4 w-4" />
                             <span>Delete</span>

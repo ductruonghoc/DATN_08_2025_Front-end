@@ -1,5 +1,39 @@
 {
-  "node": {},
+  "node": {
+    "4003a93aae886598be3d91f9b99ee3d71b6a39bf2f": {
+      "workers": {
+        "app/forgot-password/verify/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5CDATN_08_2025_Front-end-1%5C%5Cdmc_fe%5C%5Csrc%5C%5Capp%5C%5Cforgot-password%5C%5Cactions.ts%22%2C%5B%7B%22id%22%3A%224003a93aae886598be3d91f9b99ee3d71b6a39bf2f%22%2C%22exportedName%22%3A%22verifyOTP%22%7D%2C%7B%22id%22%3A%22406ac5ed765df2171d4c7fee2bc81aa32f24ac4a5e%22%2C%22exportedName%22%3A%22submitEmail%22%7D%2C%7B%22id%22%3A%2240cf81d43126104e71576f8d26d9dd7c188a101d4c%22%2C%22exportedName%22%3A%22resetPassword%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/forgot-password/verify/page": "action-browser"
+      }
+    },
+    "406ac5ed765df2171d4c7fee2bc81aa32f24ac4a5e": {
+      "workers": {
+        "app/forgot-password/verify/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5CDATN_08_2025_Front-end-1%5C%5Cdmc_fe%5C%5Csrc%5C%5Capp%5C%5Cforgot-password%5C%5Cactions.ts%22%2C%5B%7B%22id%22%3A%224003a93aae886598be3d91f9b99ee3d71b6a39bf2f%22%2C%22exportedName%22%3A%22verifyOTP%22%7D%2C%7B%22id%22%3A%22406ac5ed765df2171d4c7fee2bc81aa32f24ac4a5e%22%2C%22exportedName%22%3A%22submitEmail%22%7D%2C%7B%22id%22%3A%2240cf81d43126104e71576f8d26d9dd7c188a101d4c%22%2C%22exportedName%22%3A%22resetPassword%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/forgot-password/verify/page": "action-browser"
+      }
+    },
+    "40cf81d43126104e71576f8d26d9dd7c188a101d4c": {
+      "workers": {
+        "app/forgot-password/verify/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5CDATN_08_2025_Front-end-1%5C%5Cdmc_fe%5C%5Csrc%5C%5Capp%5C%5Cforgot-password%5C%5Cactions.ts%22%2C%5B%7B%22id%22%3A%224003a93aae886598be3d91f9b99ee3d71b6a39bf2f%22%2C%22exportedName%22%3A%22verifyOTP%22%7D%2C%7B%22id%22%3A%22406ac5ed765df2171d4c7fee2bc81aa32f24ac4a5e%22%2C%22exportedName%22%3A%22submitEmail%22%7D%2C%7B%22id%22%3A%2240cf81d43126104e71576f8d26d9dd7c188a101d4c%22%2C%22exportedName%22%3A%22resetPassword%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/forgot-password/verify/page": "action-browser"
+      }
+    }
+  },
   "edge": {},
-  "encryptionKey": "X/0jhdWWf01SQamObzTiDX13+z9STHrScWe5h4Vo7r8="
+  "encryptionKey": "/ZPzP6M2pvaKUBnnMFj8cRNXVH/3koTe9IeG2N+M72g="
 }

@@ -45,19 +45,17 @@ export default function Pagination({ currentPage, totalPages }: PaginationProps)
     <div className="flex justify-center items-center mt-6 mb-4">
       <Link
         href={currentPage > 1 ? `/home/device-management/page/${currentPage - 1}` : "#"}
-        className={`w-8 h-8 flex items-center justify-center rounded-[10px] border border-gray-300 dark:border-gray-700 mr-2 ${
-          currentPage === 1
-            ? "opacity-50 pointer-events-none bg-gray-100 dark:bg-gray-700"
-            : "bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
+        className={`w-8 h-8 flex items-center justify-center rounded-[10px] border border-gray-300 mr-2 ${
+          currentPage === 1 ? "opacity-50 pointer-events-none bg-gray-100" : "bg-white hover:bg-gray-100"
         }`}
         aria-label="Previous page"
       >
-        <ChevronLeft className="h-4 w-4 text-[#2e3139] dark:text-white" />
+        <ChevronLeft className="h-4 w-4 text-[#2e3139]" />
       </Link>
 
       {getPaginationNumbers().map((number, index) =>
         number === "..." ? (
-          <span key={`ellipsis-${index}`} className="mx-1 text-[#2e3139] dark:text-white">
+          <span key={`ellipsis-${index}`} className="mx-1 text-[#2e3139]">
             ...
           </span>
         ) : (
@@ -67,7 +65,7 @@ export default function Pagination({ currentPage, totalPages }: PaginationProps)
             className={`w-8 h-8 flex items-center justify-center rounded-[10px] mx-1 ${
               currentPage === number
                 ? "bg-[#4045ef] text-white"
-                : "border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 bg-white dark:bg-gray-800 text-[#2e3139] dark:text-white"
+                : "border border-gray-300 hover:bg-gray-100 bg-white text-[#2e3139]"
             }`}
           >
             {number}
@@ -77,14 +75,12 @@ export default function Pagination({ currentPage, totalPages }: PaginationProps)
 
       <Link
         href={currentPage < totalPages ? `/home/device-management/page/${currentPage + 1}` : "#"}
-        className={`w-8 h-8 flex items-center justify-center rounded-[10px] border border-gray-300 dark:border-gray-700 ml-2 ${
-          currentPage === totalPages
-            ? "opacity-50 pointer-events-none bg-gray-100 dark:bg-gray-700"
-            : "bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
+        className={`w-8 h-8 flex items-center justify-center rounded-[10px] border border-gray-300 ml-2 ${
+          currentPage === totalPages ? "opacity-50 pointer-events-none bg-gray-100" : "bg-white hover:bg-gray-100"
         }`}
         aria-label="Next page"
       >
-        <ChevronRight className="h-4 w-4 text-[#2e3139] dark:text-white" />
+        <ChevronRight className="h-4 w-4 text-[#2e3139]" />
       </Link>
     </div>
   )

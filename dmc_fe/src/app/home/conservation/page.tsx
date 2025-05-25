@@ -36,44 +36,44 @@ export default function ConservationPage() {
 
   return (
     <div className="flex flex-col items-center justify-center h-full p-4 overflow-auto">
-      <h1 className="text-3xl font-semibold text-[#2e3139] dark:text-white mb-8">What can I help with?</h1>
+      <h1 className="text-3xl font-semibold text-[#2e3139] mb-8">What can I help with?</h1>
 
       <div className="w-full max-w-2xl">
-        <div className="relative rounded-[10px] shadow-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+        <div className="relative rounded-[10px] shadow-md bg-white border border-gray-200">
           <input
             ref={inputRef}
             type="text"
-            placeholder="Ask anything"
-            className="w-full py-4 px-12 border-0 rounded-[10px] text-base focus:outline-none bg-white dark:bg-gray-800 text-[#2e3139] dark:text-white dark:placeholder-gray-400"
+            placeholder="Ask anything..."
+            className="w-full py-4 px-12 border-0 rounded-[10px] text-base focus:outline-none bg-white text-[#2e3139] placeholder-gray-400"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
           />
 
           <div className="absolute left-3 top-1/2 -translate-y-1/2">
-            <button className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+            <button className="p-1 text-gray-400 hover:text-gray-600">
               <Plus className="h-5 w-5" />
             </button>
           </div>
 
           <div className="absolute left-14 top-1/2 -translate-y-1/2 flex items-center gap-4">
-            <button className="flex items-center gap-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+            <button className="flex items-center gap-1 text-gray-400 hover:text-gray-600">
               <Globe className="h-4 w-4" />
               <span className="text-sm">Search</span>
             </button>
 
-            <button className="flex items-center gap-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+            <button className="flex items-center gap-1 text-gray-400 hover:text-gray-600">
               <Lightbulb className="h-4 w-4" />
               <span className="text-sm">Reason</span>
             </button>
 
-            <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+            <button className="text-gray-400 hover:text-gray-600">
               <MoreHorizontal className="h-4 w-4" />
             </button>
           </div>
 
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-            <button className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+            <button className="p-1 text-gray-400 hover:text-gray-600">
               <Mic className="h-5 w-5" />
             </button>
 

@@ -32,33 +32,33 @@ export default function FinishPage() {
             <div className="w-8 h-8 rounded-full bg-[#4045ef] text-white flex items-center justify-center mb-1">
               <Check className="w-4 h-4" />
             </div>
-            <span className="text-xs text-[#2d336b] dark:text-white">Device Info</span>
+            <span className="text-xs text-[#2d336b]">Device Info</span>
           </div>
           <div className="h-0.5 bg-[#4045ef] flex-1"></div>
           <div className="flex flex-col items-center flex-1">
             <div className="w-8 h-8 rounded-full bg-[#4045ef] text-white flex items-center justify-center mb-1">
               <Check className="w-4 h-4" />
             </div>
-            <span className="text-xs text-[#2d336b] dark:text-white">Data Preprocessing</span>
+            <span className="text-xs text-[#2d336b]">Data Preprocessing</span>
           </div>
-          <div className="h-0.5 bg-[#d5d5d5] dark:bg-gray-700 flex-1"></div>
+          <div className="h-0.5 bg-[#d5d5d5] flex-1"></div>
           <div className="flex flex-col items-center flex-1">
-            <div className="w-8 h-8 rounded-full border-2 border-[#d5d5d5] dark:border-gray-700 flex items-center justify-center mb-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#d5d5d5] dark:bg-gray-700"></div>
+            <div className="w-8 h-8 rounded-full border-2 border-[#d5d5d5] flex items-center justify-center mb-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#d5d5d5]"></div>
             </div>
-            <span className="text-xs text-[#6f6f6f] dark:text-gray-400">Confirmation</span>
+            <span className="text-xs text-[#6f6f6f]">Confirmation</span>
           </div>
         </div>
       </div>
 
       {/* Page List */}
-      <div className="max-w-3xl mx-auto w-full border border-gray-200 dark:border-gray-700 rounded-[10px] overflow-hidden shadow-sm">
+      <div className="max-w-3xl mx-auto w-full border border-gray-200 rounded-[10px] overflow-hidden shadow-sm">
         <div className="bg-[#4045ef] text-white p-3 text-center font-medium">Page Processing Results</div>
-        <div className="max-h-[calc(100vh-300px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+        <div className="max-h-[calc(100vh-300px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300">
           {pages.map((page) => (
             <div
               key={page.id}
-              className="flex items-center justify-between p-4 border-b last:border-b-0 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="flex items-center justify-between p-4 border-b last:border-b-0 border-gray-200 hover:bg-gray-50 transition-colors"
             >
               <div className="flex items-center">
                 <div
@@ -72,10 +72,10 @@ export default function FinishPage() {
                     <X className="w-5 h-5 text-white" />
                   )}
                 </div>
-                <span className="font-medium text-[#2e3139] dark:text-white">Page {page.id}</span>
+                <span className="font-medium text-[#2e3139]">Page {page.id}</span>
               </div>
-              <button className="w-8 h-8 rounded-full border border-gray-300 dark:border-gray-600 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
-                <ChevronRight className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              <button className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors">
+                <ChevronRight className="w-4 h-4 text-gray-500" />
               </button>
             </div>
           ))}

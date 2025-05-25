@@ -33,7 +33,6 @@ export default function ChatPage({ params }: { params: { id: string } }) {
   const [isLoading, setIsLoading] = useState(false)
   const [notesOpen, setNotesOpen] = useState(true)
   const [notesCollapsed, setNotesCollapsed] = useState(false)
-  const [isDarkMode, setIsDarkMode] = useState(false)
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [deleteNoteId, setDeleteNoteId] = useState<string | null>(null)
@@ -241,11 +240,6 @@ export default function ChatPage({ params }: { params: { id: string } }) {
   // Check for system dark mode preference on initial load
   useEffect(() => {
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
-    setIsDarkMode(prefersDark)
-
-    if (prefersDark) {
-      document.documentElement.classList.add("dark")
-    }
   }, [])
 
   const handleSendMessage = async () => {
@@ -329,18 +323,6 @@ export default function ChatPage({ params }: { params: { id: string } }) {
     setDeleteNoteId(null)
   }
 
-  const toggleDarkMode = () => {
-    const newMode = !isDarkMode
-    setIsDarkMode(newMode)
-
-    // Apply dark mode to the entire document
-    if (newMode) {
-      document.documentElement.classList.add("dark")
-    } else {
-      document.documentElement.classList.remove("dark")
-    }
-  }
-
   const toggleSettingsMenu = () => {
     setShowSettingsMenu(!showSettingsMenu)
     if (showUserMenu) setShowUserMenu(false)
@@ -356,26 +338,24 @@ export default function ChatPage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="flex h-full overflow-auto p-4 gap-4 bg-[#E6D9D9] dark:bg-gray-900">
+    <div className="flex h-full overflow-auto p-4 gap-4 bg-[#E6D9D9]">
       {/* Main chat area with rigid layout */}
-      <div className="flex-1 flex flex-col h-full relative bg-white dark:bg-gray-900 overflow-hidden rounded-[10px] border border-gray-200 dark:border-gray-700 shadow-sm">
+      <div className="flex-1 flex flex-col h-full relative bg-white overflow-hidden rounded-[10px] border border-gray-200 shadow-sm">
         {/* Chat header - fixed */}
-        <div className="flex items-center justify-between p-4 border-b z-10 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-[#2d336b] dark:text-white rounded-t-[10px]">
+        <div className="flex items-center justify-between p-4 border-b z-10 bg-white border-gray-200 text-[#2d336b] rounded-t-[10px]">
           <div className="flex items-center gap-3">
             <h1 className="text-lg font-medium">{deviceName || "New Conversation"}</h1>
           </div>
         </div>
 
         {/* Chat content - scrollable area - ensure this has overflow-y: auto */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-white dark:bg-gray-900">
+        <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-white">
           {messages.map((message) => (
             <div key={message.id} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
               <div className={`flex max-w-[80%] ${message.sender === "user" ? "flex-row-reverse" : "flex-row"}`}>
                 <div
                   className={`flex items-center justify-center h-8 w-8 rounded-full flex-shrink-0 ${
-                    message.sender === "user"
-                      ? "ml-3 bg-[#4045ef]"
-                      : `mr-3 ${isDarkMode ? "bg-gray-700" : "bg-gray-200"}`
+                    message.sender === "user" ? "ml-3 bg-[#4045ef]" : `mr-3 bg-gray-200`
                   }`}
                 >
                   {message.sender === "user" ? (
@@ -389,16 +369,12 @@ export default function ChatPage({ params }: { params: { id: string } }) {
                     className={`rounded-[10px] px-4 py-3 ${
                       message.sender === "user"
                         ? "bg-[#4045ef] text-white"
-                        : isDarkMode
-                          ? "bg-gray-800 text-white"
-                          : "bg-white text-[#2e3139] border border-gray-200" // Added border for separation
+                        : "bg-white text-[#2e3139] border border-gray-200" // Added border for separation
                     }`}
                   >
                     <div className="text-sm whitespace-pre-line">{message.content}</div>
                     <div
-                      className={`text-xs mt-1 ${
-                        message.sender === "user" ? "text-blue-100" : isDarkMode ? "text-gray-400" : "text-[#2e3139]/70"
-                      }`}
+                      className={`text-xs mt-1 ${message.sender === "user" ? "text-blue-100" : "text-[#2e3139]/70"}`}
                     >
                       {formatTime(message.timestamp)}
                     </div>
@@ -410,7 +386,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#4045ef] dark:text-gray-400 dark:hover:text-white"
+                        className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#4045ef]"
                         onClick={() => handleSaveNote(message)}
                       >
                         <Save className="h-3.5 w-3.5" />
@@ -419,7 +395,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#4045ef] dark:text-gray-400 dark:hover:text-white"
+                        className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#4045ef]"
                         onClick={() => handleCopyMessage(message.content)}
                       >
                         <Copy className="h-3.5 w-3.5" />
@@ -435,27 +411,21 @@ export default function ChatPage({ params }: { params: { id: string } }) {
           {isLoading && (
             <div className="flex justify-start">
               <div className="flex flex-row">
-                <div
-                  className={`flex items-center justify-center h-8 w-8 rounded-full mr-3 ${
-                    isDarkMode ? "bg-gray-700" : "bg-gray-200"
-                  }`}
-                >
+                <div className={`flex items-center justify-center h-8 w-8 rounded-full mr-3 bg-gray-200`}>
                   <Bot className="h-5 w-5 text-[#4045ef]" />
                 </div>
-                <div
-                  className={`rounded-[10px] px-4 py-3 ${isDarkMode ? "bg-gray-800" : "bg-white border border-gray-200"}`}
-                >
+                <div className={`rounded-[10px] px-4 py-3 bg-white border border-gray-200`}>
                   <div className="flex space-x-2">
                     <div
-                      className={`w-2 h-2 rounded-full animate-bounce ${isDarkMode ? "bg-gray-500" : "bg-gray-300"}`}
+                      className={`w-2 h-2 rounded-full animate-bounce bg-gray-300`}
                       style={{ animationDelay: "0ms" }}
                     />
                     <div
-                      className={`w-2 h-2 rounded-full animate-bounce ${isDarkMode ? "bg-gray-500" : "bg-gray-300"}`}
+                      className={`w-2 h-2 rounded-full animate-bounce bg-gray-300`}
                       style={{ animationDelay: "300ms" }}
                     />
                     <div
-                      className={`w-2 h-2 rounded-full animate-bounce ${isDarkMode ? "bg-gray-500" : "bg-gray-300"}`}
+                      className={`w-2 h-2 rounded-full animate-bounce bg-gray-300`}
                       style={{ animationDelay: "600ms" }}
                     />
                   </div>
@@ -468,13 +438,13 @@ export default function ChatPage({ params }: { params: { id: string } }) {
         </div>
 
         {/* Input area - fixed at bottom */}
-        <div className="border-t p-4 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-b-[10px]">
-          <div className="flex items-center border rounded-[10px] overflow-hidden pr-2 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
+        <div className="border-t p-4 bg-white border-gray-200 rounded-b-[10px]">
+          <div className="flex items-center border rounded-[10px] overflow-hidden pr-2 bg-white border-gray-300">
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="text-[#2d336b] hover:text-[#4045ef] dark:text-gray-300 dark:hover:text-white"
+              className="text-[#2d336b] hover:text-[#4045ef]"
               aria-label="Attach file"
             >
               <Paperclip className="h-5 w-5" />
@@ -483,7 +453,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
               ref={inputRef}
               type="text"
               placeholder="Ask me anything"
-              className="flex-1 border-0 focus:outline-none px-2 py-2 bg-white dark:bg-gray-700 text-[#2d336b] dark:text-white dark:placeholder-gray-400"
+              className="flex-1 border-0 focus:outline-none px-2 py-2 bg-white text-[#2d336b] placeholder-gray-400"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -495,7 +465,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
                 "rounded-full h-8 w-8 flex items-center justify-center",
                 inputValue.trim() && !isLoading
                   ? "bg-[#4045ef] text-white hover:bg-[#3035df]"
-                  : "bg-transparent text-[#2d336b]/50 dark:text-gray-500",
+                  : "bg-transparent text-[#2d336b]/50",
               )}
               onClick={handleSendMessage}
               disabled={!inputValue.trim() || isLoading}
@@ -511,14 +481,11 @@ export default function ChatPage({ params }: { params: { id: string } }) {
 
       {/* Notes panel - right sidebar */}
       {notesCollapsed ? (
-        <div className="w-12 h-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-[10px] shadow-sm flex flex-col items-center py-4 space-y-4">
-          <button
-            onClick={toggleNotesPanel}
-            className="p-2 text-[#2e3139] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
-          >
+        <div className="w-12 h-full bg-white border border-gray-200 rounded-[10px] shadow-sm flex flex-col items-center py-4 space-y-4">
+          <button onClick={toggleNotesPanel} className="p-2 text-[#2e3139] hover:bg-gray-100 rounded-md">
             <Menu className="h-5 w-5" />
           </button>
-          <button className="p-2 text-[#2e3139] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">
+          <button className="p-2 text-[#2e3139] hover:bg-gray-100 rounded-md">
             <FileText className="h-5 w-5" />
           </button>
         </div>
@@ -527,47 +494,41 @@ export default function ChatPage({ params }: { params: { id: string } }) {
           className={cn(
             "h-full flex flex-col transition-all duration-300 ease-in-out",
             notesOpen ? "w-80" : "w-0 opacity-0 overflow-hidden",
-            "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-[10px] shadow-sm",
+            "bg-white border border-gray-200 rounded-[10px] shadow-sm",
           )}
         >
           {/* Notes header - fixed */}
-          <div className="p-4 border-b flex items-center justify-between bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-t-[10px]">
-            <h2 className="font-bold text-[#2e3139] dark:text-white">YOUR NOTES</h2>
-            <button
-              onClick={toggleNotesPanel}
-              className="text-[#2e3139] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1 rounded-md"
-            >
+          <div className="p-4 border-b flex items-center justify-between bg-white border-gray-200 rounded-t-[10px]">
+            <h2 className="font-bold text-[#2e3139]">YOUR NOTES</h2>
+            <button onClick={toggleNotesPanel} className="text-[#2e3139] hover:bg-gray-100 p-1 rounded-md">
               <Menu className="h-5 w-5" />
             </button>
           </div>
 
           {/* Notes content - scrollable - ensure this has overflow-y: auto */}
-          <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+          <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300">
             <div className="p-4 space-y-4">
               {notes.map((note) => (
-                <div key={note.id} className={`border-b pb-4 ${isDarkMode ? "border-gray-700" : "border-gray-200"}`}>
+                <div key={note.id} className={`border-b pb-4 border-gray-200`}>
                   <div className="flex items-start gap-3">
-                    <div className={isDarkMode ? "text-white mt-1" : "text-[#2e3139] mt-1"}>•</div>
+                    <div className={"text-[#2e3139] mt-1"}>•</div>
                     <div className="flex-1">
                       <div className="flex items-start justify-between">
-                        <h3 className={`font-bold text-[#2e3139] dark:text-white`}>{note.title}</h3>
+                        <h3 className={`font-bold text-[#2e3139]`}>{note.title}</h3>
                         <button
                           onClick={() => setDeleteNoteId(deleteNoteId === note.id ? null : note.id)}
-                          className="text-gray-500 hover:text-[#4045ef] dark:text-gray-400 dark:hover:text-white"
+                          className="text-gray-500 hover:text-[#4045ef]"
                         >
                           <FileText className="h-4 w-4" />
                         </button>
                       </div>
-                      <p className={`text-sm mt-1 text-[#2e3139] dark:text-gray-300`}>{note.content}</p>
+                      <p className={`text-sm mt-1 text-[#2e3139]`}>{note.content}</p>
 
                       {/* Delete note confirmation */}
                       {deleteNoteId === note.id && (
-                        <div className="mt-2 p-2 bg-red-100 dark:bg-red-900 rounded-[10px] flex items-center justify-between">
-                          <span className="text-xs text-red-600 dark:text-red-200">Delete this note?</span>
-                          <button
-                            onClick={() => handleDeleteNote(note.id)}
-                            className="text-red-600 dark:text-red-200 hover:text-red-800 dark:hover:text-red-100"
-                          >
+                        <div className="mt-2 p-2 bg-red-100 rounded-[10px] flex items-center justify-between">
+                          <span className="text-xs text-red-600">Delete this note?</span>
+                          <button onClick={() => handleDeleteNote(note.id)} className="text-red-600 hover:text-red-800">
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
@@ -580,7 +541,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
           </div>
 
           {/* Notes footer - fixed */}
-          <div className="p-4 border-t bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-b-[10px]">
+          <div className="p-4 border-t bg-white border-gray-200 rounded-b-[10px]">
             <Button
               onClick={() =>
                 handleSaveNote(
@@ -592,7 +553,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
                   },
                 )
               }
-              className="flex items-center gap-2 w-full justify-start px-3 py-2 rounded-[10px] bg-white dark:bg-gray-700 border border-[#4045ef] dark:border-gray-600 hover:bg-[#f1f6ff] dark:hover:bg-gray-600"
+              className="flex items-center gap-2 w-full justify-start px-3 py-2 rounded-[10px] bg-white border border-[#4045ef] hover:bg-[#f1f6ff]"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -604,12 +565,12 @@ export default function ChatPage({ params }: { params: { id: string } }) {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="text-[#4045ef] dark:text-white"
+                className="text-[#4045ef]"
               >
                 <path d="M12 5v14" />
                 <path d="M5 12h14" />
               </svg>
-              <span className="text-[#4045ef] dark:text-white">Save as note</span>
+              <span className="text-[#4045ef]">Save as note</span>
             </Button>
           </div>
         </div>

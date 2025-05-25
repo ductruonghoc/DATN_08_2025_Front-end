@@ -16,8 +16,6 @@ import {
   ChevronDown,
   LogOut,
   UserIcon,
-  Sun,
-  Moon,
   Users,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -37,7 +35,6 @@ export default function HomeLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [isDarkMode, setIsDarkMode] = useState(false)
   const [conversations, setConversations] = useState<Conversation[]>([
     {
       id: "conv-1",
@@ -74,33 +71,6 @@ export default function HomeLayout({
     }
   }, [])
 
-  // Check for system dark mode preference on initial load
-  useEffect(() => {
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
-    setIsDarkMode(prefersDark)
-
-    if (prefersDark) {
-      document.documentElement.classList.add("dark")
-    } else {
-      document.documentElement.classList.remove("dark")
-    }
-
-    // Listen for changes in color scheme preference
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
-    const handleChange = (e: MediaQueryListEvent) => {
-      const newDarkMode = e.matches
-      setIsDarkMode(newDarkMode)
-      if (newDarkMode) {
-        document.documentElement.classList.add("dark")
-      } else {
-        document.documentElement.classList.remove("dark")
-      }
-    }
-
-    mediaQuery.addEventListener("change", handleChange)
-    return () => mediaQuery.removeEventListener("change", handleChange)
-  }, [])
-
   // Format relative time
   const formatRelativeTime = (date: Date) => {
     const now = new Date()
@@ -118,27 +88,12 @@ export default function HomeLayout({
     setShowUserMenu(!showUserMenu)
   }
 
-  const toggleDarkMode = () => {
-    const newMode = !isDarkMode
-    setIsDarkMode(newMode)
-
-    // Apply dark mode to the entire document
-    if (newMode) {
-      document.documentElement.classList.add("dark")
-    } else {
-      document.documentElement.classList.remove("dark")
-    }
-
-    // Store preference in localStorage
-    localStorage.setItem("darkMode", newMode ? "true" : "false")
-  }
-
   return (
-    <div className="flex h-full overflow-hidden bg-white dark:bg-gray-900">
+    <div className="flex h-full overflow-hidden bg-white">
       {/* Sidebar - collapses to icon-only mode */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col bg-[#fff2f2] dark:bg-gray-800 transition-all duration-300 ease-in-out",
+          "fixed inset-y-0 left-0 z-50 flex flex-col bg-[#fff2f2] transition-all duration-300 ease-in-out",
           sidebarOpen ? "w-64" : "w-16",
         )}
       >
@@ -160,18 +115,18 @@ export default function HomeLayout({
                   <polyline points="14 2 14 8 20 8" />
                 </svg>
               </div>
-              <span className="text-xl font-bold text-[#2d336b] dark:text-white">DMC</span>
+              <span className="text-xl font-bold text-[#2d336b]">DMC</span>
             </Link>
           )}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className={cn(
-              "flex items-center justify-center rounded-[10px] p-2 hover:bg-white/50 dark:hover:bg-gray-700/50",
+              "flex items-center justify-center rounded-[10px] p-2 hover:bg-white/50",
               sidebarOpen ? "" : "mx-auto",
             )}
             aria-label="Toggle sidebar"
           >
-            <Menu className="h-5 w-5 text-[#2d336b] dark:text-white" />
+            <Menu className="h-5 w-5 text-[#2d336b]" />
           </button>
         </div>
         <div className="flex-1 overflow-auto py-4">
@@ -179,8 +134,8 @@ export default function HomeLayout({
             <button
               onClick={handleNewConversation}
               className={cn(
-                "flex items-center gap-2 rounded-[10px] bg-white dark:bg-gray-700 shadow-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors",
-                sidebarOpen ? "w-full px-4 py-2 text-sm text-[#2d336b] dark:text-white" : "h-10 w-10 justify-center",
+                "flex items-center gap-2 rounded-[10px] bg-white shadow-sm cursor-pointer hover:bg-gray-50 transition-colors",
+                sidebarOpen ? "w-full px-4 py-2 text-sm text-[#2d336b]" : "h-10 w-10 justify-center",
                 pathname.includes("/home/conservation") ? "ring-2 ring-[#4045ef]/20" : "",
               )}
             >
@@ -192,70 +147,70 @@ export default function HomeLayout({
             <Link
               href="/home/import"
               className={cn(
-                "flex items-center gap-3 rounded-[10px] hover:bg-white/50 dark:hover:bg-gray-700/50 relative",
-                sidebarOpen ? "px-3 py-2 text-[#2d336b] dark:text-white" : "h-10 w-10 justify-center my-2",
+                "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
+                sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
                 pathname.includes("/home/import")
-                  ? "bg-white/50 dark:bg-gray-700/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black dark:before:bg-white"
+                  ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
                   : "",
               )}
             >
-              <Upload className="h-5 w-5 text-[#2d336b] dark:text-white" />
+              <Upload className="h-5 w-5 text-[#2d336b]" />
               {sidebarOpen && <span>Upload PDF</span>}
             </Link>
 
             <Link
               href="/home/device-management"
               className={cn(
-                "flex items-center gap-3 rounded-[10px] hover:bg-white/50 dark:hover:bg-gray-700/50 relative",
-                sidebarOpen ? "px-3 py-2 text-[#2d336b] dark:text-white" : "h-10 w-10 justify-center my-2",
+                "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
+                sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
                 pathname.includes("/home/device-management")
-                  ? "bg-white/50 dark:bg-gray-700/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black dark:before:bg-white"
+                  ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
                   : "",
               )}
             >
-              <Settings className="h-5 w-5 text-[#2d336b] dark:text-white" />
+              <Settings className="h-5 w-5 text-[#2d336b]" />
               {sidebarOpen && <span>Device Management</span>}
             </Link>
 
             <Link
               href="/home/track-progress/tracking"
               className={cn(
-                "flex items-center gap-3 rounded-[10px] hover:bg-white/50 dark:hover:bg-gray-700/50 relative",
-                sidebarOpen ? "px-3 py-2 text-[#2d336b] dark:text-white" : "h-10 w-10 justify-center my-2",
+                "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
+                sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
                 pathname.includes("/home/track-progress")
-                  ? "bg-white/50 dark:bg-gray-700/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black dark:before:bg-white"
+                  ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
                   : "",
               )}
             >
-              <FileText className="h-5 w-5 text-[#2d336b] dark:text-white" />
+              <FileText className="h-5 w-5 text-[#2d336b]" />
               {sidebarOpen && <span>Track Progress</span>}
             </Link>
 
             <Link
               href="/home/conservation"
               className={cn(
-                "flex items-center gap-3 rounded-[10px] hover:bg-white/50 dark:hover:bg-gray-700/50 relative",
-                sidebarOpen ? "px-3 py-2 text-[#2d336b] dark:text-white" : "h-10 w-10 justify-center my-2",
+                "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
+                sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
                 pathname.includes("/home/conservation")
-                  ? "bg-white/50 dark:bg-gray-700/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black dark:before:bg-white"
+                  ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
                   : "",
               )}
             >
-              <MessageSquare className="h-5 w-5 text-[#2d336b] dark:text-white" />
+              <MessageSquare className="h-5 w-5 text-[#2d336b]" />
               {sidebarOpen && <span>Conservation</span>}
             </Link>
 
             <Link
               href="/home/admin-management"
               className={cn(
-                "flex items-center gap-3 rounded-[10px] hover:bg-white/50 dark:hover:bg-gray-700/50 relative",
-                sidebarOpen ? "px-3 py-2 text-[#2d336b] dark:text-white" : "h-10 w-10 justify-center my-2",
+                "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
+                sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
                 pathname.includes("/home/admin-management")
-                  ? "bg-white/50 dark:bg-gray-700/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black dark:before:bg-white"
+                  ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
                   : "",
               )}
             >
-              <Users className="h-5 w-5 text-[#2d336b] dark:text-white" />
+              <Users className="h-5 w-5 text-[#2d336b]" />
               {sidebarOpen && <span>Admin Management</span>}
             </Link>
           </nav>
@@ -263,36 +218,28 @@ export default function HomeLayout({
           {/* Conversation history */}
           {sidebarOpen && (
             <div className="mt-8 px-2">
-              <h3 className="px-3 text-xs font-semibold uppercase text-[#2d336b] dark:text-white mb-2">
-                Your conversations
-              </h3>
+              <h3 className="px-3 text-xs font-semibold uppercase text-[#2d336b] mb-2">Your conversations</h3>
               <div className="space-y-1">
                 {conversations.map((conversation) => (
                   <Link
                     key={conversation.id}
                     href={`/home/conservation/chat/${conversation.id}`}
                     className={cn(
-                      "flex items-center justify-between rounded-[10px] px-3 py-2 hover:bg-white/50 dark:hover:bg-gray-700/50",
-                      pathname.includes(`/home/conservation/chat/${conversation.id}`)
-                        ? "bg-white/50 dark:bg-gray-700/50"
-                        : "",
+                      "flex items-center justify-between rounded-[10px] px-3 py-2 hover:bg-white/50",
+                      pathname.includes(`/home/conservation/chat/${conversation.id}`) ? "bg-white/50" : "",
                     )}
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center">
-                        <span className="font-medium text-sm truncate text-[#2d336b] dark:text-white">
-                          {conversation.title}
-                        </span>
+                        <span className="font-medium text-sm truncate text-[#2d336b]">{conversation.title}</span>
                       </div>
-                      <div className="flex items-center text-xs text-[#2d336b] dark:text-gray-300 mt-1">
+                      <div className="flex items-center text-xs text-[#2d336b] mt-1">
                         <span className="truncate">{conversation.lastMessage}</span>
                       </div>
                     </div>
                     <div className="flex items-center">
-                      <span className="text-xs text-[#2d336b] dark:text-gray-300 ml-2">
-                        {formatRelativeTime(conversation.timestamp)}
-                      </span>
-                      <button className="ml-1 text-[#2d336b] dark:text-white hover:text-[#4045ef] dark:hover:text-gray-300">
+                      <span className="text-xs text-[#2d336b] ml-2">{formatRelativeTime(conversation.timestamp)}</span>
+                      <button className="ml-1 text-[#2d336b] hover:text-[#4045ef]">
                         <MoreHorizontal className="h-4 w-4" />
                       </button>
                     </div>
@@ -312,38 +259,27 @@ export default function HomeLayout({
         )}
       >
         {/* Top horizontal bar */}
-        <div className="h-16 border-b bg-white dark:bg-gray-800 dark:border-gray-700 flex justify-end items-center px-4 sticky top-0 z-40">
+        <div className="h-16 border-b bg-white border-gray-700 flex justify-end items-center px-4 sticky top-0 z-40">
           {/* User menu content */}
           <div className="flex items-center gap-4 relative" ref={userMenuRef}>
-            <button
-              onClick={toggleDarkMode}
-              className="flex items-center justify-center h-8 w-8 rounded-full text-[#2d336b] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-              aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
-            >
-              {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </button>
-
-            <button
-              onClick={toggleUserMenu}
-              className="flex items-center gap-2 text-[#2d336b] dark:text-white hover:underline"
-            >
+            <button onClick={toggleUserMenu} className="flex items-center gap-2 text-[#2d336b] hover:underline">
               <span>Username</span>
               <ChevronDown className="h-4 w-4" />
             </button>
 
             {showUserMenu && (
-              <div className="absolute right-0 top-full mt-1 w-48 rounded-[10px] shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 z-50">
+              <div className="absolute right-0 top-full mt-1 w-48 rounded-[10px] shadow-lg bg-white border border-gray-200 z-50">
                 <div className="py-1">
-                  <button className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left">
+                  <button className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
                     <UserIcon className="h-4 w-4" />
                     <span>Profile</span>
                   </button>
-                  <button className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left">
+                  <button className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
                     <Settings className="h-4 w-4" />
                     <span>Account Settings</span>
                   </button>
-                  <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
-                  <button className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left">
+                  <div className="border-t border-gray-200 my-1"></div>
+                  <button className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left">
                     <LogOut className="h-4 w-4" />
                     <span>Sign out</span>
                   </button>
@@ -351,7 +287,7 @@ export default function HomeLayout({
               </div>
             )}
 
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -360,7 +296,7 @@ export default function HomeLayout({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="h-5 w-5 text-gray-700 dark:text-gray-300"
+                className="h-5 w-5 text-gray-700"
               >
                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
