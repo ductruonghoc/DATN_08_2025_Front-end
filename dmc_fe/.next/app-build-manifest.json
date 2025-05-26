@@ -11,11 +11,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/page.js"
     ],
-    "/sign-up/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/sign-up/page.js"
-    ],
     "/home/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -25,11 +20,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/home/page.js"
-    ],
-    "/home/import/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/home/import/page.js"
     ],
     "/home/device-management/loading": [
       "static/chunks/webpack.js",
@@ -66,15 +56,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/home/conservation/page.js"
     ],
-    "/forgot-password/layout": [
+    "/home/admin-management/loading": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/forgot-password/layout.js"
+      "static/chunks/app/home/admin-management/loading.js"
     ],
-    "/forgot-password/verify/page": [
+    "/home/admin-management/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/forgot-password/verify/page.js"
+      "static/chunks/app/home/admin-management/page.js"
     ]
   }
 }

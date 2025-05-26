@@ -1,8 +1,5 @@
 {
-  "/sign-up/page": "app/sign-up/page.js",
-  "/page": "app/page.js",
-  "/home/device-management/page": "app/home/device-management/page.js",
-  "/home/page": "app/home/page.js",
   "/home/conservation/page": "app/home/conservation/page.js",
-  "/forgot-password/verify/page": "app/forgot-password/verify/page.js"
+  "/home/track-progress/tracking/page": "app/home/track-progress/tracking/page.js",
+  "/home/admin-management/page": "app/home/admin-management/page.js"
 }
