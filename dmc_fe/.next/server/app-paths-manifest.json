@@ -1,6 +1,6 @@
 {
-  "/process/page": "app/process/page.js",
-  "/home/page": "app/home/page.js",
-  "/home/import/page": "app/home/import/page.js",
-  "/home/track-progress/page": "app/home/track-progress/page.js"
+  "/sign-up/page": "app/sign-up/page.js",
+  "/forgot-password/verify/page": "app/forgot-password/verify/page.js",
+  "/forgot-password/page": "app/forgot-password/page.js",
+  "/forgot-password/reset-password/page": "app/forgot-password/reset-password/page.js"
 }

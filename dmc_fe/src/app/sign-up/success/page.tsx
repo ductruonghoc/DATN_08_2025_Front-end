@@ -26,7 +26,7 @@ export default function PasswordResetSuccessPage() {
             <p className="text-[#425583] mb-8">Log in to your account with your new account</p>
           </div>
 
-          <Link href="/sign-in">
+          <Link href="/log-in">
             <Button className="w-full bg-[#2D336B] hover:bg-[#2d336b]/90 text-white rounded-full py-6">
               Log in
             </Button>

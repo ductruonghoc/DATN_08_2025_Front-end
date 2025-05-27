@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Mail, Lock, UserIcon, Eye, EyeOff } from "lucide-react"
-import { passwordStrength } from 'check-password-strength'
+import zxcvbn from "zxcvbn"
 
 export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -21,19 +21,60 @@ export default function SignUpPage() {
   const [passwordErrorMessage, setPasswordErrorMessage] = useState("")
   const [confirmPasswordErrorMessage, setConfirmPasswordErrorMessage] = useState("")
 
+  const passwordStrength = zxcvbn(password)
+  const passwordScore = passwordStrength.score
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setPasswordErrorMessage("")
     setConfirmPasswordErrorMessage("")
-    const passwordCheck = passwordStrength(password).value;
-    if (passwordCheck === "Weak" || passwordCheck === "Too weak") {
-      setPasswordErrorMessage("Password is not strong enough!");
-    } else if (password !== confirmPassword) {
-      setConfirmPasswordErrorMessage("Confirm password is not match!");
-    } else {
+
+    if (passwordScore < 3) {
+      setPasswordErrorMessage(
+        passwordStrength.feedback.suggestions.join(" ") || "Password is too weak!"
+      )
+      return
+    }
+
+    if (password !== confirmPassword) {
+      setConfirmPasswordErrorMessage("Confirm password does not match!")
+      return
+    }
+
+    const form = e.currentTarget
+    const emailInput = form.elements.namedItem("email") as HTMLInputElement
+    const email = emailInput?.value
+
+    try {
+      const response = await fetch("https://mdc-backend-b3f827a7852a.herokuapp.com/user/unverified_register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        alert(`Registration failed: ${errorData.message || response.statusText}`)
+        return
+      }
+
+      localStorage.setItem("pendingEmail", email)
       router.push("/sign-up/verify")
+    } catch (error) {
+      alert("Something went wrong during registration.")
+      console.error(error)
     }
   }
+
+  const strengthColors = [
+    "bg-red-500",
+    "bg-orange-400",
+    "bg-yellow-400",
+    "bg-green-500",
+    "bg-green-700",
+  ]
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -45,6 +86,7 @@ export default function SignUpPage() {
           Log in
         </Link>
       </header>
+
       <main className="flex-1 flex flex-col items-center justify-center px-4">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
@@ -53,9 +95,8 @@ export default function SignUpPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-
             <div className="space-y-2">
-              <label htmlFor="text" className="block text-sm font-medium">
+              <label htmlFor="username" className="block text-sm font-medium">
                 Username
               </label>
               <div className="relative">
@@ -65,7 +106,7 @@ export default function SignUpPage() {
                 <Input
                   id="username"
                   name="username"
-                  type="username"
+                  type="text"
                   placeholder="Enter your full name"
                   className="pl-10 rounded-full border-2 border-gray-300 w-full placeholder:text-gray-300 py-[22px]"
                   required
@@ -86,8 +127,7 @@ export default function SignUpPage() {
                   name="email"
                   type="email"
                   placeholder="example@email.com"
-                  className="pl-10 rounded-full border-2 border-gray-300 w-full placeholder:text-gray-300
-                              py-[22px]"
+                  className="pl-10 rounded-full border-2 border-gray-300 w-full placeholder:text-gray-300 py-[22px]"
                   required
                 />
               </div>
@@ -118,7 +158,25 @@ export default function SignUpPage() {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              <div>{passwordErrorMessage}</div>
+
+              {/* Strength Meter */}
+              {password && (
+                <div className="mt-2 space-y-1">
+                  <div className="h-2 bg-gray-200 rounded-full">
+                    <div
+                      className={`h-2 rounded-full transition-all duration-300 ${strengthColors[passwordScore]}`}
+                      style={{ width: `${(passwordScore + 1) * 20}%` }}
+                    />
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {passwordStrength.feedback.suggestions.join(" ") || "Looking good!"}
+                  </div>
+                </div>
+              )}
+
+              {passwordErrorMessage && (
+                <div className="text-sm text-red-600">{passwordErrorMessage}</div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -146,32 +204,24 @@ export default function SignUpPage() {
                   {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              <div>{confirmPasswordErrorMessage}</div>
+              {confirmPasswordErrorMessage && (
+                <div className="text-sm text-red-600">{confirmPasswordErrorMessage}</div>
+              )}
             </div>
 
             <Button type="submit" className="w-full bg-[#2e3470] text-white hover:bg-[#232759] rounded-full py-[22px]">
               Submit
             </Button>
           </form>
+
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-gray-500">or</span>
-            </div>
-          </div>
 
-          <Button
-            variant="outline"
-            className="mt-4 w-full flex items-center justify-center gap-2 border border-gray-300 rounded-full py-[22px]"
-          >
-            <Image src="/google-icon.svg" alt="Google" width={20} height={20} />
-            Continue with Google
-          </Button>
+          </div>
         </div>
       </main>
     </div>
   )
 }
-

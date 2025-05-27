@@ -1,6 +1,5 @@
 "use client";
 
-import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -9,12 +8,39 @@ import { Mail, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export default function SignInPage() {
+export default function LogInPage() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleGoogleLogin = async () => {
-    signIn("google", { callbackUrl: "/" }); // Chuyển hướng sau khi đăng nhập
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    try {
+      const res = await fetch("https://mdc-backend-b3f827a7852a.herokuapp.com/user/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Login failed.");
+        return;
+      }
+
+      // Save token to localStorage
+      localStorage.setItem("token", data.token);
+
+      // Redirect to home
+      router.push("/home");
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong. Please try again.");
+    }
   };
 
   return (
@@ -31,9 +57,10 @@ export default function SignInPage() {
           <div className="text-center">
             <h1 className="text-3xl font-semibold">Welcome Back</h1>
             <p className="text-muted-foreground mt-2">Enter your email and password to log in</p>
+            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
           </div>
 
-          <form className="space-y-6">
+          <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <label htmlFor="email" className="block text-sm font-medium">
                 Email
@@ -49,6 +76,8 @@ export default function SignInPage() {
                   placeholder="example@email.com"
                   className="pl-10 rounded-full border-2 border-[#a9b5df] focus:border-[#4045ef] w-full placeholder:text-gray-300 py-[22px]"
                   required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
             </div>
@@ -66,8 +95,10 @@ export default function SignInPage() {
                   name="password"
                   type="password"
                   placeholder="Enter your password"
-                  className="pl-10 rounded-full border-2 border-[#a9b5df] focus:border-[#4045ef] w-full placeholder:text-gray-300 py-[22px] "
+                  className="pl-10 rounded-full border-2 border-[#a9b5df] focus:border-[#4045ef] w-full placeholder:text-gray-300 py-[22px]"
                   required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
             </div>
@@ -88,21 +119,6 @@ export default function SignInPage() {
               Forgot password?
             </Link>
           </div>
-
-          <div className="mt-4 flex items-center justify-center">
-            <div className="border-t border-gray-300 flex-grow mr-3"></div>
-            <span className="text-sm text-muted-foreground">OR</span>
-            <div className="border-t border-gray-300 flex-grow ml-3"></div>
-          </div>
-
-          <Button
-            onClick={handleGoogleLogin}
-            variant="outline"
-            className="mt-4 w-full flex items-center justify-center gap-2 border border-[#a9b5df] focus:border-[#4045ef] rounded-full py-[22px]"
-          >
-            <Image src="/google-icon.svg" alt="Google" width={20} height={20} />
-            Continue with Google
-          </Button>
         </div>
       </main>
     </div>

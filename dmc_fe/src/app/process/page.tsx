@@ -27,34 +27,6 @@ export default function DocumentProcessor() {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Sidebar
-      <div className="w-64 bg-F-50 border-r border-gray-200 flex flex-col">
-        <div className="p-4 flex items-center gap-2">
-          <Menu className="h-5 w-5" />
-          <div className="flex items-center gap-2">
-            <Image src="/logo.svg?height=24&width=24" alt="DMC Logo" width={24} height={24} className="text-blue-700" />
-            <span className="text-xl font-bold text-blue-900">TechBot</span>
-          </div>
-        </div>
-
-        <div className="p-4">
-          <button className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 w-full rounded-md bg-white p-2 shadow-sm">
-            <span className="text-gray-400">+</span> New conversation
-          </button>
-        </div>
-
-        <nav className="flex-1 p-4 space-y-2">
-          <button className="flex items-center gap-3 text-sm text-gray-700 hover:text-gray-900 w-full p-2 hover:bg-gray-100 rounded-md">
-            <Upload className="h-5 w-5" />
-            Upload PDF
-          </button>
-          <button className="flex items-center gap-3 text-sm text-gray-700 hover:text-gray-900 w-full p-2 hover:bg-gray-100 rounded-md">
-            <Shield className="h-5 w-5" />
-            Device Management
-          </button>
-        </nav>
-      </div> */}
-
       <Navigator setSidebarOpen={setSidebarOpen}
         sidebarOpen={sidebarOpen}
       />
@@ -74,35 +46,33 @@ export default function DocumentProcessor() {
             </div>
           </div>
         </header>
-
-        {/* Progress Steps */}
-        <div className={`bg-white p-4 border-b
-          
-        `}>
-          <div className="flex justify-center items-center max-w-2xl mx-auto">
-            <div className="flex items-center w-full">
-              <div className="flex flex-col items-center">
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white">1</div>
-                <span className="text-sm mt-1">Device Info</span>
-              </div>
-              <div className="flex-1 h-1 bg-gray-200 mx-2">
-                <div className="h-full bg-blue-600"></div>
-              </div>
-              <div className="flex flex-col items-center">
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white">2</div>
-                <span className="text-sm mt-1">Data Preprocessing</span>
-              </div>
-              <div className="flex-1 h-1 bg-gray-200 mx-2"></div>
-              <div className="flex flex-col items-center">
-                <div className="w-8 h-8 bg-white border-2 border-gray-300 rounded-full flex items-center justify-center">
-                  3
-                </div>
-                <span className="text-sm mt-1">Confirmation</span>
-              </div>
+        <div className="flex flex-col h-full">
+      {/* Progress Steps */}
+      <div className="flex justify-center mb-6">
+        <div className="flex items-center max-w-2xl w-full">
+          <div className="flex flex-col items-center flex-1">
+            <div className="w-8 h-8 bg-blue-600 rounded-full bg-[#4045ef] text-white flex items-center justify-center mb-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
             </div>
+            <span className="text-xs text-[#2d336b]">Device Info</span>
+          </div>
+          <div className="h-0.5 bg-[#4045ef] flex-1"></div>
+          <div className="flex flex-col items-center flex-1">
+            <div className="w-8 h-8 bg-blue-600 rounded-full border-2 border-[#d5d5d5] flex items-center justify-center mb-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#d5d5d5]"></div>
+            </div>
+            <span className="text-xs text-[#6f6f6f]">Data Preprocessing</span>
+          </div>
+          <div className="h-0.5 bg-[#d5d5d5] flex-1"></div>
+          <div className="flex flex-col items-center flex-1">
+            <div className="w-8 h-8 rounded-full border-2 border-[#d5d5d5] flex items-center justify-center mb-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#d5d5d5]"></div>
+            </div>
+            <span className="text-xs text-[#6f6f6f]">Confirmation</span>
           </div>
         </div>
-
+      </div>
+      </div>
         {/* Document Viewer */}
         <div className="flex-1 p-4 flex flex-col md:flex-row gap-4
         h-[calc(100%-72px-72px-88px)]">

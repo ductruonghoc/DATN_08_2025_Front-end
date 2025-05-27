@@ -1,9 +1,46 @@
+"use client"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Lock } from "lucide-react"
 import Link from "next/link"
 
 export default function ForgotPasswordPage() {
+  const [email, setEmail] = useState("")
+  const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setError("")
+
+    try {
+      const response = await fetch("https://mdc-backend-b3f827a7852a.herokuapp.com/user/can_reset_password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        sessionStorage.setItem("resetEmail", email)
+        router.push("/forgot-password/verify")
+      } else {
+        setError(data.message || "Failed to send OTP.")
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  
   return (
     <div className="min-h-screen bg-white">
       <header className="flex items-center justify-between p-4 md:p-6">
@@ -25,7 +62,7 @@ export default function ForgotPasswordPage() {
             <p className="text-[#425583] mb-8">Enter your email to reset your password</p>
           </div>
 
-          <form className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm text-[#2e3139]">
                 Email
@@ -33,17 +70,17 @@ export default function ForgotPasswordPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="domat@example.com"
+                placeholder="example@gmail.com"              
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
                 className="w-full rounded-lg border border-[#a9b5df] px-4 py-2 focus:border-[#4045ef] focus:ring-2 focus:ring-[#4045ef]/20 text-black placeholder:text-gray-400"
                 style={{ borderRadius: '9999px' }} 
               />
+              {error && <p className="text-red-500">{error}</p>}
             </div>
-            <Button 
-              type="submit" 
-              className="w-full bg-[#2D336B] hover:bg-[#2d336b] text-white rounded-lg py-6"
-              style={{ borderRadius: '9999px' }} 
-            >
-              Submit
+            <Button type="submit" className="w-full bg-[#2D336B] hover:bg-[#2d336b]/90 text-white rounded-full py-2" disabled={isLoading}>
+              {isLoading ? "Sending..." : "Send OTP"}
             </Button>
           </form>
         </div>
