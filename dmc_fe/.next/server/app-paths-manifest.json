@@ -1,5 +1,5 @@
 {
-  "/home/conservation/page": "app/home/conservation/page.js",
-  "/home/track-progress/tracking/page": "app/home/track-progress/tracking/page.js",
-  "/home/admin-management/page": "app/home/admin-management/page.js"
+  "/home/import/page": "app/home/import/page.js",
+  "/home/conservation/chat/[id]/page": "app/home/conservation/chat/[id]/page.js",
+  "/home/page": "app/home/page.js"
 }

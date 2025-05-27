@@ -11,12 +11,12 @@ import {
   Plus,
   FileText,
   Settings,
-  MessageSquare,
   MoreHorizontal,
   ChevronDown,
   LogOut,
   UserIcon,
   Users,
+  Trash2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePathname } from "next/navigation"
@@ -35,6 +35,9 @@ export default function HomeLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [activeConversationMenu, setActiveConversationMenu] = useState<string | null>(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [conversationToDelete, setConversationToDelete] = useState<string | null>(null)
   const [conversations, setConversations] = useState<Conversation[]>([
     {
       id: "conv-1",
@@ -52,16 +55,55 @@ export default function HomeLayout({
   const pathname = usePathname()
   const router = useRouter()
   const userMenuRef = useRef<HTMLDivElement>(null)
+  const conversationMenuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
 
   const handleNewConversation = () => {
     router.push("/home/conservation")
   }
 
-  // Close user menu when clicking outside
+  const handleDeleteConversation = (conversationId: string) => {
+    setConversationToDelete(conversationId)
+    setShowDeleteModal(true)
+    setActiveConversationMenu(null)
+  }
+
+  const confirmDeleteConversation = () => {
+    if (conversationToDelete) {
+      setConversations(conversations.filter((conv) => conv.id !== conversationToDelete))
+      setShowDeleteModal(false)
+      setConversationToDelete(null)
+
+      // If currently viewing the deleted conversation, redirect to conservation page
+      if (pathname.includes(`/home/conservation/chat/${conversationToDelete}`)) {
+        router.push("/home/conservation")
+      }
+    }
+  }
+
+  const cancelDeleteConversation = () => {
+    setShowDeleteModal(false)
+    setConversationToDelete(null)
+  }
+
+  const toggleConversationMenu = (conversationId: string, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setActiveConversationMenu(activeConversationMenu === conversationId ? null : conversationId)
+  }
+
+  // Close menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setShowUserMenu(false)
+      }
+
+      // Close conversation menu if clicking outside
+      if (
+        activeConversationMenu &&
+        !conversationMenuRefs.current[activeConversationMenu]?.contains(event.target as Node)
+      ) {
+        setActiveConversationMenu(null)
       }
     }
 
@@ -69,7 +111,7 @@ export default function HomeLayout({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [])
+  }, [activeConversationMenu])
 
   // Format relative time
   const formatRelativeTime = (date: Date) => {
@@ -187,20 +229,6 @@ export default function HomeLayout({
             </Link>
 
             <Link
-              href="/home/conservation"
-              className={cn(
-                "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
-                sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
-                pathname.includes("/home/conservation")
-                  ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
-                  : "",
-              )}
-            >
-              <MessageSquare className="h-5 w-5 text-[#2d336b]" />
-              {sidebarOpen && <span>Conservation</span>}
-            </Link>
-
-            <Link
               href="/home/admin-management"
               className={cn(
                 "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
@@ -221,29 +249,50 @@ export default function HomeLayout({
               <h3 className="px-3 text-xs font-semibold uppercase text-[#2d336b] mb-2">Your conversations</h3>
               <div className="space-y-1">
                 {conversations.map((conversation) => (
-                  <Link
+                  <div
                     key={conversation.id}
-                    href={`/home/conservation/chat/${conversation.id}`}
                     className={cn(
-                      "flex items-center justify-between rounded-[10px] px-3 py-2 hover:bg-white/50",
+                      "flex items-center justify-between rounded-[10px] px-3 py-2 hover:bg-white/50 relative",
                       pathname.includes(`/home/conservation/chat/${conversation.id}`) ? "bg-white/50" : "",
                     )}
                   >
-                    <div className="flex-1 min-w-0">
+                    <Link href={`/home/conservation/chat/${conversation.id}`} className="flex-1 min-w-0">
                       <div className="flex items-center">
                         <span className="font-medium text-sm truncate text-[#2d336b]">{conversation.title}</span>
                       </div>
                       <div className="flex items-center text-xs text-[#2d336b] mt-1">
                         <span className="truncate">{conversation.lastMessage}</span>
                       </div>
-                    </div>
+                    </Link>
                     <div className="flex items-center">
                       <span className="text-xs text-[#2d336b] ml-2">{formatRelativeTime(conversation.timestamp)}</span>
-                      <button className="ml-1 text-[#2d336b] hover:text-[#4045ef]">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </button>
+                      <div className="relative">
+                        <button
+                          className="ml-1 text-[#2d336b] hover:text-[#4045ef] p-1"
+                          onClick={(e) => toggleConversationMenu(conversation.id, e)}
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </button>
+
+                        {activeConversationMenu === conversation.id && (
+                          <div
+                            ref={(el) => (conversationMenuRefs.current[conversation.id] = el)}
+                            className="absolute right-0 top-full mt-1 w-48 rounded-[10px] shadow-lg bg-white border border-gray-200 z-50"
+                          >
+                            <div className="py-1">
+                              <button
+                                onClick={() => handleDeleteConversation(conversation.id)}
+                                className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                <span>Delete conversation</span>
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             </div>
@@ -308,6 +357,32 @@ export default function HomeLayout({
         {/* Main content - Change from overflow-hidden to overflow-auto */}
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h2 className="text-lg font-medium mb-4 text-[#2e3139]">Delete Conversation</h2>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this conversation? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={cancelDeleteConversation}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteConversation}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
