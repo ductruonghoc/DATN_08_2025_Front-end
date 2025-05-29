@@ -6,8 +6,8 @@
 
 import React, { useState, ChangeEvent, FC, ReactNode, useEffect, useRef } from 'react';
 import { BASE_URL } from '@/src/api/base_url';
-import { Check, ChevronRight, ChevronLeft, UploadCloud } from 'lucide-react';
-import { Button, Label, Select, Input, Spinner } from '@/src/components/utils';
+import { Check, ChevronRight, UploadCloud } from 'lucide-react';
+import { Button, Label, Select, Input, Spinner, PercentageBar } from '@/src/components/utils';
 
 // --- Type Definitions ---
 
@@ -30,6 +30,8 @@ interface FormData {
     deviceName: string;
     issueDetails: string;
     pdfFile?: File | null; // Added for PDF upload
+    pdfId?: number; // <-- Add this
+    nextStepAvailable?: boolean; // <-- Add this
 }
 
 interface Errors {
@@ -51,10 +53,24 @@ interface ProgressBarProps {
     stepLabels: string[];
 }
 const ProgressBar: FC<ProgressBarProps> = ({ currentStep, totalSteps, stepLabels }) => {
+    const arr = Array.from({ length: totalSteps }, (_, i) => i + 1)
+    let i = currentStep - 2; // Adjust index to be zero-based
+    if (i < 0) i = 0; // Ensure i is not negative
+    if (currentStep === totalSteps) i = i - 1; // Ensure i does not exceed array length
+    const sublist = arr.slice(i, i + 3)
+    
+    // Iterate through the array. The loop stops when there are not enough
+    // elements left to form a sublist of the desired length.
+    // For example, if arr.length is 5 and sublistLength is 3,
+    // i will go from 0 to 2 (5 - 3).
+    // i = 0: slice(0, 3) -> [arr[0], arr[1], arr[2]]
+    // i = 1: slice(1, 4) -> [arr[1], arr[2], arr[3]]
+    // i = 2: slice(2, 5) -> [arr[2], arr[3], arr[4]]
+
     return (
         <nav aria-label="Progress">
             <ol role="list" className="flex items-center">
-                {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => (
+                {sublist.map((step) => (
                     <li key={step} className={`relative ${step !== totalSteps ? 'pr-8 sm:pr-20 flex-1' : ''}`}>
                         {currentStep > step ? (
                             // Completed step
@@ -241,25 +257,110 @@ const Step2UploadAndIssue: FC<Step2UploadAndIssueProps> = ({ data, handleFileCha
     );
 };
 
-
-
-interface Step3PlaceholderProps {
-    data: FormData;
+interface Step3ExtractionProps {
+    formData: FormData;
+    setFormData: React.Dispatch<React.SetStateAction<FormData>>;
 }
-const Step3Placeholder: FC<Step3PlaceholderProps> = ({ data }) => (
-    <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-gray-800">Review & Submit (Step 3)</h2>
-        <p className="text-sm text-gray-500">This is a placeholder for Step 3. Review your information.</p>
-        <div className="p-4 border border-gray-200 rounded-md bg-gray-50">
-            <h3 className="font-medium text-gray-700">Summary:</h3>
-            <p className="text-sm text-gray-600">Device Type: {data.deviceType || 'N/A'}</p>
-            <p className="text-sm text-gray-600">Brand: {data.brandName || 'N/A'}</p>
-            <p className="text-sm text-gray-600">Device Name: {data.deviceName || 'N/A'}</p>
-            <p className="text-sm text-gray-600">Issue: {data.issueDetails || 'N/A'}</p>
-        </div>
-    </div>
-);
 
+const Step3Extraction: React.FC<Step3ExtractionProps> = ({ formData, setFormData }) => {
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [progress, setProgress] = useState<number>(0);
+    const [status, setStatus] = useState<string>("");
+
+    // Simulate async OCR logic
+    const simulateProcessing = (threshold: number) => {
+        return new Promise<void>((resolve) => {
+            let currentProgress = 0;
+            const interval = setInterval(() => {
+                currentProgress += 10; // Simulate progress increment
+                if (currentProgress <= threshold) {
+                    setProgress(currentProgress);
+                } else {
+                    clearInterval(interval);
+                    resolve();
+                }
+            }, 200);
+        });
+    };
+
+    const handleOcrClick = async () => {
+        setIsLoading(true);
+        setProgress(0);
+        setStatus("");
+
+        try {
+            // Start fetch
+            const res = await fetch(`${BASE_URL}/pdf_process/extract_pdf?pdf_id=${formData.pdfId}`);
+            if (res.ok) {
+                const json = await res.json();
+                if (json.success) {
+                    await simulateProcessing(100);
+                    setFormData(prev => ({
+                        ...prev,
+                        nextStepAvailable: true, // Indicate that the next step is available
+                    }));
+                    setStatus("Extraction successful! You can proceed to the next step.");
+                } else {
+                    await simulateProcessing(70);
+                    setFormData(prev => ({
+                        ...prev,
+                        nextStepAvailable: false, // Indicate that the next step is not available
+                    }));
+                    setStatus(json.message || "Extraction failed.");
+                }
+            } else {
+                await simulateProcessing(70);
+                setFormData(prev => ({
+                    ...prev,
+                    nextStepAvailable: false, // Indicate that the next step is not available
+                }));
+                setStatus("Extraction failed: Server error.");
+            }
+        } catch (error) {
+            await simulateProcessing(70);
+            setFormData(prev => ({
+                ...prev,
+                nextStepAvailable: false, // Indicate that the next step is not available
+            }));
+            setStatus("Extraction failed: Network error.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    return (
+        <div className="flex flex-col items-center justify-center dark:bg-gray-900 p-2 min-h-[120px]">
+            <button
+                onClick={handleOcrClick}
+                disabled={isLoading}
+                className={`
+          px-8 py-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md
+          hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75
+          disabled:bg-gray-400 disabled:cursor-not-allowed
+          transition-colors duration-150 ease-in-out
+        `}
+            >
+                {isLoading ? 'Processing...' : 'Start the extraction'}
+            </button>
+
+            <p className="mt-4 text-sm text-gray-600 dark:text-gray-300 text-center">
+                Click the button to start extract the pdf.
+            </p>
+
+            {isLoading && (
+                <PercentageBar
+                    progress={progress}
+                    className="mt-6"
+                />
+            )}
+
+            {status && (
+                <div className={`mt-4 p-2 rounded text-center ${formData.nextStepAvailable ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {status}
+                </div>
+            )}
+        </div>
+    );
+}
 
 const MultiStepFormPage: FC = () => {
     const [currentStep, setCurrentStep] = useState<number>(1);
@@ -267,12 +368,13 @@ const MultiStepFormPage: FC = () => {
         deviceType: '',
         brandName: '',
         deviceName: '',
-        issueDetails: ''
+        issueDetails: '',
+        pdfId: -1, // <-- Mocked for testing
     });
     const [errors, setErrors] = useState<Errors>({});
     const [loadingOptions, setLoadingOptions] = useState<boolean>(false);
-    const totalSteps = 3;
-    const stepLabels: string[] = ["Device Info", "PDF Upload", "Review"];
+    const totalSteps = 4;
+    const stepLabels: string[] = ["Device Info", "PDF Upload", "PDF Extraction", "Dummy Step"];
 
     const validateStep1 = (): boolean => {
         const newErrors: Errors = {};
@@ -358,6 +460,13 @@ const MultiStepFormPage: FC = () => {
                             return;
                         }
                         // Optionally, store pdf_id if needed: json.data.pdf_id
+                        // Set pdfId in formData after successful upload
+                        if (json.data.pdf_id) {
+                            setFormData(prev => ({
+                                ...prev,
+                                pdfId: json.data.pdf_id,
+                            }));
+                        }
                     } else {
                         alert("Failed to get signed URL for PDF upload.");
                         setLoadingOptions(false);
@@ -380,13 +489,6 @@ const MultiStepFormPage: FC = () => {
             // Note: alert() is used here as per the original code.
             // For better UX in production, consider using a modal or a notification component.
             alert("Form submitted successfully! (Check console for data)");
-        }
-    };
-
-    const handlePrev = (): void => {
-        if (currentStep > 1) {
-            setCurrentStep(prev => prev - 1);
-            setErrors({});
         }
     };
 
@@ -427,14 +529,14 @@ const MultiStepFormPage: FC = () => {
                         <div>
                             {currentStep === 1 && <Step1Form data={formData} handleChange={handleChange} errors={errors} />}
                             {currentStep === 2 && <Step2UploadAndIssue data={formData} handleFileChange={handleFileChange} errors={errors} />}
-                            {currentStep === 3 && <Step3Placeholder data={formData} />}
+                            {currentStep === 3 && <Step3Extraction formData={formData} setFormData={setFormData} />}
                         </div>}
                 </div>
 
-                <div className="flex justify-between pt-6 border-t border-gray-200">
+                <div className="flex justify-end pt-6 border-t border-gray-200">
                     {currentStep === totalSteps ? <div></div> :
                         <Button onClick={handleNext}>
-                            Next
+                            Process and Continue
                             {currentStep < totalSteps && <ChevronRight className="h-4 w-4 ml-2" />}
                         </Button>
                     }

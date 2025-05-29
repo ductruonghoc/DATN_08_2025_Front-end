@@ -100,3 +100,25 @@ export const Spinner = () => (
         <span className="ml-3 text-indigo-600">Loading...</span>
     </div>
 );
+
+
+interface PercentageBarProps {
+  progress: number;
+  className?: string; // Optional className for additional styling
+}
+
+export const PercentageBar= ({ progress, className = '' } : PercentageBarProps) => {
+  const clampedProgress = Math.min(Math.max(progress, 0), 100); // Ensure progress is between 0 and 100
+
+  return (
+    <div className={`w-full max-w-xs ${className}`}>
+      <div className="bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+        <div
+          className="bg-blue-600 h-2.5 rounded-full transition-all duration-150 ease-linear" // Use ease-linear for smoother updates if progress updates frequently
+          style={{ width: `${clampedProgress}%` }}
+        ></div>
+      </div>
+      <p className="text-center text-xs text-gray-700 dark:text-gray-300 mt-1">{clampedProgress}%</p>
+    </div>
+  );
+};
