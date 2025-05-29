@@ -438,7 +438,7 @@ const MultiStepFormPage: FC = () => {
 
         } else if (currentStep === 2) {
             isValid = validateStep2();
-            console.log("Step 2 validation:", isValid, formData);
+            
             if (isValid && formData.pdfFile && formData.deviceId) {
                 setLoadingOptions(true);
                 try {
@@ -485,7 +485,7 @@ const MultiStepFormPage: FC = () => {
             setCurrentStep(prev => prev + 1);
             setErrors({});
         } else if (isValid && currentStep === totalSteps) {
-            console.log("Form Submitted:", formData);
+            
             // Note: alert() is used here as per the original code.
             // For better UX in production, consider using a modal or a notification component.
             alert("Form submitted successfully! (Check console for data)");
