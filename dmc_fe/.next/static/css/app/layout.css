@@ -1532,6 +1532,9 @@ video {
 .border-transparent {
   border-color: transparent;
 }
+.border-white\/20 {
+  border-color: rgb(255 255 255 / 0.2);
+}
 .border-l-transparent {
   border-left-color: transparent;
 }
@@ -2076,6 +2079,9 @@ video {
 }
 .opacity-70 {
   opacity: 0.7;
+}
+.opacity-75 {
+  opacity: 0.75;
 }
 .opacity-90 {
   opacity: 0.9;

@@ -28,6 +28,8 @@ interface Conversation {
   timestamp: Date
 }
 
+type UserRole = "unlogged" | "logged" | "admin" | "super_admin"
+
 export default function HomeLayout({
   children,
 }: {
@@ -52,6 +54,11 @@ export default function HomeLayout({
       timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
     },
   ])
+
+  // User role state - you can change this to test different roles
+  // In a real app, this would come from authentication context or props
+  const [userRole, setUserRole] = useState<UserRole>("admin") // Change this to test different roles
+
   const pathname = usePathname()
   const router = useRouter()
   const userMenuRef = useRef<HTMLDivElement>(null)
@@ -130,6 +137,40 @@ export default function HomeLayout({
     setShowUserMenu(!showUserMenu)
   }
 
+  // Function to check if user has access to a specific feature
+  const hasAccess = (feature: string): boolean => {
+    switch (userRole) {
+      case "unlogged":
+        return feature === "new_conversation"
+      case "logged":
+        return ["new_conversation", "conversations"].includes(feature)
+      case "admin":
+        return ["new_conversation", "conversations", "upload_pdf", "device_management", "track_progress"].includes(
+          feature,
+        )
+      case "super_admin":
+        return ["new_conversation", "conversations", "admin_management"].includes(feature)
+      default:
+        return false
+    }
+  }
+
+  // Get user display name based on role
+  const getUserDisplayName = (): string => {
+    switch (userRole) {
+      case "unlogged":
+        return "Guest"
+      case "logged":
+        return "User"
+      case "admin":
+        return "Admin"
+      case "super_admin":
+        return "Super Admin"
+      default:
+        return "Guest"
+    }
+  }
+
   return (
     <div className="flex h-full overflow-hidden bg-white">
       {/* Sidebar - collapses to icon-only mode */}
@@ -171,80 +212,98 @@ export default function HomeLayout({
             <Menu className="h-5 w-5 text-[#2d336b]" />
           </button>
         </div>
+
         <div className="flex-1 overflow-auto py-4">
-          <div className={cn("px-4", sidebarOpen ? "" : "flex justify-center")}>
-            <button
-              onClick={handleNewConversation}
-              className={cn(
-                "flex items-center gap-2 rounded-[10px] bg-white shadow-sm cursor-pointer hover:bg-gray-50 transition-colors",
-                sidebarOpen ? "w-full px-4 py-2 text-sm text-[#2d336b]" : "h-10 w-10 justify-center",
-                pathname.includes("/home/conservation") ? "ring-2 ring-[#4045ef]/20" : "",
-              )}
-            >
-              <Plus className="h-4 w-4" />
-              {sidebarOpen && <span>New conversation</span>}
-            </button>
-          </div>
+          {/* New Conversation Button - Available to all users */}
+          {hasAccess("new_conversation") && (
+            <div className={cn("px-4", sidebarOpen ? "" : "flex justify-center")}>
+              <button
+                onClick={handleNewConversation}
+                className={cn(
+                  "flex items-center gap-2 rounded-[10px] bg-white shadow-sm cursor-pointer hover:bg-gray-50 transition-colors",
+                  sidebarOpen ? "w-full px-4 py-2 text-sm text-[#2d336b]" : "h-10 w-10 justify-center",
+                  pathname.includes("/home/conservation") ? "ring-2 ring-[#4045ef]/20" : "",
+                )}
+              >
+                <Plus className="h-4 w-4" />
+                {sidebarOpen && <span>New conversation</span>}
+              </button>
+            </div>
+          )}
+
+          {/* Navigation Menu */}
           <nav className={cn("mt-6", sidebarOpen ? "px-2" : "flex flex-col items-center px-0")}>
-            <Link
-              href="/home/import"
-              className={cn(
-                "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
-                sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
-                pathname.includes("/home/import")
-                  ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
-                  : "",
-              )}
-            >
-              <Upload className="h-5 w-5 text-[#2d336b]" />
-              {sidebarOpen && <span>Upload PDF</span>}
-            </Link>
+            {/* Upload PDF - Admin only */}
+            {hasAccess("upload_pdf") && (
+              <Link
+                href="/home/import"
+                className={cn(
+                  "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
+                  sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
+                  pathname.includes("/home/import")
+                    ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
+                    : "",
+                )}
+              >
+                <Upload className="h-5 w-5 text-[#2d336b]" />
+                {sidebarOpen && <span>Upload PDF</span>}
+              </Link>
+            )}
 
-            <Link
-              href="/home/device-management"
-              className={cn(
-                "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
-                sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
-                pathname.includes("/home/device-management")
-                  ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
-                  : "",
-              )}
-            >
-              <Settings className="h-5 w-5 text-[#2d336b]" />
-              {sidebarOpen && <span>Device Management</span>}
-            </Link>
+            {/* Device Management - Admin only */}
+            {hasAccess("device_management") && (
+              <Link
+                href="/home/device-management"
+                className={cn(
+                  "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
+                  sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
+                  pathname.includes("/home/device-management")
+                    ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
+                    : "",
+                )}
+              >
+                <Settings className="h-5 w-5 text-[#2d336b]" />
+                {sidebarOpen && <span>Device Management</span>}
+              </Link>
+            )}
 
-            <Link
-              href="/home/track-progress/tracking"
-              className={cn(
-                "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
-                sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
-                pathname.includes("/home/track-progress")
-                  ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
-                  : "",
-              )}
-            >
-              <FileText className="h-5 w-5 text-[#2d336b]" />
-              {sidebarOpen && <span>Track Progress</span>}
-            </Link>
+            {/* Track Progress - Admin only */}
+            {hasAccess("track_progress") && (
+              <Link
+                href="/home/track-progress/tracking"
+                className={cn(
+                  "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
+                  sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
+                  pathname.includes("/home/track-progress")
+                    ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
+                    : "",
+                )}
+              >
+                <FileText className="h-5 w-5 text-[#2d336b]" />
+                {sidebarOpen && <span>Track Progress</span>}
+              </Link>
+            )}
 
-            <Link
-              href="/home/admin-management"
-              className={cn(
-                "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
-                sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
-                pathname.includes("/home/admin-management")
-                  ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
-                  : "",
-              )}
-            >
-              <Users className="h-5 w-5 text-[#2d336b]" />
-              {sidebarOpen && <span>Admin Management</span>}
-            </Link>
+            {/* Admin Management - Super Admin only */}
+            {hasAccess("admin_management") && (
+              <Link
+                href="/home/admin-management"
+                className={cn(
+                  "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
+                  sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
+                  pathname.includes("/home/admin-management")
+                    ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
+                    : "",
+                )}
+              >
+                <Users className="h-5 w-5 text-[#2d336b]" />
+                {sidebarOpen && <span>Admin Management</span>}
+              </Link>
+            )}
           </nav>
 
-          {/* Conversation history */}
-          {sidebarOpen && (
+          {/* Conversation history - Available to logged users, admin, and super admin */}
+          {hasAccess("conversations") && sidebarOpen && (
             <div className="mt-8 px-2">
               <h3 className="px-3 text-xs font-semibold uppercase text-[#2d336b] mb-2">Your conversations</h3>
               <div className="space-y-1">
@@ -298,6 +357,27 @@ export default function HomeLayout({
             </div>
           )}
         </div>
+
+        {/* User Role Switcher (for testing - remove in production) */}
+        {sidebarOpen && (
+          <div className="px-4 py-2 border-t border-white/20">
+            <div className="text-xs text-[#2d336b] mb-2">Current Role: {getUserDisplayName()}</div>
+            <div className="text-xs text-[#2d336b] mb-1 opacity-75">Switching roles redirects to conservation</div>
+            <select
+              value={userRole}
+              onChange={(e) => {
+                setUserRole(e.target.value as UserRole)
+                router.push("/home/conservation")
+              }}
+              className="w-full text-xs p-1 rounded border border-gray-300"
+            >
+              <option value="unlogged">Unlogged User</option>
+              <option value="logged">Logged User</option>
+              <option value="admin">Admin</option>
+              <option value="super_admin">Super Admin</option>
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Main content area with top bar */}
@@ -309,52 +389,64 @@ export default function HomeLayout({
       >
         {/* Top horizontal bar */}
         <div className="h-16 border-b bg-white border-gray-700 flex justify-end items-center px-4 sticky top-0 z-40">
-          {/* User menu content */}
-          <div className="flex items-center gap-4 relative" ref={userMenuRef}>
-            <button onClick={toggleUserMenu} className="flex items-center gap-2 text-[#2d336b] hover:underline">
-              <span>Username</span>
-              <ChevronDown className="h-4 w-4" />
-            </button>
-
-            {showUserMenu && (
-              <div className="absolute right-0 top-full mt-1 w-48 rounded-[10px] shadow-lg bg-white border border-gray-200 z-50">
-                <div className="py-1">
-                  <button className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
-                    <UserIcon className="h-4 w-4" />
-                    <span>Profile</span>
-                  </button>
-                  <button className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
-                    <Settings className="h-4 w-4" />
-                    <span>Account Settings</span>
-                  </button>
-                  <div className="border-t border-gray-200 my-1"></div>
-                  <button className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left">
-                    <LogOut className="h-4 w-4" />
-                    <span>Sign out</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-5 w-5 text-gray-700"
-              >
-                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
+          {userRole === "unlogged" ? (
+            /* Unlogged user - show login and register */
+            <div className="flex items-center gap-4">
+              <Link href="/log-in" className="text-[#4045ef] hover:text-[#2d336b] transition-colors">
+                Log in
+              </Link>
+              <Link href="/sign-up" className="text-[#4045ef] hover:text-[#2d336b] transition-colors">
+                Register
+              </Link>
             </div>
-          </div>
+          ) : (
+            /* Logged users - show user menu */
+            <div className="flex items-center gap-4 relative" ref={userMenuRef}>
+              <button onClick={toggleUserMenu} className="flex items-center gap-2 text-[#2d336b] hover:underline">
+                <span>{getUserDisplayName()}</span>
+                <ChevronDown className="h-4 w-4" />
+              </button>
+
+              {showUserMenu && (
+                <div className="absolute right-0 top-full mt-1 w-48 rounded-[10px] shadow-lg bg-white border border-gray-200 z-50">
+                  <div className="py-1">
+                    <button className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
+                      <UserIcon className="h-4 w-4" />
+                      <span>Profile</span>
+                    </button>
+                    <button className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
+                      <Settings className="h-4 w-4" />
+                      <span>Account Settings</span>
+                    </button>
+                    <div className="border-t border-gray-200 my-1"></div>
+                    <button className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left">
+                      <LogOut className="h-4 w-4" />
+                      <span>Sign out</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-5 w-5 text-gray-700"
+                >
+                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Main content - Change from overflow-hidden to overflow-auto */}
+        {/* Main content */}
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
 

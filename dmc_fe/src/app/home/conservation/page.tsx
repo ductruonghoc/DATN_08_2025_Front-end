@@ -57,19 +57,19 @@ export default function ConservationPage() {
           </div>
 
           <div className="absolute left-14 top-1/2 -translate-y-1/2 flex items-center gap-4">
-            <button className="flex items-center gap-1 text-gray-400 hover:text-gray-600">
+            {/* <button className="flex items-center gap-1 text-gray-400 hover:text-gray-600">
               <Globe className="h-4 w-4" />
               <span className="text-sm">Search</span>
-            </button>
+            </button> */}
 
-            <button className="flex items-center gap-1 text-gray-400 hover:text-gray-600">
+            {/* <button className="flex items-center gap-1 text-gray-400 hover:text-gray-600">
               <Lightbulb className="h-4 w-4" />
               <span className="text-sm">Reason</span>
-            </button>
+            </button> */}
 
-            <button className="text-gray-400 hover:text-gray-600">
+            {/* <button className="text-gray-400 hover:text-gray-600">
               <MoreHorizontal className="h-4 w-4" />
-            </button>
+            </button> */}
           </div>
 
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
