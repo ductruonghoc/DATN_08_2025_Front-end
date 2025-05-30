@@ -1,6 +1,5 @@
 {
-  "/sign-up/page": "app/sign-up/page.js",
-  "/forgot-password/verify/page": "app/forgot-password/verify/page.js",
-  "/forgot-password/page": "app/forgot-password/page.js",
-  "/forgot-password/reset-password/page": "app/forgot-password/reset-password/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/home/page": "app/home/page.js",
+  "/home/import/pdfInformation/page": "app/home/import/pdfInformation/page.js"
 }

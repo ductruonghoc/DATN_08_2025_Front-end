@@ -6,35 +6,25 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
-    "/forgot-password/reset-password/page": [
+    "/home/import/pdfInformation/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/forgot-password/reset-password/page.js"
+      "static/chunks/app/home/import/pdfInformation/page.js"
     ],
-    "/forgot-password/layout": [
+    "/home/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/forgot-password/layout.js"
+      "static/chunks/app/home/layout.js"
     ],
-    "/forgot-password/verify/page": [
+    "/home/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/forgot-password/verify/page.js"
+      "static/chunks/app/home/page.js"
     ],
-    "/sign-up/verify/page": [
+    "/_not-found/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/sign-up/verify/page.js"
-    ],
-    "/sign-up/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/sign-up/page.js"
-    ],
-    "/forgot-password/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/forgot-password/page.js"
+      "static/chunks/app/_not-found/page.js"
     ]
   }
 }
