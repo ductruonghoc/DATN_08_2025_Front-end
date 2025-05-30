@@ -1,29 +1,25 @@
 {
   "pages": {
-    "/layout": [
+    "/home/import/pdfInformation/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/layout.css",
-      "static/chunks/app/layout.js"
-    ],
-    "/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
+      "static/chunks/app/home/import/pdfInformation/page.js"
     ],
     "/home/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/home/layout.js"
     ],
-    "/home/page": [
+    "/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/home/page.js"
+      "static/css/app/layout.css",
+      "static/chunks/app/layout.js"
     ],
-    "/home/conservation/loading": [
+    "/_not-found/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
+<<<<<<< HEAD
       "static/chunks/app/home/conservation/loading.js"
     ],
     "/home/conservation/chat/loading": [
@@ -70,6 +66,9 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/home/import/page.js"
+=======
+      "static/chunks/app/_not-found/page.js"
+>>>>>>> 8c657f74b0d484a436dd8278b682f3f9a965d8d2
     ]
   }
 }
