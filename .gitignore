@@ -1,0 +1,4 @@
+dmc_fe/.next/app-build-manifest.json
+dmc_fe/.next/build-manifest.json
+*.gz
+*.old

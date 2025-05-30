@@ -1,7 +1,4 @@
 {
-  "/log-in/page": "app/log-in/page.js",
-  "/home/conservation/page": "app/home/conservation/page.js",
-  "/home/page": "app/home/page.js",
-  "/home/conservation/chat/[id]/page": "app/home/conservation/chat/[id]/page.js",
-  "/home/admin-management/page": "app/home/admin-management/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/home/import/pdfInformation/page": "app/home/import/pdfInformation/page.js"
 }
