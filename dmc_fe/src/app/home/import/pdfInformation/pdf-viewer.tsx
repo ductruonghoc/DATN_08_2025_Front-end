@@ -45,4 +45,3 @@ export default function PDFViewer({ pdfUrl, currentPage, onLoadSuccess }: PDFVie
     </div>
   )
 }
-

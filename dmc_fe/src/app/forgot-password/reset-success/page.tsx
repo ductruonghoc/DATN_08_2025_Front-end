@@ -7,7 +7,11 @@ export default function PasswordResetSuccessPage() {
     <div className="min-h-screen bg-white">
       <header className="flex items-center justify-between p-4 md:p-6">
         <Link href="/" className="flex items-center gap-2">
+<<<<<<< HEAD
           <div className="text-[#2e3139] text-xl font-semibold">DMC</div>
+=======
+          <div className="text-[#2e3139] text-xl font-semibold">QueryPDF</div>
+>>>>>>> VHoa
         </Link>
         <div className="flex items-center gap-4">
           <Link href="/login" className="text-[#4045ef] hover:text-[#2d336b] transition-colors">
@@ -33,14 +37,18 @@ export default function PasswordResetSuccessPage() {
             <p className="text-[#425583] mb-8">Sign in to your account with your new password</p>
           </div>
 
+<<<<<<< HEAD
           <Link href="/log-in">
             <Button className="w-full bg-[#2D336B] hover:bg-[#2d336b]/90 text-white rounded-full py-6">
               Log in
             </Button>
+=======
+          <Link href="/sign-in">
+            <Button className="w-full bg-[#2D336B] hover:bg-[#2d336b]/90 text-white rounded-full py-6">Sign in</Button>
+>>>>>>> VHoa
           </Link>
         </div>
       </main>
     </div>
   )
 }
-

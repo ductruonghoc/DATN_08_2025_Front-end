@@ -6,4 +6,3 @@ export default function ForgotPasswordLayout({
 }) {
   return <div className="min-h-screen bg-white">{children}</div>
 }
-

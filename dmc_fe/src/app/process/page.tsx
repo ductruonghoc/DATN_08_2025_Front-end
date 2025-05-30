@@ -27,6 +27,7 @@ export default function DocumentProcessor() {
 
   return (
     <div className="flex h-screen bg-gray-100">
+<<<<<<<< HEAD:dmc_fe/src/app/process/page.tsx
       <Navigator setSidebarOpen={setSidebarOpen}
         sidebarOpen={sidebarOpen}
       />
@@ -37,6 +38,39 @@ export default function DocumentProcessor() {
         overflow-hidden
       ${sidebarOpen ? "pl-[260px]" : "pl-[68px]"} grow`}>
         {/* Header */}
+========
+      {/* Sidebar
+      <div className="w-64 bg-rose-50 border-r border-gray-200 flex flex-col">
+        <div className="p-4 flex items-center gap-2">
+          <Menu className="h-5 w-5" />
+          <div className="flex items-center gap-2">
+            <Image src="/logo.svg?height=24&width=24" alt="DMC Logo" width={24} height={24} className="text-blue-700" />
+            <span className="text-xl font-bold text-blue-900">DMC</span>
+          </div>
+        </div>
+
+        <div className="p-4">
+          <button className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 w-full rounded-md bg-white p-2 shadow-sm">
+            <span className="text-gray-400">+</span> New conversation
+          </button>
+        </div>
+
+        <nav className="flex-1 p-4 space-y-2">
+          <button className="flex items-center gap-3 text-sm text-gray-700 hover:text-gray-900 w-full p-2 hover:bg-gray-100 rounded-md">
+            <Upload className="h-5 w-5" />
+            Upload PDF
+          </button>
+          <button className="flex items-center gap-3 text-sm text-gray-700 hover:text-gray-900 w-full p-2 hover:bg-gray-100 rounded-md">
+            <Shield className="h-5 w-5" />
+            Device Management
+          </button>
+        </nav>
+      </div> */}
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Header
+>>>>>>>> VHoa:dmc_fe/src/app/home/Text-process/page.tsx
         <header className="bg-white p-4 flex justify-between items-center border-b">
           <div></div>
           <div className="flex items-center gap-4">
@@ -45,6 +79,7 @@ export default function DocumentProcessor() {
               <span className="text-gray-600">👤</span>
             </div>
           </div>
+
         </header>
         <div className="flex flex-col h-full">
       {/* Progress Steps */}
@@ -53,6 +88,7 @@ export default function DocumentProcessor() {
           <div className="flex flex-col items-center flex-1">
             <div className="w-8 h-8 bg-blue-600 rounded-full bg-[#4045ef] text-white flex items-center justify-center mb-1">
               <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
+
             </div>
             <span className="text-xs text-[#2d336b]">Device Info</span>
           </div>

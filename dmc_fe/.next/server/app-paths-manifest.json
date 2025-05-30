@@ -1,1 +1,8 @@
+<<<<<<< HEAD
 {}
+=======
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/home/import/pdfInformation/page": "app/home/import/pdfInformation/page.js"
+}
+>>>>>>> VHoa

@@ -101,7 +101,11 @@ export default function SetNewPasswordPage() {
     <div className="min-h-screen bg-white">
       <header className="flex items-center justify-between p-4 md:p-6">
         <Link href="/" className="flex items-center gap-2">
+<<<<<<< HEAD
           <div className="text-[#2e3139] text-xl font-semibold">DMC</div>
+=======
+          <div className="text-[#2e3139] text-xl font-semibold">QueryPDF</div>
+>>>>>>> VHoa
         </Link>
         <div className="flex items-center gap-4">
           <Link href="/login" className="text-[#4045ef] hover:text-[#2d336b] transition-colors">
@@ -202,8 +206,8 @@ export default function SetNewPasswordPage() {
 
           <div className="text-center text-[#425583]">
             Remember old password?{" "}
-            <Link href="/log-in" className="text-[#4045ef] hover:text-[#2d336b]">
-              log in
+            <Link href="/sign-in" className="text-[#4045ef] hover:text-[#2d336b]">
+              Sign in
             </Link>
           </div>
         </div>
@@ -211,4 +215,3 @@ export default function SetNewPasswordPage() {
     </div>
   )
 }
-
