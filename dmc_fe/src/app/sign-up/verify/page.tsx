@@ -13,6 +13,7 @@ export default function OTPVerificationPage() {
   const [timeLeft, setTimeLeft] = useState(59)
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
   const router = useRouter() 
+  const [message, setMessage] = useState<string | null>(null)
 
   useEffect(() => {
     const timer =
@@ -45,24 +46,79 @@ export default function OTPVerificationPage() {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Verifying OTP:", otp.join(""))
+    const enteredOtp = otp.join("")
+    const email = localStorage.getItem("pendingEmail")
 
-    router.push("/sign-up/success")
+    if (!email) {
+      alert("No email found. Please register again.")
+      router.push("/sign-up")
+      return
+    }
+
+    try {
+      const res = await fetch("https://mdc-backend-b3f827a7852a.herokuapp.com/user/verify_registration", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, otp_code: enteredOtp }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        alert(data.message || "OTP verification failed.")
+        return
+      }
+
+      localStorage.removeItem("pendingEmail")
+      router.push("/sign-up/success")
+    } catch (err) {
+      console.error(err)
+      alert("Something went wrong during verification.")
+    }
   }
 
-  const handleResend = () => {
-    setTimeLeft(59)
+  const handleResend = async () => {
+    const email = localStorage.getItem("pendingEmail")
+
+    if (!email) {
+      alert("No email found. Please register again.")
+      router.push("/sign-up")
+      return
+    }
+
+    try {
+      const res = await fetch("https://mdc-backend-b3f827a7852a.herokuapp.com/user/resend_otp_registration", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setMessage(data.message || "Failed to resend OTP.")
+        return
+      }
+
+      setMessage("OTP has been sent.")
+      setTimeLeft(59)
+    } catch (err) {
+      console.error(err)
+      setMessage("Something went wrong. Please try again.")
+    }
   }
-  
+
   return (
     <div className="min-h-screen bg-white">
       <header className="flex items-center justify-between p-4 md:p-6">
         <Link href="/" className="flex items-center gap-2">
           <div className="text-[#2e3139] text-xl font-semibold">DMC</div>
         </Link>
-        <Link href="/sign-in" className="text-[#4045ef] hover:text-[#2d336b] transition-colors">
+        <Link href="/log-in" className="text-[#4045ef] hover:text-[#2d336b] transition-colors">
           Log in
         </Link>
       </header>
@@ -74,7 +130,8 @@ export default function OTPVerificationPage() {
               <Mail className="w-6 h-6 text-[#4045ef]" />
             </div>
             <h1 className="text-2xl font-semibold text-[#2e3139] mb-2">OTP Verification</h1>
-            <p className="text-[#425583] mb-8">Check your email to see the verification code</p>
+            <p className="text-[#425583] mb-4">Check your email to see the verification code</p>
+            {message && <p className="text-sm text-green-600">{message}</p>}
           </div>
     
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -110,8 +167,9 @@ export default function OTPVerificationPage() {
               disabled={timeLeft > 0}
               className="text-[#4045ef] hover:text-[#2d336b] disabled:text-gray-400"
             >
-              Resend code in {String(Math.floor(timeLeft / 60)).padStart(2, "0")}:
-              {String(timeLeft % 60).padStart(2, "0")}
+              {timeLeft > 0
+                ? `Resend code in ${String(Math.floor(timeLeft / 60)).padStart(2, "0")}:${String(timeLeft % 60).padStart(2, "0")}`
+                : "Resend Code"}
             </button>
           </div>
         </div>

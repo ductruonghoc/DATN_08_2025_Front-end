@@ -710,9 +710,6 @@ video {
 .mb-1 {
   margin-bottom: 0.25rem;
 }
-.mb-12 {
-  margin-bottom: 3rem;
-}
 .mb-2 {
   margin-bottom: 0.5rem;
 }
@@ -733,9 +730,6 @@ video {
 }
 .ml-2 {
   margin-left: 0.5rem;
-}
-.ml-3 {
-  margin-left: 0.75rem;
 }
 .ml-4 {
   margin-left: 1rem;
@@ -816,9 +810,6 @@ video {
 .h-0\.5 {
   height: 0.125rem;
 }
-.h-1 {
-  height: 0.25rem;
-}
 .h-1\.5 {
   height: 0.375rem;
 }
@@ -873,8 +864,11 @@ video {
 .h-\[400px\] {
   height: 400px;
 }
-.h-\[500px\] {
-  height: 500px;
+.h-\[calc\(100\%-72px-72px-88px\)\] {
+  height: calc(100% - 72px - 72px - 88px);
+}
+.h-\[calc\(100vh-72px-72px-88px-40px-16px-8px-16px\)\] {
+  height: calc(100vh - 72px - 72px - 88px - 40px - 16px - 8px - 16px);
 }
 .h-\[var\(--radix-navigation-menu-viewport-height\)\] {
   height: var(--radix-navigation-menu-viewport-height);
@@ -927,9 +921,6 @@ video {
 .w-1\.5 {
   width: 0.375rem;
 }
-.w-1\/2 {
-  width: 50%;
-}
 .w-10 {
   width: 2.5rem;
 }
@@ -938,9 +929,6 @@ video {
 }
 .w-12 {
   width: 3rem;
-}
-.w-16 {
-  width: 4rem;
 }
 .w-2 {
   width: 0.5rem;
@@ -1002,6 +990,12 @@ video {
 .w-\[1px\] {
   width: 1px;
 }
+.w-\[256px\] {
+  width: 256px;
+}
+.w-\[64px\] {
+  width: 64px;
+}
 .w-auto {
   width: auto;
 }
@@ -1041,33 +1035,6 @@ video {
 .max-w-2xl {
   max-width: 42rem;
 }
-<<<<<<< Updated upstream
-=======
-.max-w-3xl {
-  max-width: 48rem;
-}
-.max-w-4xl {
-  max-width: 56rem;
-}
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 .max-w-\[--skeleton-width\] {
   max-width: var(--skeleton-width);
 }
@@ -1085,9 +1052,6 @@ video {
 }
 .shrink-0 {
   flex-shrink: 0;
-}
-.flex-grow {
-  flex-grow: 1;
 }
 .grow {
   flex-grow: 1;
@@ -1172,39 +1136,12 @@ video {
 .list-none {
   list-style-type: none;
 }
-.grid-cols-1 {
-  grid-template-columns: repeat(1, minmax(0, 1fr));
-}
 .grid-cols-2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .grid-cols-3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
-<<<<<<< Updated upstream
-=======
-.grid-cols-4 {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 .flex-row {
   flex-direction: row;
 }
@@ -1400,10 +1337,6 @@ video {
 .border-destructive\/50 {
   border-color: hsl(var(--destructive) / 0.5);
 }
-.border-gray-100 {
-  --tw-border-opacity: 1;
-  border-color: rgb(243 244 246 / var(--tw-border-opacity, 1));
-}
 .border-gray-200 {
   --tw-border-opacity: 1;
   border-color: rgb(229 231 235 / var(--tw-border-opacity, 1));
@@ -1528,10 +1461,6 @@ video {
   --tw-bg-opacity: 1;
   background-color: rgb(239 68 68 / var(--tw-bg-opacity, 1));
 }
-.bg-rose-50 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(255 241 242 / var(--tw-bg-opacity, 1));
-}
 .bg-secondary {
   background-color: hsl(var(--secondary));
 }
@@ -1541,6 +1470,18 @@ video {
 .bg-white {
   --tw-bg-opacity: 1;
   background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
+}
+.bg-green-700 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(21 128 61 / var(--tw-bg-opacity, 1));
+}
+.bg-orange-400 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(251 146 60 / var(--tw-bg-opacity, 1));
+}
+.bg-yellow-400 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(250 204 21 / var(--tw-bg-opacity, 1));
 }
 .fill-current {
   fill: currentColor;
@@ -1662,6 +1603,12 @@ video {
 }
 .pl-9 {
   padding-left: 2.25rem;
+}
+.pl-\[260px\] {
+  padding-left: 260px;
+}
+.pl-\[68px\] {
+  padding-left: 68px;
 }
 .pr-10 {
   padding-right: 2.5rem;
@@ -1794,14 +1741,6 @@ video {
 .text-black {
   --tw-text-opacity: 1;
   color: rgb(0 0 0 / var(--tw-text-opacity, 1));
-}
-.text-blue-700 {
-  --tw-text-opacity: 1;
-  color: rgb(29 78 216 / var(--tw-text-opacity, 1));
-}
-.text-blue-900 {
-  --tw-text-opacity: 1;
-  color: rgb(30 58 138 / var(--tw-text-opacity, 1));
 }
 .text-card-foreground {
   color: hsl(var(--card-foreground));
@@ -2008,70 +1947,11 @@ video {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
-.transition-shadow {
-  transition-property: box-shadow;
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
-.transition-transform {
-  transition-property: transform;
->>>>>>> Stashed changes
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
-<<<<<<< Updated upstream
-=======
 .transition-transform {
   transition-property: transform;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
->>>>>>> Stashed changes
-=======
-=======
-=======
-=======
-=======
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
-.transition-transform {
-  transition-property: transform;
->>>>>>> Stashed changes
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
-.transition-transform {
-  transition-property: transform;
->>>>>>> Stashed changes
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
-.transition-transform {
-  transition-property: transform;
->>>>>>> Stashed changes
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
-.transition-transform {
-  transition-property: transform;
->>>>>>> Stashed changes
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
-.transition-transform {
-  transition-property: transform;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
->>>>>>> Stashed changes
 .duration-1000 {
   transition-duration: 1000ms;
 }
@@ -2283,11 +2163,6 @@ body {
   background-color: hsl(var(--destructive) / 0.9);
 }
 
-.hover\:bg-gray-100:hover {
-  --tw-bg-opacity: 1;
-  background-color: rgb(243 244 246 / var(--tw-bg-opacity, 1));
-}
-
 .hover\:bg-gray-50:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(249 250 251 / var(--tw-bg-opacity, 1));
@@ -2345,11 +2220,6 @@ body {
 
 .hover\:text-foreground:hover {
   color: hsl(var(--foreground));
-}
-
-.hover\:text-gray-900:hover {
-  --tw-text-opacity: 1;
-  color: rgb(17 24 39 / var(--tw-text-opacity, 1));
 }
 
 .hover\:text-muted-foreground:hover {
