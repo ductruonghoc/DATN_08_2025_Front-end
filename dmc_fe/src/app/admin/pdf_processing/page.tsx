@@ -3,11 +3,15 @@
 // You would typically use shadcn/ui components, but we'll style HTML elements to mimic them.
 // e.g., npx shadcn-ui@latest add button select input label
 "use client";
-
-import React, { useState, ChangeEvent, FC, ReactNode, useEffect, useRef } from 'react';
+// At the top of your file
+import dynamic from "next/dynamic";
+import React, { useState, ChangeEvent, FC, ReactNode, useEffect, useRef, useCallback } from 'react';
 import { BASE_URL } from '@/src/api/base_url';
-import { Check, ChevronRight, UploadCloud } from 'lucide-react';
+import { Check, ChevronRight, UploadCloud} from 'lucide-react';
 import { Button, Label, Select, Input, Spinner, PercentageBar } from '@/src/components/utils';
+
+// Replace direct import/use with:
+const Step4PDFTextEditor = dynamic(() => import('@/src/components/client_only/pdf_viewer_editor'), { ssr: false });
 
 // --- Type Definitions ---
 
@@ -58,7 +62,7 @@ const ProgressBar: FC<ProgressBarProps> = ({ currentStep, totalSteps, stepLabels
     if (i < 0) i = 0; // Ensure i is not negative
     if (currentStep === totalSteps) i = i - 1; // Ensure i does not exceed array length
     const sublist = arr.slice(i, i + 3)
-    
+
     // Iterate through the array. The loop stops when there are not enough
     // elements left to form a sublist of the desired length.
     // For example, if arr.length is 5 and sublistLength is 3,
@@ -362,6 +366,9 @@ const Step3Extraction: React.FC<Step3ExtractionProps> = ({ formData, setFormData
     );
 }
 
+// Define props interface for type safety
+
+
 const MultiStepFormPage: FC = () => {
     const [currentStep, setCurrentStep] = useState<number>(1);
     const [formData, setFormData] = useState<FormData>({
@@ -374,7 +381,7 @@ const MultiStepFormPage: FC = () => {
     const [errors, setErrors] = useState<Errors>({});
     const [loadingOptions, setLoadingOptions] = useState<boolean>(false);
     const totalSteps = 4;
-    const stepLabels: string[] = ["Device Info", "PDF Upload", "PDF Extraction", "Dummy Step"];
+    const stepLabels: string[] = ["Device Info", "PDF Upload", "PDF Extraction", "PDF Editor"];
 
     const validateStep1 = (): boolean => {
         const newErrors: Errors = {};
@@ -438,7 +445,7 @@ const MultiStepFormPage: FC = () => {
 
         } else if (currentStep === 2) {
             isValid = validateStep2();
-            
+
             if (isValid && formData.pdfFile && formData.deviceId) {
                 setLoadingOptions(true);
                 try {
@@ -485,7 +492,7 @@ const MultiStepFormPage: FC = () => {
             setCurrentStep(prev => prev + 1);
             setErrors({});
         } else if (isValid && currentStep === totalSteps) {
-            
+
             // Note: alert() is used here as per the original code.
             // For better UX in production, consider using a modal or a notification component.
             alert("Form submitted successfully! (Check console for data)");
@@ -518,8 +525,8 @@ const MultiStepFormPage: FC = () => {
 
 
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-2xl w-full space-y-8 bg-white p-8 sm:p-10 rounded-xl shadow-xl">
+        <div className="min-h-screen w-screen bg-gray-100 flex flex-col items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
+           <div className="w-full max-w-5xl space-y-8 bg-white p-8 sm:p-10 rounded-xl shadow-xl">
                 <div className="mb-8">
                     <ProgressBar currentStep={currentStep} totalSteps={totalSteps} stepLabels={stepLabels} />
                 </div>
@@ -530,6 +537,7 @@ const MultiStepFormPage: FC = () => {
                             {currentStep === 1 && <Step1Form data={formData} handleChange={handleChange} errors={errors} />}
                             {currentStep === 2 && <Step2UploadAndIssue data={formData} handleFileChange={handleFileChange} errors={errors} />}
                             {currentStep === 3 && <Step3Extraction formData={formData} setFormData={setFormData} />}
+                            {currentStep === 4 && <Step4PDFTextEditor pdfUrl={`/pdf/dummy.pdf`} />}
                         </div>}
                 </div>
 
