@@ -5,6 +5,7 @@ import { Spinner } from '../utils';
 import { Document, Page, pdfjs } from 'react-pdf';
 import '../../../node_modules/react-pdf/dist/esm/Page/AnnotationLayer.css';
 import '../../../node_modules/react-pdf/dist/esm/Page/TextLayer.css';
+import ImageAltLabeling from '../image_alt_labeling'; // Adjust the path if needed
 
 // Set up worker for react-pdf
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
@@ -27,6 +28,7 @@ const Step4PDFTextEditor: React.FC<PdfTextEditorProps> = ({
     const [pdfLoadingError, setPdfLoadingError] = useState<string | null>(null);
     const [isClient, setIsClient] = useState(false);
     const [scale, setScale] = useState(1.0);
+    const [showLabeling, setShowLabeling] = useState(false);
 
     useEffect(() => {
         setIsClient(typeof window !== "undefined");
@@ -153,29 +155,42 @@ const Step4PDFTextEditor: React.FC<PdfTextEditorProps> = ({
                     )}
                 </div>
 
-                {/* Right side: Editable Text Area (3/10 width, 100% of 75vh) */}
-                <div className="flex-[3] flex flex-col bg-white rounded-lg shadow-lg p-4 ml-4"
-                     style={{ height: '100%', maxHeight: '100%' }}>
+                {/* Right side: Switchable Text Area or Image Labeling (3/10 width, 100% of 75vh) */}
+                <div className="flex-[3] flex flex-col bg-white rounded-lg shadow-lg p-4 ml-4" style={{ height: '100%', maxHeight: '100%' }}>
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-semibold text-gray-800">Notes for Page {pageNumber}</h2>
+                        <h2 className="text-xl font-semibold text-gray-800">
+                            {showLabeling ? "Image Labeling" : `Notes for Page ${pageNumber}`}
+                        </h2>
                         <button
-                            onClick={toggleEditing}
-                            className="p-2 rounded-full bg-green-500 text-white hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 transition-all duration-200 flex items-center justify-center"
-                            aria-label={isEditing ? "Save Notes" : "Edit Notes"}
+                            onClick={() => setShowLabeling((prev) => !prev)}
+                            className="p-2 rounded-full bg-indigo-500 text-white hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all duration-200 flex items-center justify-center"
                         >
-                            {isEditing ? <Save size={20} /> : <Pencil size={20} />}
+                            
                         </button>
+                        {!showLabeling && (
+                            <button
+                                onClick={toggleEditing}
+                                className="ml-2 p-2 rounded-full bg-green-500 text-white hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 transition-all duration-200 flex items-center justify-center"
+                                aria-label={isEditing ? "Save Notes" : "Edit Notes"}
+                            >
+                                {isEditing ? <Save size={20} /> : <Pencil size={20} />}
+                            </button>
+                        )}
                     </div>
-                    <textarea
-                        className={`flex-1 w-full p-3 border rounded-md resize-none focus:outline-none transition-all duration-200
-              ${isEditing ? 'border-blue-400 ring-2 ring-blue-200' : 'border-gray-300 bg-gray-50 cursor-default'}
-              text-gray-800 text-base leading-relaxed`}
-                        value={textAreaData}
-                        onChange={handleTextAreaChange}
-                        readOnly={!isEditing}
-                        placeholder="Type your notes here..."
-                        aria-label="Editable text area for notes"
-                    />
+                    {showLabeling ? (
+                        <ImageAltLabeling />
+                    ) : (
+                        <textarea
+                            className={`flex-1 w-full p-3 border rounded-md resize-none focus:outline-none transition-all duration-200
+                                ${isEditing ? 'border-blue-400 ring-2 ring-blue-200' : 'border-gray-300 bg-gray-50 cursor-default'}
+                                text-gray-800 text-base leading-relaxed`}
+                            value={textAreaData}
+                            onChange={handleTextAreaChange}
+                            readOnly={!isEditing}
+                            placeholder="Type your notes here..."
+                            aria-label="Editable text area for notes"
+                        />
+                    )}
                 </div>
             </div>
         </div>
