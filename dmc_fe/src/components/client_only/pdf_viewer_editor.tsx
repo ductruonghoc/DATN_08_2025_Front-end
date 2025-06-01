@@ -6,7 +6,8 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import '../../../node_modules/react-pdf/dist/esm/Page/AnnotationLayer.css';
 import '../../../node_modules/react-pdf/dist/esm/Page/TextLayer.css';
 import ImageAltLabeling from '../image_alt_labeling'; // Adjust the path if needed
-
+import { ImageItem } from '../image_alt_labeling'; // Import your ImageItem interface
+import { BASE_URL } from '@/src/api/base_url';
 // Set up worker for react-pdf
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
@@ -14,16 +15,21 @@ interface PdfTextEditorProps {
     pdfUrl: string; // URL of the PDF document
     initialPageNumber?: number; // Optional initial page number
     initialTextContent?: string; // Optional initial text content for the text area
+    images: ImageItem[]; // <-- Add this line
+    pdfId: number; // <-- add this
 }
 
 const Step4PDFTextEditor: React.FC<PdfTextEditorProps> = ({
     pdfUrl,
     initialPageNumber = 1,
     initialTextContent = 'Dummy text content for the PDF page.',
+    images: initialImages,
+    pdfId,
 }) => {
     const [numPages, setNumPages] = useState<number | null>(null);
     const [pageNumber, setPageNumber] = useState<number>(initialPageNumber);
     const [textAreaData, setTextAreaData] = useState<string>(initialTextContent);
+    const [images, setImages] = useState<ImageItem[]>(initialImages);
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [pdfLoadingError, setPdfLoadingError] = useState<string | null>(null);
     const [isClient, setIsClient] = useState(false);
@@ -37,6 +43,19 @@ const Step4PDFTextEditor: React.FC<PdfTextEditorProps> = ({
     useEffect(() => {
             setPageNumber(initialPageNumber);
     }, [initialPageNumber]);
+
+    // Fetch new page data when pageNumber changes
+    useEffect(() => {
+        if (!pdfId || !pageNumber) return;
+        fetch(`${BASE_URL}/pdf_process/get_pdf_state?pdf_id=${pdfId}&page_number=${pageNumber}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.data) {
+                    setTextAreaData(data.data.pdf_paragraph.context);
+                    setImages(data.data.pdf_images);
+                }
+            });
+    }, [pdfId, pageNumber]);
 
     // Callback for when PDF document loads successfully
     const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
@@ -63,13 +82,35 @@ const Step4PDFTextEditor: React.FC<PdfTextEditorProps> = ({
 
     // Toggle editing mode for the text area
     const toggleEditing = useCallback(() => {
-        setIsEditing((prev) => !prev);
-        // Optionally save data when toggling off editing
         if (isEditing) {
-            console.log('Text area content saved:', textAreaData);
-            // Here you would typically send `textAreaData` to an API or save it locally
+            // Save event: send POST request
+            fetch(`${BASE_URL}/pdf_process/save_and_embed_paragraph`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    pdf_paragraph_id: pdfId,
+                    pdf_paragraph_context: textAreaData,
+                }),
+            })
+            .then(async (res) => {
+                if (!res.ok) {
+                    // Try to read error message from response
+                    let errorMsg = 'Unknown error';
+                    try {
+                        const data = await res.json();
+                        errorMsg = JSON.stringify(data);
+                    } catch (e) {
+                        errorMsg = res.statusText;
+                    }
+                    console.error('Error saving paragraph:', errorMsg);
+                }
+            })
+            .catch((err) => {
+                console.error('Network error saving paragraph:', err);
+            });
         }
-    }, [isEditing, textAreaData]);
+        setIsEditing((prev) => !prev);
+    }, [isEditing, pdfId, textAreaData]);
 
     // Handle text area content changes
     const handleTextAreaChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -108,7 +149,7 @@ const Step4PDFTextEditor: React.FC<PdfTextEditorProps> = ({
 
             <div className="flex flex-1 overflow-hidden p-4">
                 {/* Left side: PDF Viewer (7/10 width) */}
-                <div className="flex-[7] flex flex-col items-center justify-center bg-white rounded-lg shadow-lg p-4 mr-4 overflow-auto">
+                <div className="flex-[6] flex flex-col items-center justify-center bg-white rounded-lg shadow-lg p-4 mr-4 overflow-auto">
                     {/* Zoom controls */}
                     <div className="flex gap-2 bg-gray-50 rounded shadow mt-2"
                          >
@@ -156,17 +197,18 @@ const Step4PDFTextEditor: React.FC<PdfTextEditorProps> = ({
                 </div>
 
                 {/* Right side: Switchable Text Area or Image Labeling (3/10 width, 100% of 75vh) */}
-                <div className="flex-[3] flex flex-col bg-white rounded-lg shadow-lg p-4 ml-4" style={{ height: '100%', maxHeight: '100%' }}>
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-semibold text-gray-800">
-                            {showLabeling ? "Image Labeling" : `Notes for Page ${pageNumber}`}
-                        </h2>
+                <div className="flex-[4] flex flex-col bg-white rounded-lg shadow-lg p-4 ml-4 overflow-auto" style={{ height: '100%', maxHeight: '100%' }}>
+                    <div className="flex flex-col justify-between items-center mb-4">
                         <button
                             onClick={() => setShowLabeling((prev) => !prev)}
                             className="p-2 rounded-full bg-indigo-500 text-white hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all duration-200 flex items-center justify-center"
                         >
-                            
+                            Change to {showLabeling ? "Notes" : "Labeling"}
                         </button>
+                        <div className='flex items-center justify-between w-full mt-2 mb-4'>
+                        <h2 className="text-xl font-semibold text-gray-800">
+                            {showLabeling ? "Image Labeling" : `Notes for Page ${pageNumber}`}
+                        </h2>
                         {!showLabeling && (
                             <button
                                 onClick={toggleEditing}
@@ -176,9 +218,10 @@ const Step4PDFTextEditor: React.FC<PdfTextEditorProps> = ({
                                 {isEditing ? <Save size={20} /> : <Pencil size={20} />}
                             </button>
                         )}
+                        </div>
                     </div>
                     {showLabeling ? (
-                        <ImageAltLabeling />
+                        <ImageAltLabeling images={images} />
                     ) : (
                         <textarea
                             className={`flex-1 w-full p-3 border rounded-md resize-none focus:outline-none transition-all duration-200

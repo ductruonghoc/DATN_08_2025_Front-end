@@ -7,7 +7,7 @@
 import dynamic from "next/dynamic";
 import React, { useState, ChangeEvent, FC, ReactNode, useEffect, useRef, useCallback } from 'react';
 import { BASE_URL } from '@/src/api/base_url';
-import { Check, ChevronRight, UploadCloud} from 'lucide-react';
+import { Check, ChevronRight, UploadCloud } from 'lucide-react';
 import { Button, Label, Select, Input, Spinner, PercentageBar } from '@/src/components/utils';
 
 // Replace direct import/use with:
@@ -27,15 +27,26 @@ interface DeviceTypeOption extends Option {
 interface BrandOption extends Option { }
 
 
+interface PDFPageContent {
+    paragraph: string;
+    images: { id: number; alt: string }[];
+}
+
+interface PDFData {
+    currentPageNumber: number;
+    currentPageContents: PDFPageContent;
+}
+
 interface FormData {
-    deviceId?: number; // Optional, will be set after API call
+    deviceId?: number;
     deviceType: string;
     brandName: string;
     deviceName: string;
     issueDetails: string;
-    pdfFile?: File | null; // Added for PDF upload
-    pdfId?: number; // <-- Add this
-    nextStepAvailable?: boolean; // <-- Add this
+    pdfFile?: File | null;
+    pdfId?: number;
+    nextStepAvailable?: boolean;
+    pdf?: PDFData; // <-- Add this
 }
 
 interface Errors {
@@ -370,16 +381,30 @@ const Step3Extraction: React.FC<Step3ExtractionProps> = ({ formData, setFormData
 
 
 const MultiStepFormPage: FC = () => {
-    const [currentStep, setCurrentStep] = useState<number>(1);
+    const [currentStep, setCurrentStep] = useState<number>(4);
     const [formData, setFormData] = useState<FormData>({
         deviceType: '',
         brandName: '',
         deviceName: '',
         issueDetails: '',
-        pdfId: -1, // <-- Mocked for testing
+        pdfId: 13,
+        pdf: {
+            currentPageNumber: 1,
+            currentPageContents: {
+                paragraph: '',
+                images: []
+            }
+        }
     });
     const [errors, setErrors] = useState<Errors>({});
     const [loadingOptions, setLoadingOptions] = useState<boolean>(false);
+    const [pdfState, setPdfState] = useState<{
+        pdfUrl: string;
+        paragraph: string;
+        images: { id: number; alt: string }[];
+    } | null>(null);
+    const [pdfLoading, setPdfLoading] = useState(false);
+    const [pdfError, setPdfError] = useState<string | null>(null);
     const totalSteps = 4;
     const stepLabels: string[] = ["Device Info", "PDF Upload", "PDF Extraction", "PDF Editor"];
 
@@ -523,10 +548,31 @@ const MultiStepFormPage: FC = () => {
         }
     };
 
+    useEffect(() => {
+        if (currentStep === 4 && formData.pdfId) {
+            setPdfLoading(true);
+            setPdfError(null);
+            fetch(`${BASE_URL}/pdf_process/get_pdf_initial_state?pdf_id=${formData.pdfId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        setPdfState({
+                            pdfUrl: data.data.pdf_gcs_signed_read_url,
+                            paragraph: data.data.pdf_paragraph.context,
+                            images: data.data.pdf_images,
+                        });
+                    } else {
+                        setPdfError(data.message || "Failed to fetch PDF state.");
+                    }
+                })
+                .catch(() => setPdfError("Failed to fetch PDF state."))
+                .finally(() => setPdfLoading(false));
+        }
+    }, [currentStep, formData.pdfId]);
 
     return (
-        <div className="min-h-screen w-screen bg-gray-100 flex flex-col items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
-           <div className="w-full max-w-5xl space-y-8 bg-white p-8 sm:p-10 rounded-xl shadow-xl">
+        <div className="min-h-screen w-full bg-gray-100 flex flex-col items-center justify-center py-8">
+            <div className="w-full max-w-5xl space-y-8 bg-white py-8 sm:py-10 rounded-xl shadow-xl">
                 <div className="mb-8">
                     <ProgressBar currentStep={currentStep} totalSteps={totalSteps} stepLabels={stepLabels} />
                 </div>
@@ -537,7 +583,20 @@ const MultiStepFormPage: FC = () => {
                             {currentStep === 1 && <Step1Form data={formData} handleChange={handleChange} errors={errors} />}
                             {currentStep === 2 && <Step2UploadAndIssue data={formData} handleFileChange={handleFileChange} errors={errors} />}
                             {currentStep === 3 && <Step3Extraction formData={formData} setFormData={setFormData} />}
-                            {currentStep === 4 && <Step4PDFTextEditor pdfUrl={`/pdf/dummy.pdf`} />}
+                            {currentStep === 4 && (
+                                pdfLoading ? (
+                                    <Spinner />
+                                ) : pdfError ? (
+                                    <div className="text-red-500">{pdfError}</div>
+                                ) : pdfState ? (
+                                    <Step4PDFTextEditor
+                                        pdfUrl={pdfState.pdfUrl}
+                                        initialTextContent={pdfState.paragraph}
+                                        images={pdfState.images}
+                                        pdfId={formData.pdfId ?? -1}
+                                    />
+                                ) : null
+                            )}
                         </div>}
                 </div>
 

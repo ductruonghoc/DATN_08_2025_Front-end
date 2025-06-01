@@ -1,12 +1,13 @@
 "use client"
 
-import type React from "react"
+import React from "react"
 
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { User, Bot, Paperclip, Copy, Save, FileText, Trash2, Menu } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { BASE_URL } from "@/src/api/base_url"
 
 interface Message {
   id: string
@@ -27,7 +28,9 @@ interface Conversation {
   messages: Message[]
 }
 
-export default function ChatPage({ params }: { params: { id: string } }) {
+export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = React.use(params);
+
   const [inputValue, setInputValue] = useState("")
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -180,15 +183,15 @@ export default function ChatPage({ params }: { params: { id: string } }) {
 
   // Load conversation based on ID
   useEffect(() => {
-    const conversationId = params.id
-    const conversation = mockConversations[conversationId]
+    const conversationId = id;
+    const conversation = mockConversations[conversationId];
 
     if (conversation) {
-      setDeviceName(conversation.title)
-      setMessages(conversation.messages)
+      setDeviceName(conversation.title);
+      setMessages(conversation.messages);
     } else {
       // If conversation not found, check for initialMessage
-      const initialMessage = sessionStorage.getItem("initialMessage")
+      const initialMessage = sessionStorage.getItem("initialMessage");
 
       if (initialMessage) {
         const userMessage: Message = {
@@ -196,42 +199,52 @@ export default function ChatPage({ params }: { params: { id: string } }) {
           content: initialMessage,
           sender: "user",
           timestamp: new Date(),
-        }
+        };
 
-        setMessages([userMessage])
-        setIsLoading(true)
+        setMessages([userMessage]);
+        setIsLoading(true);
 
-        // Simulate AI response
-        setTimeout(() => {
-          const aiResponses = [
-            "I can help you analyze that PDF. Would you like me to extract specific information from it?",
-            "Based on your PDF, I can see several key points that might be relevant to your query.",
-            "Your document contains information about device specifications. Is there anything specific you'd like to know?",
-            "I've processed your PDF. It appears to be a technical manual. What information are you looking for?",
-            "I can see this is a report with multiple sections. Which part would you like me to focus on?",
-          ]
-
-          const randomResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)]
-
-          const aiMessage: Message = {
-            id: Date.now().toString(),
-            content: randomResponse,
-            sender: "ai",
-            timestamp: new Date(),
-          }
-
-          setMessages((prev) => [...prev, aiMessage])
-          setIsLoading(false)
-        }, 1500)
+        // Fetch AI response from backend instead of simulating
+        fetch(`${BASE_URL}/pdf_process/rag_query`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: initialMessage }),
+        })
+          .then(res => res.json())
+          .then(data => {
+            let aiContent = "Sorry, I couldn't get a response.";
+            if (data.success && data.data?.response) {
+              aiContent = data.data.response;
+            }
+            const aiMessage: Message = {
+              id: generateUniqueId(),
+              content: aiContent,
+              sender: "ai",
+              timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, aiMessage]);
+          })
+          .catch(() => {
+            setMessages(prev => [
+              ...prev,
+              {
+                id: generateUniqueId(),
+                content: "Error contacting AI service.",
+                sender: "ai",
+                timestamp: new Date(),
+              },
+            ]);
+          })
+          .finally(() => setIsLoading(false));
       } else {
         // If no conversation and no initialMessage, redirect to conservation page
-        router.push("/home/conservation")
+        router.push("/home/conservation");
       }
     }
 
     // Focus input
     inputRef.current?.focus()
-  }, [params.id, router])
+  }, [id, router])
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -253,7 +266,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
 
     // Add user message
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: generateUniqueId(),
       content: inputValue,
       sender: "user",
       timestamp: new Date(),
@@ -263,28 +276,40 @@ export default function ChatPage({ params }: { params: { id: string } }) {
     setInputValue("")
     setIsLoading(true)
 
-    // Simulate AI response after a delay
-    setTimeout(() => {
-      const aiResponses = [
-        "I can help you analyze that PDF. Would you like me to extract specific information from it?",
-        "Based on your PDF, I can see several key points that might be relevant to your query.",
-        "Your document contains information about device specifications. Is there anything specific you'd like to know?",
-        "I've processed your PDF. It appears to be a technical manual. What information are you looking for?",
-        "I can see this is a report with multiple sections. Which part would you like me to focus on?",
-      ]
-
-      const randomResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)]
+    // Fetch AI response from backend
+    try {
+      const res = await fetch(`${BASE_URL}/pdf_process/rag_query`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: userMessage.content }),
+      })
+      const data = await res.json()
+      let aiContent = "Sorry, I couldn't get a response."
+      if (data.success && data.data?.response) {
+        aiContent = data.data.response
+      }
 
       const aiMessage: Message = {
-        id: Date.now().toString(),
-        content: randomResponse,
+        id: generateUniqueId(),
+        content: aiContent,
         sender: "ai",
         timestamp: new Date(),
       }
 
       setMessages((prev) => [...prev, aiMessage])
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          content: "Error contacting AI service.",
+          sender: "ai",
+          timestamp: new Date(),
+        },
+      ])
+    } finally {
       setIsLoading(false)
-    }, 1500)
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -616,4 +641,8 @@ export default function ChatPage({ params }: { params: { id: string } }) {
       )}
     </div>
   )
+}
+
+function generateUniqueId() {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
