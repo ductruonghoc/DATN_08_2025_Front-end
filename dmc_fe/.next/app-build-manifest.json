@@ -6,10 +6,10 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
-    "/page": [
+    "/admin/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
+      "static/chunks/app/admin/layout.js"
     ],
     "/admin/pdf_processing/page": [
       "static/chunks/webpack.js",
@@ -26,11 +26,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/home/conservation/loading.js"
     ],
-    "/home/conservation/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/home/conservation/page.js"
-    ],
     "/home/conservation/chat/loading": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -41,10 +36,20 @@
       "static/chunks/main-app.js",
       "static/chunks/app/home/conservation/chat/[id]/page.js"
     ],
-    "/admin/layout": [
+    "/home/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/admin/layout.js"
+      "static/chunks/app/home/page.js"
+    ],
+    "/home/conservation/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/home/conservation/page.js"
+    ],
+    "/_not-found/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/_not-found/page.js"
     ]
   }
 }

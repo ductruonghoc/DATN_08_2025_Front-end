@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/ductruonghoc/DATN_08_2025_Front-end/issues"
   },
-  "homepage": "https://github.com/ductruonghoc/DATN_08_2025_Front-end#readme"
+  "homepage": "https://github.com/ductruonghoc/DATN_08_2025_Front-end#readme",
+  "dependencies": {
+    "react-markdown": "^10.1.0"
+  }
 }

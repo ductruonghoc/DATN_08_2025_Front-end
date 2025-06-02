@@ -387,7 +387,7 @@ const MultiStepFormPage: FC = () => {
         brandName: '',
         deviceName: '',
         issueDetails: '',
-        pdfId: 13,
+        pdfId: 16,
         pdf: {
             currentPageNumber: 1,
             currentPageContents: {
@@ -398,13 +398,6 @@ const MultiStepFormPage: FC = () => {
     });
     const [errors, setErrors] = useState<Errors>({});
     const [loadingOptions, setLoadingOptions] = useState<boolean>(false);
-    const [pdfState, setPdfState] = useState<{
-        pdfUrl: string;
-        paragraph: string;
-        images: { id: number; alt: string }[];
-    } | null>(null);
-    const [pdfLoading, setPdfLoading] = useState(false);
-    const [pdfError, setPdfError] = useState<string | null>(null);
     const totalSteps = 4;
     const stepLabels: string[] = ["Device Info", "PDF Upload", "PDF Extraction", "PDF Editor"];
 
@@ -548,56 +541,38 @@ const MultiStepFormPage: FC = () => {
         }
     };
 
-    useEffect(() => {
-        if (currentStep === 4 && formData.pdfId) {
-            setPdfLoading(true);
-            setPdfError(null);
-            fetch(`${BASE_URL}/pdf_process/get_pdf_initial_state?pdf_id=${formData.pdfId}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        setPdfState({
-                            pdfUrl: data.data.pdf_gcs_signed_read_url,
-                            paragraph: data.data.pdf_paragraph.context,
-                            images: data.data.pdf_images,
-                        });
-                    } else {
-                        setPdfError(data.message || "Failed to fetch PDF state.");
-                    }
-                })
-                .catch(() => setPdfError("Failed to fetch PDF state."))
-                .finally(() => setPdfLoading(false));
-        }
-    }, [currentStep, formData.pdfId]);
-
     return (
-        <div className="min-h-screen w-full bg-gray-100 flex flex-col items-center justify-center py-8">
-            <div className="w-full max-w-5xl space-y-8 bg-white py-8 sm:py-10 rounded-xl shadow-xl">
+        <div className="min-h-screen w-full p-8 bg-gray-100 flex flex-col items-center justify-center py-8">
+            <div className="w-full space-y-8 bg-white p-8 sm:py-10 rounded-xl shadow-xl">
                 <div className="mb-8">
                     <ProgressBar currentStep={currentStep} totalSteps={totalSteps} stepLabels={stepLabels} />
                 </div>
 
-                <div className="min-h-[300px]">
+                <div className="min-h-[300px] w-full">
                     {loadingOptions ? <Spinner /> :
-                        <div>
-                            {currentStep === 1 && <Step1Form data={formData} handleChange={handleChange} errors={errors} />}
-                            {currentStep === 2 && <Step2UploadAndIssue data={formData} handleFileChange={handleFileChange} errors={errors} />}
-                            {currentStep === 3 && <Step3Extraction formData={formData} setFormData={setFormData} />}
-                            {currentStep === 4 && (
-                                pdfLoading ? (
-                                    <Spinner />
-                                ) : pdfError ? (
-                                    <div className="text-red-500">{pdfError}</div>
-                                ) : pdfState ? (
-                                    <Step4PDFTextEditor
-                                        pdfUrl={pdfState.pdfUrl}
-                                        initialTextContent={pdfState.paragraph}
-                                        images={pdfState.images}
-                                        pdfId={formData.pdfId ?? -1}
-                                    />
-                                ) : null
+                        <div className="w-full">
+                            {currentStep === 1 && (
+                                <div className="w-full">
+                                    <Step1Form data={formData} handleChange={handleChange} errors={errors} />
+                                </div>
                             )}
-                        </div>}
+                            {currentStep === 2 && (
+                                <div className="w-full">
+                                    <Step2UploadAndIssue data={formData} handleFileChange={handleFileChange} errors={errors} />
+                                </div>
+                            )}
+                            {currentStep === 3 && (
+                                <div className="w-full">
+                                    <Step3Extraction formData={formData} setFormData={setFormData} />
+                                </div>
+                            )}
+                            {currentStep === 4 && (
+                                <div className="w-full">
+                                    <Step4PDFTextEditor pdfId={formData.pdfId ?? -1} />
+                                </div>
+                            )}
+                        </div>
+                    }
                 </div>
 
                 <div className="flex justify-end pt-6 border-t border-gray-200">

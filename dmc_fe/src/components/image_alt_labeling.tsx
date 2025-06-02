@@ -19,6 +19,7 @@ export interface ImageItem {
   // You can add more properties here if your image objects will contain more data, e.g.:
   // caption?: string; // Optional caption for the image
   // category?: string; // Image category
+  sequence?: number; // Optional sequence number for ordering images
 }
 // (Your fetchImageUrlById function as defined above)
 

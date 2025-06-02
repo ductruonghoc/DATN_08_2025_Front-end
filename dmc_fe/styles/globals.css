@@ -92,3 +92,12 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+.custom-resize {
+  /* Optional: make the resize handle area more visible */
+  background-image:
+    linear-gradient(to bottom right, transparent 95%, #cbd5e1 95%, #cbd5e1 100%);
+  background-repeat: no-repeat;
+  background-position: bottom right;
+  background-size: 20px 20px;
+}

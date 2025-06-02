@@ -1205,6 +1205,12 @@ video {
 .top-full {
   top: 100%;
 }
+.bottom-4 {
+  bottom: 1rem;
+}
+.left-4 {
+  left: 1rem;
+}
 .z-10 {
   z-index: 10;
 }
@@ -1222,6 +1228,9 @@ video {
 }
 .z-\[1\] {
   z-index: 1;
+}
+.z-30 {
+  z-index: 30;
 }
 .-mx-1 {
   margin-left: -0.25rem;
@@ -1605,9 +1614,6 @@ video {
 .w-px {
   width: 1px;
 }
-.w-screen {
-  width: 100vw;
-}
 .min-w-0 {
   min-width: 0px;
 }
@@ -1780,6 +1786,9 @@ video {
 }
 .resize-none {
   resize: none;
+}
+.resize {
+  resize: both;
 }
 .list-none {
   list-style-type: none;
@@ -2263,6 +2272,12 @@ video {
 .bg-opacity-50 {
   --tw-bg-opacity: 0.5;
 }
+.bg-opacity-60 {
+  --tw-bg-opacity: 0.6;
+}
+.bg-opacity-70 {
+  --tw-bg-opacity: 0.7;
+}
 .fill-current {
   fill: currentColor;
 }
@@ -2295,6 +2310,9 @@ video {
 }
 .p-\[1px\] {
   padding: 1px;
+}
+.p-10 {
+  padding: 2.5rem;
 }
 .px-0 {
   padding-left: 0px;
@@ -2372,6 +2390,10 @@ video {
   padding-top: 22px;
   padding-bottom: 22px;
 }
+.py-10 {
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
+}
 .pb-3 {
   padding-bottom: 0.75rem;
 }
@@ -2437,6 +2459,18 @@ video {
 }
 .pt-6 {
   padding-top: 1.5rem;
+}
+.pr-1 {
+  padding-right: 0.25rem;
+}
+.pr-16 {
+  padding-right: 4rem;
+}
+.pt-10 {
+  padding-top: 2.5rem;
+}
+.pb-8 {
+  padding-bottom: 2rem;
 }
 .text-left {
   text-align: left;
@@ -2663,6 +2697,9 @@ video {
 .text-yellow-500 {
   --tw-text-opacity: 1;
   color: rgb(234 179 8 / var(--tw-text-opacity, 1));
+}
+.underline {
+  text-decoration-line: underline;
 }
 .underline-offset-4 {
   text-underline-offset: 4px;
@@ -3295,6 +3332,10 @@ main {
 }
 .focus\:ring-ring:focus {
   --tw-ring-color: hsl(var(--ring));
+}
+.focus\:ring-red-400:focus {
+  --tw-ring-opacity: 1;
+  --tw-ring-color: rgb(248 113 113 / var(--tw-ring-opacity, 1));
 }
 .focus\:ring-opacity-75:focus {
   --tw-ring-opacity: 0.75;
@@ -4015,15 +4056,6 @@ main {
     border-radius: var(--radius);
   }
 
-  .sm\:p-10 {
-    padding: 2.5rem;
-  }
-
-  .sm\:px-6 {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-  }
-
   .sm\:py-10 {
     padding-top: 2.5rem;
     padding-bottom: 2.5rem;
@@ -4134,13 +4166,6 @@ main {
     --tw-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
     --tw-shadow-colored: 0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);
     box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
-  }
-}
-@media (min-width: 1024px) {
-
-  .lg\:px-8 {
-    padding-left: 2rem;
-    padding-right: 2rem;
   }
 }
 .\[\&\:has\(\[aria-selected\]\)\]\:bg-accent:has([aria-selected]) {

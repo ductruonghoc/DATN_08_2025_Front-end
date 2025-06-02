@@ -1,8 +1,8 @@
 "use client"
 
-import React from "react"
+import React, { useState, useRef, useEffect } from "react"
+import ReactMarkdown from "react-markdown";
 
-import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { User, Bot, Paperclip, Copy, Save, FileText, Trash2, Menu } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -182,7 +182,12 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   }, [])
 
   // Load conversation based on ID
+  const effectRan = useRef(false); // <-- Add this ref
+
   useEffect(() => {
+    if (effectRan.current) return; // <-- Prevent double run in dev
+    effectRan.current = true;
+
     const conversationId = id;
     const conversation = mockConversations[conversationId];
 
@@ -243,7 +248,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     }
 
     // Focus input
-    inputRef.current?.focus()
+    inputRef.current?.focus();
   }, [id, router])
 
   // Auto-scroll to bottom when messages change
@@ -397,11 +402,10 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
             <div key={message.id} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
               <div className={`flex max-w-[80%] ${message.sender === "user" ? "flex-row-reverse" : "flex-row"}`}>
                 <div
-                  className={`flex items-center justify-center h-8 w-8 rounded-full flex-shrink-0 ${
-                    message.sender === "user"
+                  className={`flex items-center justify-center h-8 w-8 rounded-full flex-shrink-0 ${message.sender === "user"
                       ? "ml-3 bg-[#4045ef]"
                       : `mr-3 ${isDarkMode ? "bg-gray-700" : "bg-gray-200"}`
-                  }`}
+                    }`}
                 >
                   {message.sender === "user" ? (
                     <User className="h-5 w-5 text-white" />
@@ -411,19 +415,23 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                 </div>
                 <div className="flex flex-col">
                   <div
-                    className={`rounded-[10px] px-4 py-3 ${
-                      message.sender === "user"
+                    className={`rounded-[10px] px-4 py-3 ${message.sender === "user"
                         ? "bg-[#4045ef] text-white"
                         : isDarkMode
                           ? "bg-gray-800 text-white"
                           : "bg-white text-[#2e3139] border border-gray-200" // Added border for separation
-                    }`}
-                  >
-                    <div className="text-sm whitespace-pre-line">{message.content}</div>
-                    <div
-                      className={`text-xs mt-1 ${
-                        message.sender === "user" ? "text-blue-100" : isDarkMode ? "text-gray-400" : "text-[#2e3139]/70"
                       }`}
+                  >
+                    <div className="text-sm whitespace-pre-line">
+                      {message.sender === "ai" ? (
+                        <ReactMarkdown>{cleanAIResponse(message.content)}</ReactMarkdown>
+                      ) : (
+                        message.content
+                      )}
+                    </div>
+                    <div
+                      className={`text-xs mt-1 ${message.sender === "user" ? "text-blue-100" : isDarkMode ? "text-gray-400" : "text-[#2e3139]/70"
+                        }`}
                     >
                       {formatTime(message.timestamp)}
                     </div>
@@ -461,9 +469,8 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
             <div className="flex justify-start">
               <div className="flex flex-row">
                 <div
-                  className={`flex items-center justify-center h-8 w-8 rounded-full mr-3 ${
-                    isDarkMode ? "bg-gray-700" : "bg-gray-200"
-                  }`}
+                  className={`flex items-center justify-center h-8 w-8 rounded-full mr-3 ${isDarkMode ? "bg-gray-700" : "bg-gray-200"
+                    }`}
                 >
                   <Bot className="h-5 w-5 text-[#4045ef]" />
                 </div>
@@ -645,4 +652,13 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
 
 function generateUniqueId() {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+
+function cleanAIResponse(text: string): string {
+  return text
+    .split('\n')
+    .map(line => line.trim())
+    .join('\n')
+    .replace(/\n{2,}/g, '\n');
 }
