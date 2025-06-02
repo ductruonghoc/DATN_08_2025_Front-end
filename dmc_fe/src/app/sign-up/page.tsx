@@ -7,7 +7,7 @@ import Image from "next/image"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Input } from "@/components/form/input"
 import { Label } from "@/components/ui/label"
 import { Mail, Lock, UserIcon, Eye, EyeOff } from "lucide-react"
 import { passwordStrength } from 'check-password-strength'

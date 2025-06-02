@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useRef, useEffect } from "react"
 import { Search, MoreVertical, Pen, Trash2, ChevronDown, Plus } from "lucide-react"
-import { Input } from "@/components/ui/input"
+import { Input } from "@/components/form/input"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 

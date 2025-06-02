@@ -7,7 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Mail, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/form/input";
 
 export default function SignInPage() {
   const router = useRouter();

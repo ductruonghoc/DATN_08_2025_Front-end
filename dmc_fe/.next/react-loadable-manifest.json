@@ -1,9 +1,8 @@
 {
-  "app\\home\\import\\pdfInformation\\page.tsx -> ./pdf-viewer": {
-    "id": "app\\home\\import\\pdfInformation\\page.tsx -> ./pdf-viewer",
+  "..\\node_modules\\next\\dist\\client\\components\\react-dev-overlay\\utils\\use-websocket.js -> @vercel/turbopack-ecmascript-runtime/browser/dev/hmr-client/hmr-client.ts": {
+    "id": "..\\node_modules\\next\\dist\\client\\components\\react-dev-overlay\\utils\\use-websocket.js -> @vercel/turbopack-ecmascript-runtime/browser/dev/hmr-client/hmr-client.ts",
     "files": [
-      "static/css/_app-pages-browser_src_app_home_import_pdfInformation_pdf-viewer_tsx.css",
-      "static/chunks/_app-pages-browser_src_app_home_import_pdfInformation_pdf-viewer_tsx.js"
+      "static/chunks/_app-pages-browser_node_modules_next_dist_client_dev_noop-turbopack-hmr_js.js"
     ]
   }
 }

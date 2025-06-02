@@ -1,25 +1,29 @@
 {
   "pages": {
-    "/home/import/pdfInformation/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/home/import/pdfInformation/page.js"
-    ],
-    "/home/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/home/layout.js"
-    ],
     "/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
-    "/_not-found/page": [
+    "/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-<<<<<<< HEAD
+      "static/chunks/app/page.js"
+    ],
+    "/home/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/home/layout.js"
+    ],
+    "/home/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/home/page.js"
+    ],
+    "/home/conservation/loading": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
       "static/chunks/app/home/conservation/loading.js"
     ],
     "/home/conservation/chat/loading": [
@@ -31,21 +35,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/home/conservation/chat/[id]/page.js"
-    ],
-    "/home/conservation/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/home/conservation/page.js"
-    ],
-    "/home/device-management/loading": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/home/device-management/loading.js"
-    ],
-    "/home/device-management/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/home/device-management/page.js"
     ],
     "/home/track-progress/loading": [
       "static/chunks/webpack.js",
@@ -66,9 +55,21 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/home/import/page.js"
-=======
-      "static/chunks/app/_not-found/page.js"
->>>>>>> 8c657f74b0d484a436dd8278b682f3f9a965d8d2
+    ],
+    "/home/device-management/loading": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/home/device-management/loading.js"
+    ],
+    "/home/device-management/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/home/device-management/page.js"
+    ],
+    "/home/conservation/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/home/conservation/page.js"
     ]
   }
 }

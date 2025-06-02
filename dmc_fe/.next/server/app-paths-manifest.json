@@ -1,13 +1,8 @@
 {
-<<<<<<< HEAD
-  "/home/conservation/page": "app/home/conservation/page.js",
-  "/home/conservation/chat/[id]/page": "app/home/conservation/chat/[id]/page.js",
   "/home/track-progress/tracking/page": "app/home/track-progress/tracking/page.js",
   "/home/page": "app/home/page.js",
+  "/home/conservation/chat/[id]/page": "app/home/conservation/chat/[id]/page.js",
   "/home/import/page": "app/home/import/page.js",
+  "/home/conservation/page": "app/home/conservation/page.js",
   "/home/device-management/page": "app/home/device-management/page.js"
-=======
-  "/_not-found/page": "app/_not-found/page.js",
-  "/home/import/pdfInformation/page": "app/home/import/pdfInformation/page.js"
->>>>>>> 8c657f74b0d484a436dd8278b682f3f9a965d8d2
 }

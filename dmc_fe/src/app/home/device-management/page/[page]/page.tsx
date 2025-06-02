@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Search, ChevronDown, ChevronUp } from "lucide-react"
-import { Input } from "@/components/ui/input"
+import { Input } from "@/components/form/input"
 import { useRouter } from "next/navigation"
 import Pagination from "../../pagination"
 import { Button } from "@/components/ui/button"

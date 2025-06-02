@@ -4,7 +4,7 @@ import { useState } from "react"
 import Image from "next/image"
 import { Menu, Upload, Shield, ChevronLeft, ChevronRight, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/navigation/tabs"
 
 export default function DocumentProcessor() {
   const [imageDescription, setImageDescription] = useState("")
