@@ -1,7 +1,6 @@
 {
   "/favicon.ico/route": "app/favicon.ico/route.js",
-  "/_not-found/page": "app/_not-found/page.js",
+  "/home/conservation/page": "app/home/conservation/page.js",
   "/admin/pdf_processing/page": "app/admin/pdf_processing/page.js",
-  "/home/conservation/chat/[id]/page": "app/home/conservation/chat/[id]/page.js",
-  "/home/page": "app/home/page.js"
+  "/home/conservation/chat/[id]/page": "app/home/conservation/chat/[id]/page.js"
 }

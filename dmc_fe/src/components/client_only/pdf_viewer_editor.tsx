@@ -207,10 +207,10 @@ const Step4PDFTextEditor: React.FC<PdfTextEditorProps> = ({ pdfId }) => {
     const handleSnipMouseDown = (e: React.MouseEvent) => {
         if (!snipping || !pdfViewerRef.current) return;
         const rect = pdfViewerRef.current.getBoundingClientRect();
-        const scrollLeft = pdfViewerRef.current.scrollLeft;
+        const scrollLeft = pdfViewerRef.current.scrollLeft ;
         const scrollTop = pdfViewerRef.current.scrollTop;
-        const startX = (e.clientX - rect.left + scrollLeft);
-        const startY = (e.clientY - rect.top + scrollTop);
+        const startX = (e.clientX - rect.left + scrollLeft) ;
+        const startY = (e.clientY - rect.top + scrollTop) ;
         setSnipStart({ x: startX, y: startY });
         setSnipRect({ x: startX, y: startY, w: 0, h: 0 });
     };
@@ -223,13 +223,11 @@ const Step4PDFTextEditor: React.FC<PdfTextEditorProps> = ({ pdfId }) => {
         // Calculate max X/Y inside the content area
         const contentWidth = pdfViewerRef.current.clientWidth;
         const contentHeight = pdfViewerRef.current.clientHeight;
-        let currX = e.clientX - rect.left + scrollLeft;
-        let currY = e.clientY - rect.top + scrollTop;
+        let currX = (e.clientX - rect.left + scrollLeft);
+        let currY = (e.clientY - rect.top + scrollTop);
         // Clamp to content area
         currX = Math.max(0, Math.min(currX, contentWidth));
         currY = Math.max(0, Math.min(currY, contentHeight));
-        currX = currX / scale;
-        currY = currY / scale;
         setSnipRect({
             x: Math.min(snipStart.x, currX),
             y: Math.min(snipStart.y, currY),
@@ -418,7 +416,7 @@ const Step4PDFTextEditor: React.FC<PdfTextEditorProps> = ({ pdfId }) => {
                     {pdfLoadingError ? (
                         <div className="text-red-500 text-center p-4">{pdfLoadingError}</div>
                     ) : (
-                        <div ref={pdfViewerRef} className="w-full h-full flex items-center justify-center">
+                        <div ref={pdfViewerRef} className="w-full h-full flex ">
                             {isClient ? (
                                 pdfUrl ? (
                                     <Document
@@ -454,8 +452,8 @@ const Step4PDFTextEditor: React.FC<PdfTextEditorProps> = ({ pdfId }) => {
                         <div
                             style={{
                                 position: "absolute",
-                                left: snipRect.x, // Adjust for p-4 padding
-                                top: snipRect.y,  // Adjust for p-4 padding
+                                left: snipRect.x + 12, // Adjust for p-4 padding
+                                top: snipRect.y + 64,  // Adjust for p-4 padding
                                 width: snipRect.w,
                                 height: snipRect.h,
                                 border: "2px dashed #2563eb",
@@ -533,7 +531,7 @@ const Step4PDFTextEditor: React.FC<PdfTextEditorProps> = ({ pdfId }) => {
                                         </button>
                                     </div>
                                     <textarea
-                                        className={`w-full p-3 pt-10 pb-8 border rounded-lg shadow-sm resize-vertical focus:outline-none transition-all duration-200
+                                        className={`w-full h-[250px] p-3 pt-10 pb-8 border rounded-lg shadow-sm resize-vertical focus:outline-none transition-all duration-200
                                             ${editingChunkId === chunk.id ? 'border-blue-400 ring-2 ring-blue-200' : 'border-gray-300 bg-gray-50 cursor-default'}
                                             text-gray-800 text-base leading-relaxed custom-resize`}
                                         value={chunk.value}

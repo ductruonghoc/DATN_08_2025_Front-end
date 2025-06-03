@@ -8,7 +8,7 @@ import dynamic from "next/dynamic";
 import React, { useState, ChangeEvent, FC, ReactNode, useEffect, useRef, useCallback } from 'react';
 import { BASE_URL } from '@/src/api/base_url';
 import { Check, ChevronRight, UploadCloud } from 'lucide-react';
-import { Button, Label, Select, Input, Spinner, PercentageBar } from '@/src/components/utils';
+import { Button, Label, Select, Input, Spinner } from '@/src/components/utils';
 
 // Replace direct import/use with:
 const Step4PDFTextEditor = dynamic(() => import('@/src/components/client_only/pdf_viewer_editor'), { ssr: false });
@@ -283,11 +283,11 @@ const Step3Extraction: React.FC<Step3ExtractionProps> = ({ formData, setFormData
     const [status, setStatus] = useState<string>("");
 
     // Simulate async OCR logic
-    const simulateProcessing = (threshold: number) => {
+    const simulateProcessing = (threshold: number, start: number = 0, step: number = 10 ) => {
         return new Promise<void>((resolve) => {
-            let currentProgress = 0;
+            let currentProgress = start;
             const interval = setInterval(() => {
-                currentProgress += 10; // Simulate progress increment
+                currentProgress += step; // Simulate progress increment
                 if (currentProgress <= threshold) {
                     setProgress(currentProgress);
                 } else {
@@ -305,18 +305,19 @@ const Step3Extraction: React.FC<Step3ExtractionProps> = ({ formData, setFormData
 
         try {
             // Start fetch
+            await simulateProcessing(30, 0, 5);
             const res = await fetch(`${BASE_URL}/pdf_process/extract_pdf?pdf_id=${formData.pdfId}`);
             if (res.ok) {
                 const json = await res.json();
                 if (json.success) {
-                    await simulateProcessing(100);
+                    await simulateProcessing(100, 30);
                     setFormData(prev => ({
                         ...prev,
                         nextStepAvailable: true, // Indicate that the next step is available
                     }));
                     setStatus("Extraction successful! You can proceed to the next step.");
                 } else {
-                    await simulateProcessing(70);
+                    await simulateProcessing(70, 30);
                     setFormData(prev => ({
                         ...prev,
                         nextStepAvailable: false, // Indicate that the next step is not available
@@ -324,7 +325,7 @@ const Step3Extraction: React.FC<Step3ExtractionProps> = ({ formData, setFormData
                     setStatus(json.message || "Extraction failed.");
                 }
             } else {
-                await simulateProcessing(70);
+                await simulateProcessing(70, 30);
                 setFormData(prev => ({
                     ...prev,
                     nextStepAvailable: false, // Indicate that the next step is not available
@@ -362,10 +363,14 @@ const Step3Extraction: React.FC<Step3ExtractionProps> = ({ formData, setFormData
             </p>
 
             {isLoading && (
-                <PercentageBar
-                    progress={progress}
-                    className="mt-6"
-                />
+                <div className={`relative w-60 h-4 bg-gray-200 rounded`}>
+                    <div
+                        className={`h-4 rounded transition-all duration-300
+                            bg-gradient-to-r from-blue-400 via-blue-300 to-blue-400 animate-pulse
+                          `}
+                        style={{ width: `${progress}%` }}
+                    />
+                </div>
             )}
 
             {status && (
@@ -381,13 +386,13 @@ const Step3Extraction: React.FC<Step3ExtractionProps> = ({ formData, setFormData
 
 
 const MultiStepFormPage: FC = () => {
-    const [currentStep, setCurrentStep] = useState<number>(4);
+    const [currentStep, setCurrentStep] = useState<number>(1);
     const [formData, setFormData] = useState<FormData>({
         deviceType: '',
         brandName: '',
         deviceName: '',
         issueDetails: '',
-        pdfId: 16,
+        pdfId: -1,
         pdf: {
             currentPageNumber: 1,
             currentPageContents: {
@@ -548,7 +553,7 @@ const MultiStepFormPage: FC = () => {
                     <ProgressBar currentStep={currentStep} totalSteps={totalSteps} stepLabels={stepLabels} />
                 </div>
 
-                <div className="min-h-[300px] w-full">
+                <div className="min-h-[400px] w-full">
                     {loadingOptions ? <Spinner /> :
                         <div className="w-full">
                             {currentStep === 1 && (
@@ -577,7 +582,9 @@ const MultiStepFormPage: FC = () => {
 
                 <div className="flex justify-end pt-6 border-t border-gray-200">
                     {currentStep === totalSteps ? <div></div> :
-                        <Button onClick={handleNext}>
+                        <Button 
+                            disabled={loadingOptions || (currentStep === 3 && !formData.nextStepAvailable)}
+                            onClick={handleNext}>
                             Process and Continue
                             {currentStep < totalSteps && <ChevronRight className="h-4 w-4 ml-2" />}
                         </Button>
