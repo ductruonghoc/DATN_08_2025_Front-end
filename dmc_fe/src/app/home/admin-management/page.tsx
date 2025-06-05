@@ -162,7 +162,11 @@ export default function AdminManagementPage() {
                   {activeMenu === user.id && (
                     <div
                       ref={(el) => (menuRefs.current[user.id] = el)}
-                      className="absolute right-10 top-4 z-10 bg-white border border-gray-200 rounded-[10px] shadow-lg py-1 w-40"
+                      className="absolute right-10 z-10 bg-white border border-gray-200 rounded-[10px] shadow-lg py-1 w-40"
+                      style={{
+                        top: users.indexOf(user) >= users.length - 2 ? "auto" : "100%",
+                        bottom: users.indexOf(user) >= users.length - 2 ? "100%" : "auto",
+                      }}
                     >
                       <button
                         onClick={(e) => {

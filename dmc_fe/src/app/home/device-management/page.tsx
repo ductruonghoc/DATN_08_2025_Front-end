@@ -59,7 +59,7 @@ export default function DeviceManagementPage() {
   const [editCategoryName, setEditCategoryName] = useState("")
   const [editBrandName, setEditBrandName] = useState("")
 
-  // Mock devices data
+  // Mock devices data - expand to 50+ devices for proper pagination
   const devices: Device[] = [
     {
       id: "device-1",
@@ -120,6 +120,247 @@ export default function DeviceManagementPage() {
       name: "Xiaomi Redmi Note 14 Pro+",
       category: "Smartphone",
       brand: "Xiaomi",
+    },
+    // Add more devices for pagination
+    {
+      id: "device-11",
+      name: "iPhone 15 Pro Max",
+      category: "Smartphone",
+      brand: "Apple",
+    },
+    {
+      id: "device-12",
+      name: "MacBook Pro 16-inch M3",
+      category: "Laptop",
+      brand: "Apple",
+    },
+    {
+      id: "device-13",
+      name: "Sony WH-1000XM5 Wireless Headphones",
+      category: "Headphones",
+      brand: "Sony",
+    },
+    {
+      id: "device-14",
+      name: "Canon EOS R5 Mirrorless Camera",
+      category: "Camera",
+      brand: "Canon",
+    },
+    {
+      id: "device-15",
+      name: "Nintendo Switch OLED",
+      category: "Gaming Console",
+      brand: "Nintendo",
+    },
+    {
+      id: "device-16",
+      name: "Tesla Model S Plaid",
+      category: "Electric Vehicle",
+      brand: "Tesla",
+    },
+    {
+      id: "device-17",
+      name: "Dyson V15 Detect Cordless Vacuum",
+      category: "Vacuum Cleaner",
+      brand: "Dyson",
+    },
+    {
+      id: "device-18",
+      name: "KitchenAid Artisan Stand Mixer",
+      category: "Kitchen Appliance",
+      brand: "KitchenAid",
+    },
+    {
+      id: "device-19",
+      name: "Nest Learning Thermostat",
+      category: "Smart Home",
+      brand: "Google",
+    },
+    {
+      id: "device-20",
+      name: "Ring Video Doorbell Pro 2",
+      category: "Security Camera",
+      brand: "Ring",
+    },
+    {
+      id: "device-21",
+      name: "Bose QuietComfort 45 Headphones",
+      category: "Headphones",
+      brand: "Bose",
+    },
+    {
+      id: "device-22",
+      name: "iPad Pro 12.9-inch M2",
+      category: "Tablet",
+      brand: "Apple",
+    },
+    {
+      id: "device-23",
+      name: "Microsoft Surface Pro 9",
+      category: "Tablet",
+      brand: "Microsoft",
+    },
+    {
+      id: "device-24",
+      name: "HP Spectre x360 14",
+      category: "Laptop",
+      brand: "HP",
+    },
+    {
+      id: "device-25",
+      name: "Lenovo ThinkPad X1 Carbon Gen 11",
+      category: "Laptop",
+      brand: "Lenovo",
+    },
+    {
+      id: "device-26",
+      name: "ASUS ROG Strix G15 Gaming Laptop",
+      category: "Gaming Laptop",
+      brand: "Asus",
+    },
+    {
+      id: "device-27",
+      name: "Samsung Galaxy Tab S9 Ultra",
+      category: "Tablet",
+      brand: "Samsung",
+    },
+    {
+      id: "device-28",
+      name: "Google Pixel 8 Pro",
+      category: "Smartphone",
+      brand: "Google",
+    },
+    {
+      id: "device-29",
+      name: "OnePlus 12",
+      category: "Smartphone",
+      brand: "OnePlus",
+    },
+    {
+      id: "device-30",
+      name: "Sony PlayStation 5",
+      category: "Gaming Console",
+      brand: "Sony",
+    },
+    {
+      id: "device-31",
+      name: "Xbox Series X",
+      category: "Gaming Console",
+      brand: "Microsoft",
+    },
+    {
+      id: "device-32",
+      name: "LG OLED C3 65-inch TV",
+      category: "Smart TV",
+      brand: "LG",
+    },
+    {
+      id: "device-33",
+      name: "Samsung QN90C Neo QLED 4K TV",
+      category: "Smart TV",
+      brand: "Samsung",
+    },
+    {
+      id: "device-34",
+      name: "Whirlpool French Door Refrigerator",
+      category: "Refrigerator",
+      brand: "Whirlpool",
+    },
+    {
+      id: "device-35",
+      name: "GE Profile Smart Dishwasher",
+      category: "Dishwasher",
+      brand: "GE",
+    },
+    {
+      id: "device-36",
+      name: "Instant Pot Duo 7-in-1 Electric Pressure Cooker",
+      category: "Kitchen Appliance",
+      brand: "Instant Pot",
+    },
+    {
+      id: "device-37",
+      name: "Ninja Foodi Personal Blender",
+      category: "Blender",
+      brand: "Ninja",
+    },
+    {
+      id: "device-38",
+      name: "Keurig K-Elite Coffee Maker",
+      category: "Coffee Maker",
+      brand: "Keurig",
+    },
+    {
+      id: "device-39",
+      name: "Roomba j7+ Robot Vacuum",
+      category: "Robot Vacuum",
+      brand: "iRobot",
+    },
+    {
+      id: "device-40",
+      name: "Shark Navigator Lift-Away Professional",
+      category: "Vacuum Cleaner",
+      brand: "Shark",
+    },
+    {
+      id: "device-41",
+      name: "Fitbit Charge 5 Fitness Tracker",
+      category: "Fitness Tracker",
+      brand: "Fitbit",
+    },
+    {
+      id: "device-42",
+      name: "Apple Watch Series 9",
+      category: "Smartwatch",
+      brand: "Apple",
+    },
+    {
+      id: "device-43",
+      name: "Samsung Galaxy Watch 6",
+      category: "Smartwatch",
+      brand: "Samsung",
+    },
+    {
+      id: "device-44",
+      name: "Garmin Forerunner 955",
+      category: "GPS Watch",
+      brand: "Garmin",
+    },
+    {
+      id: "device-45",
+      name: "JBL Charge 5 Portable Speaker",
+      category: "Bluetooth Speaker",
+      brand: "JBL",
+    },
+    {
+      id: "device-46",
+      name: "Sonos One SL Wireless Speaker",
+      category: "Smart Speaker",
+      brand: "Sonos",
+    },
+    {
+      id: "device-47",
+      name: "Amazon Echo Dot (5th Gen)",
+      category: "Smart Speaker",
+      brand: "Amazon",
+    },
+    {
+      id: "device-48",
+      name: "Google Nest Hub Max",
+      category: "Smart Display",
+      brand: "Google",
+    },
+    {
+      id: "device-49",
+      name: "Philips Hue White and Color Ambiance Starter Kit",
+      category: "Smart Lighting",
+      brand: "Philips",
+    },
+    {
+      id: "device-50",
+      name: "TP-Link Archer AX73 WiFi 6 Router",
+      category: "Router",
+      brand: "TP-Link",
     },
   ]
 
@@ -1185,7 +1426,12 @@ export default function DeviceManagementPage() {
                           {activeMenu === device.id && (
                             <div
                               ref={(el) => (menuRefs.current[device.id] = el)}
-                              className="absolute right-10 top-4 z-10 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40"
+                              className="absolute right-10 z-10 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40"
+                              style={{
+                                top: paginatedDevices.indexOf(device) >= paginatedDevices.length - 2 ? "auto" : "100%",
+                                bottom:
+                                  paginatedDevices.indexOf(device) >= paginatedDevices.length - 2 ? "100%" : "auto",
+                              }}
                             >
                               <button
                                 onClick={(e) => handleEditDevice(device.id, e)}
@@ -1225,7 +1471,8 @@ export default function DeviceManagementPage() {
                     ‹
                   </Button>
 
-                  {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
+                  {/* Show first few pages */}
+                  {Array.from({ length: Math.min(3, totalPages) }).map((_, i) => {
                     const pageNumber = i + 1
                     return (
                       <Button
@@ -1240,16 +1487,18 @@ export default function DeviceManagementPage() {
                     )
                   })}
 
-                  {totalPages > 5 && <span>...</span>}
+                  {/* Show ellipsis if there are more pages */}
+                  {totalPages > 5 && currentPage < totalPages - 2 && <span>...</span>}
 
-                  {totalPages > 5 && (
+                  {/* Show last page if not already shown */}
+                  {totalPages > 3 && (
                     <Button
-                      variant="outline"
+                      variant={currentPage === totalPages ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setCurrentPage(10)}
-                      className={currentPage === 10 ? "bg-[#2d336b] text-white" : ""}
+                      onClick={() => setCurrentPage(totalPages)}
+                      className={currentPage === totalPages ? "bg-[#2d336b] text-white" : ""}
                     >
-                      10
+                      {totalPages}
                     </Button>
                   )}
 
@@ -1301,11 +1550,11 @@ export default function DeviceManagementPage() {
                         <Plus className="h-5 w-5 text-white" />
                       </button>
                     </div>
-                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                    <div className="space-y-1 max-h-80 overflow-y-auto">
                       {filteredCategories.map((category) => (
                         <div
                           key={category.id}
-                          className="flex items-center justify-between p-3 hover:bg-gray-50 rounded"
+                          className="flex items-center justify-between p-2 hover:bg-gray-50 rounded"
                         >
                           <span className="text-[#2e3139]">{category.name}</span>
                           <div className="relative">
@@ -1319,7 +1568,17 @@ export default function DeviceManagementPage() {
                             {activeCategoryMenu === category.id && (
                               <div
                                 ref={(el) => (categoryMenuRefs.current[category.id] = el)}
-                                className="absolute right-0 top-full mt-1 z-10 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40"
+                                className="absolute right-0 z-10 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40"
+                                style={{
+                                  top:
+                                    filteredCategories.indexOf(category) >= filteredCategories.length - 2
+                                      ? "auto"
+                                      : "100%",
+                                  bottom:
+                                    filteredCategories.indexOf(category) >= filteredCategories.length - 2
+                                      ? "100%"
+                                      : "auto",
+                                }}
                               >
                                 <button
                                   onClick={(e) => handleEditCategory(category.id, e)}
@@ -1367,9 +1626,9 @@ export default function DeviceManagementPage() {
                         <Plus className="h-5 w-5 text-white" />
                       </button>
                     </div>
-                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                    <div className="space-y-1 max-h-80 overflow-y-auto">
                       {filteredBrands.map((brand) => (
-                        <div key={brand.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded">
+                        <div key={brand.id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
                           <span className="text-[#2e3139]">{brand.name}</span>
                           <div className="relative">
                             <button
@@ -1382,7 +1641,11 @@ export default function DeviceManagementPage() {
                             {activeBrandMenu === brand.id && (
                               <div
                                 ref={(el) => (brandMenuRefs.current[brand.id] = el)}
-                                className="absolute right-0 top-full mt-1 z-10 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40"
+                                className="absolute right-0 z-10 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40"
+                                style={{
+                                  top: filteredBrands.indexOf(brand) >= filteredBrands.length - 2 ? "auto" : "100%",
+                                  bottom: filteredBrands.indexOf(brand) >= filteredBrands.length - 2 ? "100%" : "auto",
+                                }}
                               >
                                 <button
                                   onClick={(e) => handleEditBrand(brand.id, e)}
