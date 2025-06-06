@@ -227,8 +227,8 @@ export default function ChatPage({ params }: { params: { id: string } }) {
           setIsLoading(false)
         }, 1500)
       } else {
-        // If no conversation and no initialMessage, redirect to conservation page
-        router.push("/home/conservation")
+        // If no conversation and no initialMessage, redirect to conversation page
+        router.push("/home/conversation")
       }
     }
 

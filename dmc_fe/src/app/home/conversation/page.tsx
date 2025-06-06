@@ -6,7 +6,7 @@ import { useState, useRef, useEffect } from "react"
 import { Plus, Globe, Lightbulb, MoreHorizontal, Mic } from "lucide-react"
 import { useRouter } from "next/navigation"
 
-export default function ConservationPage() {
+export default function conversationPage() {
   const [inputValue, setInputValue] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
@@ -24,7 +24,7 @@ export default function ConservationPage() {
     sessionStorage.setItem("initialMessage", inputValue)
 
     // Navigate to the chat page with a new conversation ID
-    router.push(`/home/conservation/chat/new-conversation`)
+    router.push(`/home/conversation/chat/new-conversation`)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

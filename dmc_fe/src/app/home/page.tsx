@@ -20,7 +20,7 @@ export default function HomePage() {
               </div>
               <h2 className="text-xl font-semibold text-[#2e3139]">Upload PDF</h2>
             </div>
-            <p className="text-gray-600 mb-6">Upload your PDF documents and start querying them instantly.</p>
+            <p className="text-gray-600 mb-6">Upload PDF documents and start querying them instantly.</p>
             <Link href="/home/import">
               <Button className="w-full rounded-[10px] bg-[#4045ef] text-white hover:bg-[#2d336b]/90">
                 Upload a PDF
@@ -36,8 +36,8 @@ export default function HomePage() {
               </div>
               <h2 className="text-xl font-semibold text-[#2e3139]">New Conversation</h2>
             </div>
-            <p className="text-gray-600 mb-6">Start a new conversation with your PDF assistant.</p>
-            <Link href="/home/conservation">
+            <p className="text-gray-600 mb-6">Start a new conversation with PDF assistant.</p>
+            <Link href="/home/conversation">
               <Button className="w-full rounded-[10px] bg-[#4045ef] text-white hover:bg-[#2d336b]/90">
                 Start Conversation
               </Button>

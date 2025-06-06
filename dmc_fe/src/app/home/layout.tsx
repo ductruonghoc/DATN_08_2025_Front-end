@@ -65,7 +65,7 @@ export default function HomeLayout({
   const conversationMenuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
 
   const handleNewConversation = () => {
-    router.push("/home/conservation")
+    router.push("/home/conversation")
   }
 
   const handleDeleteConversation = (conversationId: string) => {
@@ -80,9 +80,9 @@ export default function HomeLayout({
       setShowDeleteModal(false)
       setConversationToDelete(null)
 
-      // If currently viewing the deleted conversation, redirect to conservation page
-      if (pathname.includes(`/home/conservation/chat/${conversationToDelete}`)) {
-        router.push("/home/conservation")
+      // If currently viewing the deleted conversation, redirect to conversation page
+      if (pathname.includes(`/home/conversation/chat/${conversationToDelete}`)) {
+        router.push("/home/conversation")
       }
     }
   }
@@ -222,7 +222,7 @@ export default function HomeLayout({
                 className={cn(
                   "flex items-center gap-2 rounded-[10px] bg-white shadow-sm cursor-pointer hover:bg-gray-50 transition-colors",
                   sidebarOpen ? "w-full px-4 py-2 text-sm text-[#2d336b]" : "h-10 w-10 justify-center",
-                  pathname.includes("/home/conservation") ? "ring-2 ring-[#4045ef]/20" : "",
+                  pathname.includes("/home/conversation") ? "ring-2 ring-[#4045ef]/20" : "",
                 )}
               >
                 <Plus className="h-4 w-4" />
@@ -312,10 +312,10 @@ export default function HomeLayout({
                     key={conversation.id}
                     className={cn(
                       "flex items-center justify-between rounded-[10px] px-3 py-2 hover:bg-white/50 relative",
-                      pathname.includes(`/home/conservation/chat/${conversation.id}`) ? "bg-white/50" : "",
+                      pathname.includes(`/home/conversation/chat/${conversation.id}`) ? "bg-white/50" : "",
                     )}
                   >
-                    <Link href={`/home/conservation/chat/${conversation.id}`} className="flex-1 min-w-0">
+                    <Link href={`/home/conversation/chat/${conversation.id}`} className="flex-1 min-w-0">
                       <div className="flex items-center">
                         <span className="font-medium text-sm truncate text-[#2d336b]">{conversation.title}</span>
                       </div>
@@ -362,12 +362,12 @@ export default function HomeLayout({
         {sidebarOpen && (
           <div className="px-4 py-2 border-t border-white/20">
             <div className="text-xs text-[#2d336b] mb-2">Current Role: {getUserDisplayName()}</div>
-            <div className="text-xs text-[#2d336b] mb-1 opacity-75">Switching roles redirects to conservation</div>
+            <div className="text-xs text-[#2d336b] mb-1 opacity-75">Switching roles redirects to conversation</div>
             <select
               value={userRole}
               onChange={(e) => {
                 setUserRole(e.target.value as UserRole)
-                router.push("/home/conservation")
+                router.push("/home/conversation")
               }}
               className="w-full text-xs p-1 rounded border border-gray-300"
             >
@@ -388,7 +388,7 @@ export default function HomeLayout({
         )}
       >
         {/* Top horizontal bar */}
-        <div className="h-16 border-b bg-white border-gray-700 flex justify-end items-center px-4 sticky top-0 z-40">
+        <div className="h-16 bg-white flex justify-end items-center px-4 sticky top-0 z-40">
           {userRole === "unlogged" ? (
             /* Unlogged user - show login and register */
             <div className="flex items-center gap-4">

@@ -22,7 +22,7 @@ export default function ChatPage() {
   // Add a useEffect to redirect to the dynamic route
   useEffect(() => {
     // Redirect to the dynamic route
-    router.push("/home/conservation/chat/new-conversation")
+    router.push("/home/conversation/chat/new-conversation")
   }, [router])
 
   // Return a loading state while redirecting
