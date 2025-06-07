@@ -1,9 +1,6 @@
 {
   "/page": "app/page.js",
-  "/home/conversation/page": "app/home/conversation/page.js",
   "/home/page": "app/home/page.js",
-  "/home/conversation/chat/[id]/page": "app/home/conversation/chat/[id]/page.js",
-  "/home/track-progress/tracking/page": "app/home/track-progress/tracking/page.js",
-  "/home/device-management/page": "app/home/device-management/page.js",
-  "/home/import/page": "app/home/import/page.js"
+  "/home/import/page": "app/home/import/page.js",
+  "/home/import/pdfInformation/page": "app/home/import/pdfInformation/page.js"
 }

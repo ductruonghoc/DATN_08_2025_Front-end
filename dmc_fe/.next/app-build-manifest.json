@@ -21,55 +21,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/home/page.js"
     ],
-    "/home/conversation/loading": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/home/conversation/loading.js"
-    ],
-    "/home/conversation/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/home/conversation/page.js"
-    ],
-    "/home/conversation/chat/loading": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/home/conversation/chat/loading.js"
-    ],
-    "/home/conversation/chat/[id]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/home/conversation/chat/[id]/page.js"
-    ],
-    "/home/track-progress/loading": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/home/track-progress/loading.js"
-    ],
-    "/home/track-progress/tracking/loading": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/home/track-progress/tracking/loading.js"
-    ],
-    "/home/track-progress/tracking/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/home/track-progress/tracking/page.js"
-    ],
-    "/home/device-management/loading": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/home/device-management/loading.js"
-    ],
-    "/home/device-management/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/home/device-management/page.js"
-    ],
     "/home/import/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/home/import/page.js"
+    ],
+    "/home/import/pdfInformation/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/home/import/pdfInformation/page.js"
     ]
   }
 }

@@ -24,6 +24,7 @@ interface Note {
 interface Conversation {
   id: string
   title: string
+  deviceId: string
   messages: Message[]
 }
 
@@ -111,11 +112,12 @@ export default function ChatPage({ params }: { params: { id: string } }) {
   const [shareNoteId, setShareNoteId] = useState<string | null>(null)
   const [shareLink, setShareLink] = useState("")
 
-  // Mock conversations data
+  // Mock conversations data with updated IDs and deviceId
   const mockConversations: Record<string, Conversation> = {
-    "conv-1": {
-      id: "conv-1",
-      title: "Lenovo Thinkpad T570",
+    "chat-1685432789000-device-1": {
+      id: "chat-1685432789000-device-1",
+      title: "Galaxy S25 Ultra",
+      deviceId: "device-1",
       messages: [
         {
           id: "user-1",
@@ -137,26 +139,27 @@ export default function ChatPage({ params }: { params: { id: string } }) {
         },
         {
           id: "user-2",
-          content: "Are there a ways to fix this antenna",
+          content: "Are there ways to fix this antenna?",
           sender: "user",
           timestamp: new Date(Date.now() - 60000 * 3),
         },
       ],
     },
-    "conv-2": {
-      id: "conv-2",
-      title: "Cannon Camera EOS R5",
+    "chat-1685346389000-device-4": {
+      id: "chat-1685346389000-device-4",
+      title: "Aspire Vero 14 Laptop",
+      deviceId: "device-4",
       messages: [
         {
           id: "user-1",
-          content: "What's the best lens for portraits?",
+          content: "What's the best way to upgrade RAM?",
           sender: "user",
           timestamp: new Date(Date.now() - 60000 * 60 * 24 * 2),
         },
         {
           id: "ai-1",
           content:
-            "For portrait photography with the Canon EOS R5, I would recommend the RF 85mm f/1.2L USM. It's considered one of the best portrait lenses due to its ideal focal length and exceptional bokeh. The wide aperture creates beautiful background blur while keeping your subject tack sharp.",
+            "For the Aspire Vero 14 Laptop (AV14-52P-55N4), you can upgrade the RAM by removing the bottom panel. This model supports up to 16GB of DDR4 RAM. Make sure to get compatible SO-DIMM DDR4 modules. Power off the laptop completely before installation and ground yourself to prevent static discharge.",
           sender: "ai",
           timestamp: new Date(Date.now() - 60000 * 60 * 24 * 2 + 60000 * 5),
         },
@@ -227,14 +230,48 @@ export default function ChatPage({ params }: { params: { id: string } }) {
           setIsLoading(false)
         }, 1500)
       } else {
-        // If no conversation and no initialMessage, redirect to conversation page
-        router.push("/home/conversation")
+        // If no conversation and no initialMessage, redirect to conservation page
+        router.push("/home/conservation")
       }
     }
 
     // Focus input
     inputRef.current?.focus()
   }, [params.id, router])
+
+  // Check for conversations in sessionStorage
+  useEffect(() => {
+    // Check for conversations in sessionStorage
+    const storedConversations = sessionStorage.getItem("conversations")
+    if (storedConversations) {
+      try {
+        const parsedConversations = JSON.parse(storedConversations)
+        // Find if current conversation ID exists in stored conversations
+        const currentConversation = parsedConversations.find((conv: any) => conv.id === params.id)
+
+        if (currentConversation && !mockConversations[params.id]) {
+          // If this is a new conversation we created but not in our mock data
+          // Initialize with empty messages or a welcome message
+          const selectedDevice = sessionStorage.getItem("selectedDevice")
+          if (selectedDevice) {
+            const device = JSON.parse(selectedDevice)
+            setDeviceName(device.name)
+
+            // Add a welcome message
+            const welcomeMessage: Message = {
+              id: "welcome-" + Date.now(),
+              content: `Welcome! How can I help you with your ${device.name}?`,
+              sender: "ai",
+              timestamp: new Date(),
+            }
+            setMessages([welcomeMessage])
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing stored conversations:", error)
+      }
+    }
+  }, [params.id])
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {

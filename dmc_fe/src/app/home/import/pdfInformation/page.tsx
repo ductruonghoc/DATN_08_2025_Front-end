@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, Mail, HelpCircle, Check } from "lucide-react"
+import { ChevronLeft, ChevronRight, Mail, HelpCircle, Check, Plus } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/form/select"
 import { useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
@@ -38,6 +38,13 @@ export default function PDFInformationPage() {
   const [activeTab, setActiveTab] = useState<"texts" | "images">("texts")
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [imageDescriptions, setImageDescriptions] = useState<{ [key: number]: string }>({})
+
+  const [showAddBrandModal, setShowAddBrandModal] = useState(false)
+  const [showAddTypeModal, setShowAddTypeModal] = useState(false)
+  const [showAddNameModal, setShowAddNameModal] = useState(false)
+  const [newBrandName, setNewBrandName] = useState("")
+  const [newTypeName, setNewTypeName] = useState("")
+  const [newDeviceName, setNewDeviceName] = useState("")
 
   // Mock images data
   const [images] = useState<ImageData[]>([
@@ -138,7 +145,7 @@ export default function PDFInformationPage() {
   const isCurrentPageChecked = checkedPages.has(currentPage)
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full pt-6">
       {/* Progress Steps */}
       <div className="flex justify-center mb-6">
         <div className="flex items-center max-w-2xl w-full">
@@ -176,10 +183,10 @@ export default function PDFInformationPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-1 gap-6">
+      <div className="flex flex-1 gap-6 px-6 pb-6">
         {/* PDF Preview */}
         <div className="flex-1 flex flex-col">
-          <div className="flex-1 border border-[#d5d5d5] rounded-md flex items-center justify-center bg-white overflow-hidden">
+          <div className="flex-1 border border-[#d5d5d5] rounded-md flex items-center justify-center bg-white overflow-hidden mb-4">
             {pdfUrl ? (
               <PDFViewer pdfUrl={pdfUrl} currentPage={currentPage} onLoadSuccess={handleDocumentLoadSuccess} />
             ) : (
@@ -190,7 +197,7 @@ export default function PDFInformationPage() {
           </div>
 
           {/* Page Navigation */}
-          <div className="flex justify-center mt-4">
+          <div className="flex justify-center">
             <div className="flex items-center bg-[#f1f6ff] rounded-md">
               <button
                 onClick={prevPage}
@@ -240,81 +247,105 @@ export default function PDFInformationPage() {
           {!showImageProcessing ? (
             /* Device Information Panel */
             <>
-              <div className="bg-[#d3e0fe] p-4 rounded-md mb-4">
+              <div className="bg-[#d3e0fe] p-4 rounded-md mb-6">
                 <h2 className="text-lg font-medium text-center text-[#2d336b] mb-4">Device Information</h2>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <div>
-                  <label className="block text-sm text-[#2e3139] mb-2">Device brand</label>
-                  <div className="relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#425583] z-10">
-                      <Mail className="w-5 h-5" />
+                  <label className="block text-sm text-[#2e3139] mb-3">Device brand</label>
+                  <div className="flex items-center gap-3">
+                    <div className="relative flex-1">
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#425583] z-10">
+                        <Mail className="w-5 h-5" />
+                      </div>
+                      <Select>
+                        <SelectTrigger className="pl-10 py-2 w-full border-[#a9b5df] rounded-full focus:border-[#4045ef] focus:ring-2 focus:ring-[#4045ef]/20">
+                          <SelectValue placeholder="..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="lenovo">Lenovo</SelectItem>
+                          <SelectItem value="hp">HP</SelectItem>
+                          <SelectItem value="dell">Dell</SelectItem>
+                          <SelectItem value="apple">Apple</SelectItem>
+                          <SelectItem value="asus">Asus</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <Select>
-                      <SelectTrigger className="pl-10 py-2 w-full border-[#a9b5df] rounded-full focus:border-[#4045ef] focus:ring-2 focus:ring-[#4045ef]/20">
-                        <SelectValue placeholder="..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="lenovo">Lenovo</SelectItem>
-                        <SelectItem value="hp">HP</SelectItem>
-                        <SelectItem value="dell">Dell</SelectItem>
-                        <SelectItem value="apple">Apple</SelectItem>
-                        <SelectItem value="asus">Asus</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <button
+                      onClick={() => setShowAddBrandModal(true)}
+                      className="w-8 h-8 rounded-full bg-[#A9B5DF] hover:bg-[#9AA5D5] flex items-center justify-center transition-colors"
+                    >
+                      <Plus className="w-4 h-4 text-white" />
+                    </button>
                   </div>
-                  <div className="flex items-center mt-1 text-sm text-[#4045ef]">
+                  <div className="flex items-center mt-2 text-sm text-[#4045ef]">
                     <HelpCircle className="w-4 h-4 mr-1" />
                     <span>Helper Text</span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm text-[#2e3139] mb-2">Device type</label>
-                  <div className="relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#425583] z-10">
-                      <Mail className="w-5 h-5" />
+                  <label className="block text-sm text-[#2e3139] mb-3">Device type</label>
+                  <div className="flex items-center gap-3">
+                    <div className="relative flex-1">
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#425583] z-10">
+                        <Mail className="w-5 h-5" />
+                      </div>
+                      <Select>
+                        <SelectTrigger className="pl-10 py-2 w-full border-[#a9b5df] rounded-full focus:border-[#4045ef] focus:ring-2 focus:ring-[#4045ef]/20">
+                          <SelectValue placeholder="..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="laptop">Laptop</SelectItem>
+                          <SelectItem value="desktop">Desktop</SelectItem>
+                          <SelectItem value="tablet">Tablet</SelectItem>
+                          <SelectItem value="smartphone">Smartphone</SelectItem>
+                          <SelectItem value="server">Server</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <Select>
-                      <SelectTrigger className="pl-10 py-2 w-full border-[#a9b5df] rounded-full focus:border-[#4045ef] focus:ring-2 focus:ring-[#4045ef]/20">
-                        <SelectValue placeholder="..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="laptop">Laptop</SelectItem>
-                        <SelectItem value="desktop">Desktop</SelectItem>
-                        <SelectItem value="tablet">Tablet</SelectItem>
-                        <SelectItem value="smartphone">Smartphone</SelectItem>
-                        <SelectItem value="server">Server</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <button
+                      onClick={() => setShowAddTypeModal(true)}
+                      className="w-8 h-8 rounded-full bg-[#A9B5DF] hover:bg-[#9AA5D5] flex items-center justify-center transition-colors"
+                    >
+                      <Plus className="w-4 h-4 text-white" />
+                    </button>
                   </div>
-                  <div className="flex items-center mt-1 text-sm text-[#4045ef]">
+                  <div className="flex items-center mt-2 text-sm text-[#4045ef]">
                     <HelpCircle className="w-4 h-4 mr-1" />
                     <span>Helper Text</span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm text-[#2e3139] mb-2">Device name</label>
-                  <div className="relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#425583] z-10">
-                      <Mail className="w-5 h-5" />
+                  <label className="block text-sm text-[#2e3139] mb-3">Device name</label>
+                  <div className="flex items-center gap-3">
+                    <div className="relative flex-1">
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#425583] z-10">
+                        <Mail className="w-5 h-5" />
+                      </div>
+                      <Select>
+                        <SelectTrigger className="pl-10 py-2 w-full border-[#a9b5df] rounded-full focus:border-[#4045ef] focus:ring-2 focus:ring-[#4045ef]/20">
+                          <SelectValue placeholder="..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="thinkpad-t570">ThinkPad T570</SelectItem>
+                          <SelectItem value="thinkpad-p51s">ThinkPad P51s</SelectItem>
+                          <SelectItem value="thinkpad-x1">ThinkPad X1 Carbon</SelectItem>
+                          <SelectItem value="thinkpad-yoga">ThinkPad Yoga</SelectItem>
+                          <SelectItem value="thinkpad-e15">ThinkPad E15</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <Select>
-                      <SelectTrigger className="pl-10 py-2 w-full border-[#a9b5df] rounded-full focus:border-[#4045ef] focus:ring-2 focus:ring-[#4045ef]/20">
-                        <SelectValue placeholder="..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="thinkpad-t570">ThinkPad T570</SelectItem>
-                        <SelectItem value="thinkpad-p51s">ThinkPad P51s</SelectItem>
-                        <SelectItem value="thinkpad-x1">ThinkPad X1 Carbon</SelectItem>
-                        <SelectItem value="thinkpad-yoga">ThinkPad Yoga</SelectItem>
-                        <SelectItem value="thinkpad-e15">ThinkPad E15</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    {/* <button
+                      onClick={() => setShowAddNameModal(true)}
+                      className="w-8 h-8 rounded-full bg-[#A9B5DF] hover:bg-[#9AA5D5] flex items-center justify-center transition-colors"
+                    >
+                      <Plus className="w-4 h-4 text-white" />
+                    </button> */}
                   </div>
-                  <div className="flex items-center mt-1 text-sm text-[#4045ef]">
+                  <div className="flex items-center mt-2 text-sm text-[#4045ef]">
                     <HelpCircle className="w-4 h-4 mr-1" />
                     <span>Helper Text</span>
                   </div>
@@ -322,7 +353,7 @@ export default function PDFInformationPage() {
               </div>
 
               {/* Progress indicator */}
-              <div className="mt-6 p-4 bg-gray-50 rounded-md">
+              <div className="mt-8 p-4 bg-gray-50 rounded-md">
                 <div className="text-sm text-gray-600 mb-2">
                   Pages checked: {checkedPages.size}/{totalPages}
                 </div>
@@ -336,7 +367,7 @@ export default function PDFInformationPage() {
             </>
           ) : (
             /* Image Processing Panel */
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Tab Navigation */}
               <div className="flex rounded-md overflow-hidden">
                 <button
@@ -363,7 +394,7 @@ export default function PDFInformationPage() {
 
               {/* Image Content */}
               {activeTab === "images" && (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div className="border border-gray-200 rounded-md p-4">
                     <img
                       src={images[currentImageIndex]?.src || "/placeholder.svg"}
@@ -371,7 +402,7 @@ export default function PDFInformationPage() {
                       className="w-full h-48 object-cover rounded-md mb-4"
                     />
 
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       <label className="block text-sm font-medium text-gray-700">Input image description</label>
                       <textarea
                         value={imageDescriptions[currentImageIndex] || ""}
@@ -407,6 +438,128 @@ export default function PDFInformationPage() {
           )}
         </div>
       </div>
+      {/* Add Brand Modal */}
+      {showAddBrandModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4 text-[#2e3139]">Add New Brand</h2>
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-[#2e3139] mb-2">Brand Name</label>
+              <input
+                type="text"
+                value={newBrandName}
+                onChange={(e) => setNewBrandName(e.target.value)}
+                placeholder="Enter brand name"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4045ef]"
+              />
+            </div>
+            <div className="flex justify-between">
+              <Button
+                onClick={() => {
+                  setShowAddBrandModal(false)
+                  setNewBrandName("")
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  // Handle adding new brand here
+                  console.log("Adding brand:", newBrandName)
+                  setShowAddBrandModal(false)
+                  setNewBrandName("")
+                }}
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md"
+              >
+                Add
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Type Modal */}
+      {showAddTypeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4 text-[#2e3139]">Add New Device Type</h2>
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-[#2e3139] mb-2">Type Name</label>
+              <input
+                type="text"
+                value={newTypeName}
+                onChange={(e) => setNewTypeName(e.target.value)}
+                placeholder="Enter device type"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4045ef]"
+              />
+            </div>
+            <div className="flex justify-between">
+              <Button
+                onClick={() => {
+                  setShowAddTypeModal(false)
+                  setNewTypeName("")
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  // Handle adding new type here
+                  console.log("Adding type:", newTypeName)
+                  setShowAddTypeModal(false)
+                  setNewTypeName("")
+                }}
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md"
+              >
+                Add
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Device Name Modal */}
+      {showAddNameModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4 text-[#2e3139]">Add New Device Name</h2>
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-[#2e3139] mb-2">Device Name</label>
+              <input
+                type="text"
+                value={newDeviceName}
+                onChange={(e) => setNewDeviceName(e.target.value)}
+                placeholder="Enter device name"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4045ef]"
+              />
+            </div>
+            <div className="flex justify-between">
+              <Button
+                onClick={() => {
+                  setShowAddNameModal(false)
+                  setNewDeviceName("")
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  // Handle adding new device name here
+                  console.log("Adding device name:", newDeviceName)
+                  setShowAddNameModal(false)
+                  setNewDeviceName("")
+                }}
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md"
+              >
+                Add
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
