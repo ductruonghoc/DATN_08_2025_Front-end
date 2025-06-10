@@ -1,6 +1,5 @@
 {
-  "/page": "app/page.js",
-  "/home/page": "app/home/page.js",
-  "/home/import/page": "app/home/import/page.js",
-  "/home/import/pdfInformation/page": "app/home/import/pdfInformation/page.js"
+  "/home/import/pdfInformation/page": "app/home/import/pdfInformation/page.js",
+  "/home/device-management/page": "app/home/device-management/page.js",
+  "/home/import/page": "app/home/import/page.js"
 }

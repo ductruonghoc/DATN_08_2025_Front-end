@@ -26,9 +26,21 @@
       "static/chunks/main-app.js",
       "static/chunks/app/home/import/page.js"
     ],
+    "/home/device-management/loading": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/home/device-management/loading.js"
+    ],
+    "/home/device-management/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/home/device-management/page.css",
+      "static/chunks/app/home/device-management/page.js"
+    ],
     "/home/import/pdfInformation/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
+      "static/css/app/home/import/pdfInformation/page.css",
       "static/chunks/app/home/import/pdfInformation/page.js"
     ]
   }

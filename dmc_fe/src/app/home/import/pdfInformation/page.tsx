@@ -1,11 +1,14 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, Mail, HelpCircle, Check, Plus } from "lucide-react"
+import { ChevronLeft, ChevronRight, Mail, HelpCircle, Check, Plus, X } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/form/select"
 import { useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
+import { toast, ToastContainer } from "react-toastify"
+import 'react-toastify/dist/ReactToastify.css'
 
 // Dynamically import the PDF viewer to avoid SSR issues
 const PDFViewer = dynamic(() => import("./pdf-viewer"), {
@@ -38,13 +41,19 @@ export default function PDFInformationPage() {
   const [activeTab, setActiveTab] = useState<"texts" | "images">("texts")
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [imageDescriptions, setImageDescriptions] = useState<{ [key: number]: string }>({})
-
   const [showAddBrandModal, setShowAddBrandModal] = useState(false)
   const [showAddTypeModal, setShowAddTypeModal] = useState(false)
   const [showAddNameModal, setShowAddNameModal] = useState(false)
   const [newBrandName, setNewBrandName] = useState("")
   const [newTypeName, setNewTypeName] = useState("")
   const [newDeviceName, setNewDeviceName] = useState("")
+  // Mock extracted text from PDF
+  const [extractedTexts, setExtractedTexts] = useState<string[]>([
+    "Sample text 1 from PDF",
+    "Sample text 2 from PDF",
+    "Sample text 3 from PDF",
+  ])
+  const [editedTexts, setEditedTexts] = useState<string[]>(extractedTexts)
 
   // Mock images data
   const [images] = useState<ImageData[]>([
@@ -69,7 +78,6 @@ export default function PDFInformationPage() {
   ])
 
   useEffect(() => {
-    // Get the PDF URL from sessionStorage
     const storedPdfUrl = sessionStorage.getItem("uploadedPdfUrl")
     const storedPdfName = sessionStorage.getItem("uploadedPdfName")
 
@@ -102,15 +110,17 @@ export default function PDFInformationPage() {
     const newCheckedPages = new Set(checkedPages)
     if (checkedPages.has(currentPage)) {
       newCheckedPages.delete(currentPage)
+      toast.info(`Page ${currentPage} has been unselected`)
     } else {
       newCheckedPages.add(currentPage)
+      toast.success(`Page ${currentPage} has been selected successfully`)
     }
     setCheckedPages(newCheckedPages)
 
-    // If all pages are checked, move to image processing
     if (newCheckedPages.size === totalPages && !showImageProcessing) {
       setShowImageProcessing(true)
-      setActiveTab("images")
+      setActiveTab("texts")
+      toast.success("Page Selection Completed! Proceeding to data preprocessing")
     }
   }
 
@@ -124,15 +134,74 @@ export default function PDFInformationPage() {
   const handleCheckImage = () => {
     const description = imageDescriptions[currentImageIndex]
     if (!description || description.trim() === "") {
-      return // Don't allow checking without description
+      toast.error("Please provide an image description before checking")
+      return
     }
 
-    // Move to next image or finish
+    toast.success(`Description for image ${currentImageIndex + 1} has been saved successfully`)
+
     if (currentImageIndex < images.length - 1) {
       setCurrentImageIndex(currentImageIndex + 1)
     } else {
-      // All images processed, redirect to finish page
-      router.push("/home/track-progress/finish")
+      toast.success("All images have been processed successfully")
+      setTimeout(() => {
+        router.push("/home/track-progress/finish")
+      }, 1000)
+    }
+  }
+
+  const handleAddBrand = () => {
+    if (newBrandName.trim()) {
+      toast.success(`Brand "${newBrandName}" has been added successfully`)
+      setShowAddBrandModal(false)
+      setNewBrandName("")
+    } else {
+      toast.error("Brand name cannot be empty")
+    }
+  }
+
+  const handleAddType = () => {
+    if (newTypeName.trim()) {
+      toast.success(`Device type "${newTypeName}" has been added successfully`)
+      setShowAddTypeModal(false)
+      setNewTypeName("")
+    } else {
+      toast.error("Device type cannot be empty")
+    }
+  }
+
+  const handleAddDeviceName = () => {
+    if (newDeviceName.trim()) {
+      toast.success(`Device name "${newDeviceName}" has been added successfully`)
+      setShowAddNameModal(false)
+      setNewDeviceName("")
+    } else {
+      toast.error("Device name cannot be empty")
+    }
+  }
+
+  const handleTextChange = (index: number, value: string) => {
+    const newEditedTexts = [...editedTexts]
+    newEditedTexts[index] = value
+    setEditedTexts(newEditedTexts)
+  }
+
+  const handleCheckImages = () => {
+    const allFilled = editedImages.every(text => text.trim() !== "")
+    if (allFilled) {
+      toast.success("Images checked successfully")
+      setShowImageProcessed(true)
+    } else {
+      toast.error("Please check all images before proceeding")
+    }
+  }
+
+  const handleCheckTexts = () => {
+    const allFilled = editedTexts.every(text => text.trim() !== "")
+    if (allFilled) {
+      toast.success("All text fields have been saved successfully")
+    } else {
+      toast.error("Please fill all text fields before checking")
     }
   }
 
@@ -146,6 +215,9 @@ export default function PDFInformationPage() {
 
   return (
     <div className="flex flex-col h-full pt-6">
+      {/* ToastContainer */}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} closeOnClick pauseOnHover />
+
       {/* Progress Steps */}
       <div className="flex justify-center mb-6">
         <div className="flex items-center max-w-2xl w-full">
@@ -325,18 +397,13 @@ export default function PDFInformationPage() {
                       <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#425583] z-10">
                         <Mail className="w-5 h-5" />
                       </div>
-                      <Select>
-                        <SelectTrigger className="pl-10 py-2 w-full border-[#a9b5df] rounded-full focus:border-[#4045ef] focus:ring-2 focus:ring-[#4045ef]/20">
-                          <SelectValue placeholder="..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="thinkpad-t570">ThinkPad T570</SelectItem>
-                          <SelectItem value="thinkpad-p51s">ThinkPad P51s</SelectItem>
-                          <SelectItem value="thinkpad-x1">ThinkPad X1 Carbon</SelectItem>
-                          <SelectItem value="thinkpad-yoga">ThinkPad Yoga</SelectItem>
-                          <SelectItem value="thinkpad-e15">ThinkPad E15</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <input
+                        type="text"
+                        value={newDeviceName}
+                        onChange={(e) => setNewDeviceName(e.target.value)}
+                        placeholder="Enter device name"
+                        className="pl-10 py-2 w-full border rounded-full border-[#A9B5DF] focus:border-[#A9B5DF] focus:ring-2 focus:ring-[#A9B5DF]/20"
+                      />
                     </div>
                     {/* <button
                       onClick={() => setShowAddNameModal(true)}
@@ -374,8 +441,8 @@ export default function PDFInformationPage() {
                   onClick={() => setActiveTab("texts")}
                   className={`flex-1 py-2 px-4 text-sm font-medium ${
                     activeTab === "texts"
-                      ? "bg-[#a8b3ff] text-[#2d336b]"
-                      : "bg-[#e8ebff] text-[#6b7280] hover:bg-[#d1d5ff]"
+                      ? "bg-[#4f46e5] text-white"
+                      : "bg-[#e0e7ff] text-[#4b5563] hover:bg-[#c7d2fe]"
                   }`}
                 >
                   Texts
@@ -385,14 +452,38 @@ export default function PDFInformationPage() {
                   className={`flex-1 py-2 px-4 text-sm font-medium ${
                     activeTab === "images"
                       ? "bg-[#6366f1] text-white"
-                      : "bg-[#e8ebff] text-[#6b7280] hover:bg-[#d1d5ff]"
+                      : "bg-[#e0e7ff] text-[#4b5563] hover:bg-[#c7d2fe]"
                   }`}
                 >
                   Images
                 </button>
               </div>
 
-              {/* Image Content */}
+              {/* Content */}
+              {activeTab === "texts" && (
+                <div className="space-y-4">
+                  <div className="border border-gray-200 rounded-md p-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Extracted Texts</label>
+                    {editedTexts.map((text, index) => (
+                      <input
+                        key={index}
+                        type="text"
+                        value={text}
+                        onChange={(e) => handleTextChange(index, e.target.value)}
+                        className="w-full p-2 mb-2 border border-gray-300 rounded-md text-sm"
+                        placeholder={`Text ${index + 1}`}
+                      />
+                    ))}
+                  </div>
+                  <Button
+                    onClick={handleCheckTexts}
+                    className="w-full py-3 rounded-md font-medium bg-green-500 hover:bg-green-600 text-white"
+                  >
+                    Check Texts
+                  </Button>
+                </div>
+              )}
+
               {activeTab === "images" && (
                 <div className="space-y-6">
                   <div className="border border-gray-200 rounded-md p-4">
@@ -438,6 +529,7 @@ export default function PDFInformationPage() {
           )}
         </div>
       </div>
+
       {/* Add Brand Modal */}
       {showAddBrandModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -458,18 +550,14 @@ export default function PDFInformationPage() {
                 onClick={() => {
                   setShowAddBrandModal(false)
                   setNewBrandName("")
+                  toast.info("Action cancelled")
                 }}
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
               >
                 Cancel
               </Button>
               <Button
-                onClick={() => {
-                  // Handle adding new brand here
-                  console.log("Adding brand:", newBrandName)
-                  setShowAddBrandModal(false)
-                  setNewBrandName("")
-                }}
+                onClick={handleAddBrand}
                 className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md"
               >
                 Add
@@ -499,18 +587,14 @@ export default function PDFInformationPage() {
                 onClick={() => {
                   setShowAddTypeModal(false)
                   setNewTypeName("")
+                  toast.info("Action cancelled")
                 }}
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
               >
                 Cancel
               </Button>
               <Button
-                onClick={() => {
-                  // Handle adding new type here
-                  console.log("Adding type:", newTypeName)
-                  setShowAddTypeModal(false)
-                  setNewTypeName("")
-                }}
+                onClick={handleAddType}
                 className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md"
               >
                 Add
@@ -540,18 +624,14 @@ export default function PDFInformationPage() {
                 onClick={() => {
                   setShowAddNameModal(false)
                   setNewDeviceName("")
+                  toast.info("Action cancelled")
                 }}
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
               >
                 Cancel
               </Button>
               <Button
-                onClick={() => {
-                  // Handle adding new device name here
-                  console.log("Adding device name:", newDeviceName)
-                  setShowAddNameModal(false)
-                  setNewDeviceName("")
-                }}
+                onClick={handleAddDeviceName}
                 className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md"
               >
                 Add

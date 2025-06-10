@@ -1,12 +1,13 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useRef, useEffect } from "react"
 import { Search, MoreVertical, Pen, Trash2, ChevronDown, Plus } from "lucide-react"
 import { Input } from "@/components/form/input"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { toast, ToastContainer } from "react-toastify"
+import 'react-toastify/dist/ReactToastify.css'
 
 interface Device {
   id: string
@@ -59,7 +60,15 @@ export default function DeviceManagementPage() {
   const [editCategoryName, setEditCategoryName] = useState("")
   const [editBrandName, setEditBrandName] = useState("")
 
-  // Mock devices data - expand to 50+ devices for proper pagination
+  const [showEditDeviceModal, setShowEditDeviceModal] = useState(false)
+  const [showDeleteDeviceModal, setShowDeleteDeviceModal] = useState(false)
+  const [editingDevice, setEditingDevice] = useState<Device | null>(null)
+  const [deletingDevice, setDeletingDevice] = useState<Device | null>(null)
+  const [editDeviceName, setEditDeviceName] = useState("")
+  const [editDeviceCategory, setEditDeviceCategory] = useState("")
+  const [editDeviceBrand, setEditDeviceBrand] = useState("")
+
+  // Mock devices data
   const devices: Device[] = [
     {
       id: "device-1",
@@ -121,7 +130,6 @@ export default function DeviceManagementPage() {
       category: "Smartphone",
       brand: "Xiaomi",
     },
-    // Add more devices for pagination
     {
       id: "device-11",
       name: "iPhone 15 Pro Max",
@@ -431,6 +439,13 @@ export default function DeviceManagementPage() {
     return matches
   })
 
+  // Show "No results found" toast if filteredDevices is empty
+  useEffect(() => {
+    if (filteredDevices.length === 0 && (searchQuery || selectedCategory || selectedBrand)) {
+      toast.info("No results found. Try adjusting your search or filters.")
+    }
+  }, [filteredDevices, searchQuery, selectedCategory, selectedBrand])
+
   // Pagination
   const itemsPerPage = 10
   const totalPages = Math.ceil(filteredDevices.length / itemsPerPage)
@@ -453,13 +468,28 @@ export default function DeviceManagementPage() {
 
   const handleEditDevice = (deviceId: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    console.log("Edit device:", deviceId)
+    const device = devices.find((d) => d.id === deviceId)
+    if (device) {
+      setEditingDevice(device)
+      setEditDeviceName(device.name)
+      setEditDeviceCategory(device.category)
+      setEditDeviceBrand(device.brand)
+      setShowEditDeviceModal(true)
+    } else {
+      toast.error("Device not found. Please try again.")
+    }
     setActiveMenu(null)
   }
 
   const handleDeleteDevice = (deviceId: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    console.log("Delete device:", deviceId)
+    const device = devices.find((d) => d.id === deviceId)
+    if (device) {
+      setDeletingDevice(device)
+      setShowDeleteDeviceModal(true)
+    } else {
+      toast.error("Device not found. Please try again.")
+    }
     setActiveMenu(null)
   }
 
@@ -470,6 +500,8 @@ export default function DeviceManagementPage() {
       setEditingCategory(category)
       setEditCategoryName(category.name)
       setShowEditCategoryModal(true)
+    } else {
+      toast.error("Category not found. Please try again.")
     }
     setActiveCategoryMenu(null)
   }
@@ -480,6 +512,8 @@ export default function DeviceManagementPage() {
     if (category) {
       setDeletingCategory(category)
       setShowDeleteCategoryModal(true)
+    } else {
+      toast.error("Category not found. Please try again.")
     }
     setActiveCategoryMenu(null)
   }
@@ -491,6 +525,8 @@ export default function DeviceManagementPage() {
       setEditingBrand(brand)
       setEditBrandName(brand.name)
       setShowEditBrandModal(true)
+    } else {
+      toast.error("Brand not found. Please try again.")
     }
     setActiveBrandMenu(null)
   }
@@ -501,6 +537,8 @@ export default function DeviceManagementPage() {
     if (brand) {
       setDeletingBrand(brand)
       setShowDeleteBrandModal(true)
+    } else {
+      toast.error("Brand not found. Please try again.")
     }
     setActiveBrandMenu(null)
   }
@@ -511,10 +549,12 @@ export default function DeviceManagementPage() {
         id: `cat-${Date.now()}`,
         name: newCategoryName.trim(),
       }
-      // In a real app, you would add this to your state/database
+      toast.success("Category added successfully!")
       console.log("Adding category:", newCategory)
       setNewCategoryName("")
       setShowAddCategoryModal(false)
+    } else {
+      toast.error("Category name cannot be empty.")
     }
   }
 
@@ -524,36 +564,42 @@ export default function DeviceManagementPage() {
         id: `brand-${Date.now()}`,
         name: newBrandName.trim(),
       }
-      // In a real app, you would add this to your state/database
+      toast.success("Brand added successfully!")
       console.log("Adding brand:", newBrand)
       setNewBrandName("")
       setShowAddBrandModal(false)
+    } else {
+      toast.error("Brand name cannot be empty.")
     }
   }
 
   const handleConfirmEditCategory = () => {
     if (editingCategory && editCategoryName.trim()) {
-      // In a real app, you would update this in your state/database
+      toast.success("Category updated successfully!")
       console.log("Editing category:", editingCategory.id, "to:", editCategoryName)
       setShowEditCategoryModal(false)
       setEditingCategory(null)
       setEditCategoryName("")
+    } else {
+      toast.error("Category name cannot be empty.")
     }
   }
 
   const handleConfirmEditBrand = () => {
     if (editingBrand && editBrandName.trim()) {
-      // In a real app, you would update this in your state/database
+      toast.success("Brand updated successfully!")
       console.log("Editing brand:", editingBrand.id, "to:", editBrandName)
       setShowEditBrandModal(false)
       setEditingBrand(null)
       setEditBrandName("")
+    } else {
+      toast.error("Brand name cannot be empty.")
     }
   }
 
   const handleConfirmDeleteCategory = () => {
     if (deletingCategory) {
-      // In a real app, you would delete this from your state/database
+      toast.success("Category deleted successfully!")
       console.log("Deleting category:", deletingCategory.id)
       setShowDeleteCategoryModal(false)
       setDeletingCategory(null)
@@ -562,10 +608,37 @@ export default function DeviceManagementPage() {
 
   const handleConfirmDeleteBrand = () => {
     if (deletingBrand) {
-      // In a real app, you would delete this from your state/database
+      toast.success("Brand deleted successfully!")
       console.log("Deleting brand:", deletingBrand.id)
       setShowDeleteBrandModal(false)
       setDeletingBrand(null)
+    }
+  }
+
+  const handleConfirmEditDevice = () => {
+    if (editingDevice && editDeviceName.trim() && editDeviceCategory.trim() && editDeviceBrand.trim()) {
+      toast.success("Device updated successfully!")
+      console.log("Editing device:", editingDevice.id, {
+        name: editDeviceName,
+        category: editDeviceCategory,
+        brand: editDeviceBrand,
+      })
+      setShowEditDeviceModal(false)
+      setEditingDevice(null)
+      setEditDeviceName("")
+      setEditDeviceCategory("")
+      setEditDeviceBrand("")
+    } else {
+      toast.error("Please fill in all fields to update the device.")
+    }
+  }
+
+  const handleConfirmDeleteDevice = () => {
+    if (deletingDevice) {
+      toast.success("Device deleted successfully!")
+      console.log("Deleting device:", deletingDevice.id)
+      setShowDeleteDeviceModal(false)
+      setDeletingDevice(null)
     }
   }
 
@@ -589,8 +662,28 @@ export default function DeviceManagementPage() {
     }
   }, [activeMenu, activeCategoryMenu, activeBrandMenu])
 
+  // Toast when filter is applied
+  const handleCategoryFilter = (category: string) => {
+    setSelectedCategory(category)
+    setShowCategoryDropdown(false)
+    if (category) {
+      toast.success("Filter applied successfully!")
+    }
+  }
+
+  const handleBrandFilter = (brand: string) => {
+    setSelectedBrand(brand)
+    setShowBrandDropdown(false)
+    if (brand) {
+      toast.success("Filter applied successfully!")
+    }
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-sm h-full overflow-auto p-6">
+      {/* Toast Container */}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} closeOnClick pauseOnHover />
+
       {/* Bookmark-style Tab Navigation */}
       <div className="mb-6">
         {/* Tab Headers - Bookmark style */}
@@ -665,8 +758,8 @@ export default function DeviceManagementPage() {
                     <ChevronDown className="h-4 w-4" />
                   </Button>
                   {showCategoryDropdown && (
-                    <div className="absolute top-full mt-1 w-[800px] right-0 bg-white border border-gray-200 rounded-md shadow-lg z-30 max-h-96 overflow-y-auto">
-                      <div className="p-4">
+                    <div className="absolute top-full mt-1 w-[800px] right-0 bg-white border border-gray-200 rounded-md shadow-lg z-30 max-h-[600px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300">
+                      <div className="p-4 pb-8">
                         <div className="grid grid-cols-3 gap-8">
                           {/* Column A-F */}
                           <div className="space-y-4">
@@ -675,37 +768,25 @@ export default function DeviceManagementPage() {
                               <div className="space-y-1">
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Air conditioner")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Air conditioner")}
                                 >
                                   Air conditioner
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Air fryer")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Air fryer")}
                                 >
                                   Air fryer
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Air purifier")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Air purifier")}
                                 >
                                   Air purifier
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Alarm clock")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Alarm clock")}
                                 >
                                   Alarm clock
                                 </button>
@@ -716,37 +797,25 @@ export default function DeviceManagementPage() {
                               <div className="space-y-1">
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Barcode scanner")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Barcode scanner")}
                                 >
                                   Barcode scanner
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Battery charger")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Battery charger")}
                                 >
                                   Battery charger
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Blender")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Blender")}
                                 >
                                   Blender
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Bluetooth speaker")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Bluetooth speaker")}
                                 >
                                   Bluetooth speaker
                                 </button>
@@ -757,28 +826,19 @@ export default function DeviceManagementPage() {
                               <div className="space-y-1">
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Camera")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Camera")}
                                 >
                                   Camera
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Computer")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Computer")}
                                 >
                                   Computer
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Cooker")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Cooker")}
                                 >
                                   Cooker
                                 </button>
@@ -793,37 +853,25 @@ export default function DeviceManagementPage() {
                               <div className="space-y-1">
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Hair dryer")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Hair dryer")}
                                 >
                                   Hair dryer
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Headphones")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Headphones")}
                                 >
                                   Headphones
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Heater")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Heater")}
                                 >
                                   Heater
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Humidifier")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Humidifier")}
                                 >
                                   Humidifier
                                 </button>
@@ -834,28 +882,19 @@ export default function DeviceManagementPage() {
                               <div className="space-y-1">
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Ice maker")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Ice maker")}
                                 >
                                   Ice maker
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Iron")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Iron")}
                                 >
                                   Iron
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Incubator")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Incubator")}
                                 >
                                   Incubator
                                 </button>
@@ -866,10 +905,7 @@ export default function DeviceManagementPage() {
                               <div className="space-y-1">
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Juicer")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Juicer")}
                                 >
                                   Juicer
                                 </button>
@@ -880,10 +916,7 @@ export default function DeviceManagementPage() {
                               <div className="space-y-1">
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Kettle")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Kettle")}
                                 >
                                   Kettle
                                 </button>
@@ -898,46 +931,31 @@ export default function DeviceManagementPage() {
                               <div className="space-y-1">
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Scanner")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Scanner")}
                                 >
                                   Scanner
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Shaver")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Shaver")}
                                 >
                                   Shaver
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Speaker")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Speaker")}
                                 >
                                   Speaker
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Smartphone")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Smartphone")}
                                 >
                                   Smartphone
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Smartwatch")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Smartwatch")}
                                 >
                                   Smartwatch
                                 </button>
@@ -948,46 +966,31 @@ export default function DeviceManagementPage() {
                               <div className="space-y-1">
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Tablet")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Tablet")}
                                 >
                                   Tablet
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Television")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Television")}
                                 >
                                   Television
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Toaster")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Toaster")}
                                 >
                                   Toaster
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Treadmill")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Treadmill")}
                                 >
                                   Treadmill
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("Trimmer")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("Trimmer")}
                                 >
                                   Trimmer
                                 </button>
@@ -998,19 +1001,13 @@ export default function DeviceManagementPage() {
                               <div className="space-y-1">
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("USB drive")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("USB drive")}
                                 >
                                   USB drive
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedCategory("USC")
-                                    setShowCategoryDropdown(false)
-                                  }}
+                                  onClick={() => handleCategoryFilter("USC")}
                                 >
                                   USC
                                 </button>
@@ -1036,8 +1033,8 @@ export default function DeviceManagementPage() {
                     <ChevronDown className="h-4 w-4" />
                   </Button>
                   {showBrandDropdown && (
-                    <div className="absolute top-full mt-1 w-[800px] right-0 bg-white border border-gray-200 rounded-md shadow-lg z-30 max-h-96 overflow-y-auto">
-                      <div className="p-4">
+                    <div className="absolute top-full mt-1 w-[800px] right-0 bg-white border border-gray-200 rounded-md shadow-lg z-30 max-h-[600px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300">
+                      <div className="p-4 pb-8">
                         <div className="grid grid-cols-3 gap-8">
                           {/* Column A-F */}
                           <div className="space-y-4">
@@ -1046,37 +1043,25 @@ export default function DeviceManagementPage() {
                               <div className="space-y-1">
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("Acer")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("Acer")}
                                 >
                                   Acer
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("Alienware")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("Alienware")}
                                 >
                                   Alienware
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("Apple")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("Apple")}
                                 >
                                   Apple
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("Asus")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("Asus")}
                                 >
                                   Asus
                                 </button>
@@ -1087,37 +1072,25 @@ export default function DeviceManagementPage() {
                               <div className="space-y-1">
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("Bang & Olufsen")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("Bang & Olufsen")}
                                 >
                                   Bang & Olufsen
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("BenQ")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("BenQ")}
                                 >
                                   BenQ
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("BlackBerry")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("BlackBerry")}
                                 >
                                   BlackBerry
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("Bosch")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("Bosch")}
                                 >
                                   Bosch
                                 </button>
@@ -1128,28 +1101,19 @@ export default function DeviceManagementPage() {
                               <div className="space-y-1">
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("Canon")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("Canon")}
                                 >
                                   Canon
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("CyberPowerPC")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("CyberPowerPC")}
                                 >
                                   CyberPowerPC
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("CyberQuest")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("CyberQuest")}
                                 >
                                   CyberQuest
                                 </button>
@@ -1164,37 +1128,25 @@ export default function DeviceManagementPage() {
                               <div className="space-y-1">
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("Harman Kardon")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("Harman Kardon")}
                                 >
                                   Harman Kardon
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("HP")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("HP")}
                                 >
                                   HP
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("Huawei")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("Huawei")}
                                 >
                                   Huawei
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("HyperX")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("HyperX")}
                                 >
                                   HyperX
                                 </button>
@@ -1205,28 +1157,19 @@ export default function DeviceManagementPage() {
                               <div className="space-y-1">
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("ICONIQ Motors")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("ICONIQ Motors")}
                                 >
                                   ICONIQ Motors
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("Infinix")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("Infinix")}
                                 >
                                   Infinix
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("iRobot")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("iRobot")}
                                 >
                                   iRobot
                                 </button>
@@ -1237,37 +1180,25 @@ export default function DeviceManagementPage() {
                               <div className="space-y-1">
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("Jam Audio")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("Jam Audio")}
                                 >
                                   Jam Audio
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("JBL")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("JBL")}
                                 >
                                   JBL
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("JVC")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("JVC")}
                                 >
                                   JVC
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("J-TEC")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("J-TEC")}
                                 >
                                   J-TEC
                                 </button>
@@ -1282,28 +1213,19 @@ export default function DeviceManagementPage() {
                               <div className="space-y-1">
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("Samsung")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("Samsung")}
                                 >
                                   Samsung
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("Sharp")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("Sharp")}
                                 >
                                   Sharp
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("Sony")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("Sony")}
                                 >
                                   Sony
                                 </button>
@@ -1314,28 +1236,19 @@ export default function DeviceManagementPage() {
                               <div className="space-y-1">
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("TCL")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("TCL")}
                                 >
                                   TCL
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("Toshiba")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("Toshiba")}
                                 >
                                   Toshiba
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("Tronsmart")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("Tronsmart")}
                                 >
                                   Tronsmart
                                 </button>
@@ -1346,46 +1259,31 @@ export default function DeviceManagementPage() {
                               <div className="space-y-1">
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("Ultratec")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("Ultratec")}
                                 >
                                   Ultratec
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("Unicom Electrics")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("Unicom Electrics")}
                                 >
                                   Unicom Electrics
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("UniRoss")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("UniRoss")}
                                 >
                                   UniRoss
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("UpRight")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("UpRight")}
                                 >
                                   UpRight
                                 </button>
                                 <button
                                   className="block w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                  onClick={() => {
-                                    setSelectedBrand("Unisys")
-                                    setShowBrandDropdown(false)
-                                  }}
+                                  onClick={() => handleBrandFilter("Unisys")}
                                 >
                                   Unisys
                                 </button>
@@ -1399,61 +1297,64 @@ export default function DeviceManagementPage() {
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-medium text-gray-500">Device</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-500">Category</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-500">Brand</th>
-                      <th className="w-10"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedDevices.map((device) => (
-                      <tr key={device.id} className="border-b border-gray-200 hover:bg-gray-50">
-                        <td className="py-3 px-4 text-[#2e3139]">{device.name}</td>
-                        <td className="py-3 px-4 text-[#2e3139]">{device.category}</td>
-                        <td className="py-3 px-4 text-[#2e3139]">{device.brand}</td>
-                        <td className="py-3 px-4 relative">
-                          <button
-                            onClick={(e) => toggleMenu(device.id, e)}
-                            className="text-gray-500 hover:text-[#4045ef]"
-                          >
-                            <MoreVertical className="h-5 w-5" />
-                          </button>
-
-                          {activeMenu === device.id && (
-                            <div
-                              ref={(el) => (menuRefs.current[device.id] = el)}
-                              className="absolute right-10 z-10 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40"
-                              style={{
-                                top: paginatedDevices.indexOf(device) >= paginatedDevices.length - 2 ? "auto" : "100%",
-                                bottom:
-                                  paginatedDevices.indexOf(device) >= paginatedDevices.length - 2 ? "100%" : "auto",
-                              }}
-                            >
-                              <button
-                                onClick={(e) => handleEditDevice(device.id, e)}
-                                className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[#2e3139] hover:bg-gray-100"
-                              >
-                                <Pen className="h-4 w-4" />
-                                <span>Edit device</span>
-                              </button>
-                              <button
-                                onClick={(e) => handleDeleteDevice(device.id, e)}
-                                className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                                <span>Delete device</span>
-                              </button>
-                            </div>
-                          )}
-                        </td>
+              <div className="border border-gray-200 rounded-md overflow-hidden">
+                <div className="max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300">
+                  <table className="w-full">
+                    <thead className="sticky top-0 bg-gray-50 border-b border-gray-200 z-10">
+                      <tr>
+                        <th className="text-left py-3 px-4 font-medium text-gray-500">Device</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-500">Category</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-500">Brand</th>
+                        <th className="w-10"></th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {paginatedDevices.map((device) => (
+                        <tr key={device.id} className="border-b border-gray-200 hover:bg-gray-50">
+                          <td className="py-3 px-4 text-[#2e3139]">{device.name}</td>
+                          <td className="py-3 px-4 text-[#2e3139]">{device.category}</td>
+                          <td className="py-3 px-4 text-[#2e3139]">{device.brand}</td>
+                          <td className="py-3 px-4 relative">
+                            <button
+                              onClick={(e) => toggleMenu(device.id, e)}
+                              className="text-gray-500 hover:text-[#4045ef]"
+                            >
+                              <MoreVertical className="h-5 w-5" />
+                            </button>
+
+                            {activeMenu === device.id && (
+                              <div
+                                ref={(el) => (menuRefs.current[device.id] = el)}
+                                className="absolute right-10 z-10 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40"
+                                style={{
+                                  top:
+                                    paginatedDevices.indexOf(device) >= paginatedDevices.length - 2 ? "auto" : "100%",
+                                  bottom:
+                                    paginatedDevices.indexOf(device) >= paginatedDevices.length - 2 ? "100%" : "auto",
+                                }}
+                              >
+                                <button
+                                  onClick={(e) => handleEditDevice(device.id, e)}
+                                  className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[#2e3139] hover:bg-gray-100"
+                                >
+                                  <Pen className="h-4 w-4" />
+                                  <span>Edit device</span>
+                                </button>
+                                <button
+                                  onClick={(e) => handleDeleteDevice(device.id, e)}
+                                  className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  <span>Delete device</span>
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               {/* Pagination */}
@@ -1550,11 +1451,11 @@ export default function DeviceManagementPage() {
                         <Plus className="h-5 w-5 text-white" />
                       </button>
                     </div>
-                    <div className="space-y-1 max-h-80 overflow-y-auto">
+                    <div className="space-y-2 max-h-[500px] overflow-y-auto pb-8 pr-2 scrollbar-thin scrollbar-thumb-gray-300">
                       {filteredCategories.map((category) => (
                         <div
                           key={category.id}
-                          className="flex items-center justify-between p-2 hover:bg-gray-50 rounded"
+                          className="flex items-center justify-between p-3 hover:bg-gray-50 rounded"
                         >
                           <span className="text-[#2e3139]">{category.name}</span>
                           <div className="relative">
@@ -1568,17 +1469,7 @@ export default function DeviceManagementPage() {
                             {activeCategoryMenu === category.id && (
                               <div
                                 ref={(el) => (categoryMenuRefs.current[category.id] = el)}
-                                className="absolute right-0 z-10 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40"
-                                style={{
-                                  top:
-                                    filteredCategories.indexOf(category) >= filteredCategories.length - 2
-                                      ? "auto"
-                                      : "100%",
-                                  bottom:
-                                    filteredCategories.indexOf(category) >= filteredCategories.length - 2
-                                      ? "100%"
-                                      : "auto",
-                                }}
+                                className="absolute right-0 top-full mt-1 z-10 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40"
                               >
                                 <button
                                   onClick={(e) => handleEditCategory(category.id, e)}
@@ -1626,9 +1517,9 @@ export default function DeviceManagementPage() {
                         <Plus className="h-5 w-5 text-white" />
                       </button>
                     </div>
-                    <div className="space-y-1 max-h-80 overflow-y-auto">
+                    <div className="space-y-2 max-h-[500px] overflow-y-auto pb-8 pr-2 scrollbar-thin scrollbar-thumb-gray-300">
                       {filteredBrands.map((brand) => (
-                        <div key={brand.id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+                        <div key={brand.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded">
                           <span className="text-[#2e3139]">{brand.name}</span>
                           <div className="relative">
                             <button
@@ -1641,11 +1532,7 @@ export default function DeviceManagementPage() {
                             {activeBrandMenu === brand.id && (
                               <div
                                 ref={(el) => (brandMenuRefs.current[brand.id] = el)}
-                                className="absolute right-0 z-10 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40"
-                                style={{
-                                  top: filteredBrands.indexOf(brand) >= filteredBrands.length - 2 ? "auto" : "100%",
-                                  bottom: filteredBrands.indexOf(brand) >= filteredBrands.length - 2 ? "100%" : "auto",
-                                }}
+                                className="absolute right-0 top-full mt-1 z-10 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40"
                               >
                                 <button
                                   onClick={(e) => handleEditBrand(brand.id, e)}
@@ -1697,6 +1584,7 @@ export default function DeviceManagementPage() {
                 onClick={() => {
                   setShowAddCategoryModal(false)
                   setNewCategoryName("")
+                  toast.info("Action cancelled.")
                 }}
                 className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
               >
@@ -1735,6 +1623,7 @@ export default function DeviceManagementPage() {
                 onClick={() => {
                   setShowAddBrandModal(false)
                   setNewBrandName("")
+                  toast.info("Action cancelled.")
                 }}
                 className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
               >
@@ -1773,6 +1662,7 @@ export default function DeviceManagementPage() {
                   setShowEditCategoryModal(false)
                   setEditingCategory(null)
                   setEditCategoryName("")
+                  toast.info("Action cancelled.")
                 }}
                 className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
               >
@@ -1811,6 +1701,7 @@ export default function DeviceManagementPage() {
                   setShowEditBrandModal(false)
                   setEditingBrand(null)
                   setEditBrandName("")
+                  toast.info("Action cancelled.")
                 }}
                 className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
               >
@@ -1838,6 +1729,7 @@ export default function DeviceManagementPage() {
                 onClick={() => {
                   setShowDeleteCategoryModal(false)
                   setDeletingCategory(null)
+                  toast.info("Action cancelled.")
                 }}
                 className="px-6 py-2 bg-gray-400 text-white rounded-full hover:bg-gray-500 transition-colors"
               >
@@ -1865,6 +1757,7 @@ export default function DeviceManagementPage() {
                 onClick={() => {
                   setShowDeleteBrandModal(false)
                   setDeletingBrand(null)
+                  toast.info("Action cancelled.")
                 }}
                 className="px-6 py-2 bg-gray-400 text-white rounded-full hover:bg-gray-500 transition-colors"
               >
@@ -1873,6 +1766,110 @@ export default function DeviceManagementPage() {
               <button
                 onClick={handleConfirmDeleteBrand}
                 className="px-6 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Device Modal */}
+      {showEditDeviceModal && editingDevice && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-6 text-[#2e3139]">Edit device</h2>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-[#2e3139] mb-2">Device Name:</label>
+              <input
+                type="text"
+                value={editDeviceName}
+                onChange={(e) => setEditDeviceName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4045ef]"
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-[#2e3139] mb-2">Category:</label>
+              <select
+                value={editDeviceCategory}
+                onChange={(e) => setEditDeviceCategory(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4045ef]"
+              >
+                <option value="">Select Category</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.name}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-[#2e3139] mb-2">Brand:</label>
+              <select
+                value={editDeviceBrand}
+                onChange={(e) => setEditDeviceBrand(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4045ef]"
+              >
+                <option value="">Select Brand</option>
+                {brands.map((brand) => (
+                  <option key={brand.id} value={brand.name}>
+                    {brand.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex justify-between">
+              <button
+                onClick={() => {
+                  setShowEditDeviceModal(false)
+                  setEditingDevice(null)
+                  setEditDeviceName("")
+                  setEditDeviceCategory("")
+                  setEditDeviceBrand("")
+                  toast.info("Action cancelled.")
+                }}
+                className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmEditDevice}
+                className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Device Modal */}
+      {showDeleteDeviceModal && deletingDevice && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4 text-[#2e3139]">Delete Device</h2>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete "{deletingDevice.name}"? This action cannot be undone.
+            </p>
+
+            <div className="flex justify-between">
+              <button
+                onClick={() => {
+                  setShowDeleteDeviceModal(false)
+                  setDeletingDevice(null)
+                  toast.info("Action cancelled.")
+                }}
+                className="px-6 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDeleteDevice}
+                className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
               >
                 Delete
               </button>
