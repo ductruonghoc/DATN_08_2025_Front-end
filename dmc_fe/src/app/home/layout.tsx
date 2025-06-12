@@ -42,13 +42,13 @@ export default function HomeLayout({
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null)
   const [conversations, setConversations] = useState<Conversation[]>([
     {
-      id: "conv-1",
+      id: "chat-1685432789000-device-1",
       title: "Lenovo Thinkpad T570",
       lastMessage: "How to get the screen?",
       timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
     },
     {
-      id: "conv-2",
+      id: "chat-1685346389000-device-4",
       title: "Cannon Camera EOS R5",
       lastMessage: "What's the best lens for portraits?",
       timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago

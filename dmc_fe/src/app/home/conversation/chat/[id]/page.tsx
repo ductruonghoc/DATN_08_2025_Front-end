@@ -1,12 +1,13 @@
 "use client"
 
-import type React from "react"
-
+import React from "react"
+import type { ReactNode } from "react"
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { User, Bot, Paperclip, Copy, Save, FileText, Trash2, Menu } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { toast, ToastContainer } from "react-toastify"
 
 interface Message {
   id: string
@@ -28,7 +29,10 @@ interface Conversation {
   messages: Message[]
 }
 
-export default function ChatPage({ params }: { params: { id: string } }) {
+export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
+  // Unwrap the params Promise using React.use
+  const { id } = React.use(params)
+
   const [inputValue, setInputValue] = useState("")
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -186,7 +190,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
 
   // Load conversation based on ID
   useEffect(() => {
-    const conversationId = params.id
+    const conversationId = id
     const conversation = mockConversations[conversationId]
 
     if (conversation) {
@@ -237,7 +241,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
 
     // Focus input
     inputRef.current?.focus()
-  }, [params.id, router])
+  }, [id, router])
 
   // Check for conversations in sessionStorage
   useEffect(() => {
@@ -247,9 +251,9 @@ export default function ChatPage({ params }: { params: { id: string } }) {
       try {
         const parsedConversations = JSON.parse(storedConversations)
         // Find if current conversation ID exists in stored conversations
-        const currentConversation = parsedConversations.find((conv: any) => conv.id === params.id)
+        const currentConversation = parsedConversations.find((conv: any) => conv.id === id)
 
-        if (currentConversation && !mockConversations[params.id]) {
+        if (currentConversation && !mockConversations[id]) {
           // If this is a new conversation we created but not in our mock data
           // Initialize with empty messages or a welcome message
           const selectedDevice = sessionStorage.getItem("selectedDevice")
@@ -271,7 +275,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
         console.error("Error parsing stored conversations:", error)
       }
     }
-  }, [params.id])
+  }, [id])
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -319,6 +323,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
 
       setMessages((prev) => [...prev, aiMessage])
       setIsLoading(false)
+      // toast.success("Message sent successfully")
     }, 1500)
   }
 
@@ -345,23 +350,25 @@ export default function ChatPage({ params }: { params: { id: string } }) {
     }
 
     setNotes((prev) => [...prev, newNote])
+    toast.success("Note saved successfully")
   }
 
   const handleCopyMessage = (content: string) => {
     navigator.clipboard
       .writeText(content)
       .then(() => {
-        // Could add a toast notification here
-        console.log("Text copied to clipboard")
+        toast.success("Message copied to clipboard")
       })
       .catch((err) => {
         console.error("Failed to copy text: ", err)
+        toast.error("Failed to copy message")
       })
   }
 
   const handleDeleteNote = (id: string) => {
     setNotes((prev) => prev.filter((note) => note.id !== id))
     setDeleteNoteId(null)
+    toast.success("Note deleted successfully")
   }
 
   const toggleSettingsMenu = () => {
@@ -385,6 +392,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
       setShareLink(`https://notelink1234.com/${noteId}`)
       setShowShareModal(true)
       setDeleteNoteId(null)
+      toast.success("Share link generated")
     }
   }
 
@@ -392,10 +400,11 @@ export default function ChatPage({ params }: { params: { id: string } }) {
     navigator.clipboard
       .writeText(shareLink)
       .then(() => {
-        console.log("Link copied to clipboard")
+        toast.success("Share link copied to clipboard")
       })
       .catch((err) => {
         console.error("Failed to copy link: ", err)
+        toast.error("Failed to copy share link")
       })
   }
 
@@ -403,10 +412,12 @@ export default function ChatPage({ params }: { params: { id: string } }) {
     setShowShareModal(false)
     setShareNoteId(null)
     setShareLink("")
+    toast.info("Share modal closed")
   }
 
   return (
     <div className="flex h-full overflow-auto p-4 gap-4 bg-[#E6D9D9]">
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} closeOnClick pauseOnHover />
       {/* Main chat area with rigid layout */}
       <div className="flex-1 flex flex-col h-full relative bg-white overflow-hidden rounded-[10px] border border-gray-200 shadow-sm">
         {/* Chat header - fixed */}
@@ -437,7 +448,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
                     className={`rounded-[10px] px-4 py-3 ${
                       message.sender === "user"
                         ? "bg-[#4045ef] text-white"
-                        : "bg-white text-[#2e3139] border border-gray-200" // Added border for separation
+                        : "bg-white text-[#2e3139] border border-gray-200"
                     }`}
                   >
                     <div className="text-sm whitespace-pre-line">{message.content}</div>
