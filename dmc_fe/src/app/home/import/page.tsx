@@ -12,6 +12,7 @@ export default function ImportPDFPage() {
   const [isDragging, setIsDragging] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [pdfName, setPdfName] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -32,6 +33,7 @@ export default function ImportPDFPage() {
       const file = e.dataTransfer.files[0]
       if (file.type === "application/pdf") {
         setSelectedFile(file)
+        setPdfName(file.name.replace(/\.pdf$/, "")) // Pre-fill with file name without .pdf
       } else {
         alert("Please upload a PDF file")
       }
@@ -43,6 +45,7 @@ export default function ImportPDFPage() {
       const file = e.target.files[0]
       if (file.type === "application/pdf") {
         setSelectedFile(file)
+        setPdfName(file.name.replace(/\.pdf$/, "")) // Pre-fill with file name without .pdf
       } else {
         alert("Please upload a PDF file")
       }
@@ -61,9 +64,12 @@ export default function ImportPDFPage() {
         // Create a blob URL for the PDF file
         const pdfUrl = URL.createObjectURL(selectedFile)
 
-        // Store the PDF URL in sessionStorage
+        // Determine the file name to store
+        const finalPdfName = pdfName.trim() ? `${pdfName.trim()}.pdf` : selectedFile.name
+
+        // Store the PDF URL and name in sessionStorage
         sessionStorage.setItem("uploadedPdfUrl", pdfUrl)
-        sessionStorage.setItem("uploadedPdfName", selectedFile.name)
+        sessionStorage.setItem("uploadedPdfName", finalPdfName)
 
         // Navigate to the PDF information page
         router.push("/home/import/pdfInformation")
@@ -118,9 +124,27 @@ export default function ImportPDFPage() {
             <p className="text-xs text-gray-400">Supports PDF files up to 10MB</p>
           </div>
         ) : (
-          <div className="mb-6 rounded-lg border p-4">
-            <p className="mb-2 font-medium">{selectedFile.name}</p>
-            <p className="text-sm text-gray-500">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+          <div className="mb-6 space-y-4">
+            <div className="rounded-lg border p-4">
+              <p className="mb-2 font-medium">{selectedFile.name}</p>
+              <p className="text-sm text-gray-500">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+            </div>
+            <div>
+              <label htmlFor="pdfName" className="block text-sm font-medium text-gray-700 mb-1">
+                PDF Name (Optional)
+              </label>
+              <input
+                type="text"
+                id="pdfName"
+                value={pdfName}
+                onChange={(e) => setPdfName(e.target.value)}
+                placeholder="Enter custom PDF name"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4045ef]"
+              />
+              <p className="mt-1 text-xs text-gray-400">
+                Leave blank to use default name: {selectedFile.name}
+              </p>
+            </div>
           </div>
         )}
 
