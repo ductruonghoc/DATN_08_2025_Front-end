@@ -21,30 +21,32 @@
       "static/chunks/main-app.js",
       "static/chunks/app/home/page.js"
     ],
-    "/home/conversation/loading": [
+    "/home/import/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/home/conversation/loading.js"
+      "static/css/app/home/import/page.css",
+      "static/chunks/app/home/import/page.js"
     ],
-    "/home/conversation/page": [
+    "/home/import/pdfInformation/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/home/conversation/page.js"
+      "static/css/app/home/import/pdfInformation/page.css",
+      "static/chunks/app/home/import/pdfInformation/page.js"
     ],
-    "/home/conversation/chat/loading": [
+    "/home/track-progress/loading": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/home/conversation/chat/loading.js"
+      "static/chunks/app/home/track-progress/loading.js"
     ],
-    "/home/conversation/chat/[id]/page": [
+    "/home/track-progress/finish/loading": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/home/conversation/chat/[id]/page.js"
+      "static/chunks/app/home/track-progress/finish/loading.js"
     ],
-    "/_not-found/page": [
+    "/home/track-progress/finish/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
+      "static/chunks/app/home/track-progress/finish/page.js"
     ]
   }
 }
