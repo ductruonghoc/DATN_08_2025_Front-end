@@ -335,7 +335,7 @@ export default function HomeLayout({
 
                         {activeConversationMenu === conversation.id && (
                           <div
-                            ref={(el) => (conversationMenuRefs.current[conversation.id] = el)}
+                            ref={(el) => {conversationMenuRefs.current[conversation.id] = el}}
                             className="absolute right-0 top-full mt-1 w-48 rounded-[10px] shadow-lg bg-white border border-gray-200 z-50"
                           >
                             <div className="py-1">
