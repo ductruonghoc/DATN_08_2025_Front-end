@@ -14,6 +14,7 @@ interface Message {
   content: string
   sender: "user" | "ai"
   timestamp: Date
+  images?: string[]
 }
 
 interface Note {
@@ -30,7 +31,6 @@ interface Conversation {
 }
 
 export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
-  // Unwrap the params Promise using React.use
   const { id } = React.use(params)
 
   const [inputValue, setInputValue] = useState("")
@@ -45,14 +45,12 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     {
       id: "note-1",
       title: "How to get the screen?",
-      content:
-        "To get the screen for your Lenovo Thinkpad T570, you'll need to order a replacement LCD panel. Make sure to get the correct resolution and type (touch or non-touch) that matches your model. You can find compatible screens on Lenovo's parts website or through authorized resellers.",
+      content: "To get the screen for your Lenovo Thinkpad T570, you'll need to order a replacement LCD panel. Make sure to get the correct resolution and type (touch or non-touch) that matches your model. You can find compatible screens on Lenovo's parts website or through authorized resellers.",
     },
     {
       id: "note-2",
       title: "What's the best lens for portraits?",
-      content:
-        "For portrait photography with the Canon EOS R5, I would recommend the RF 85mm f/1.2L USM. It's considered one of the best portrait lenses due to its ideal focal length and exceptional bokeh. The wide aperture creates beautiful background blur while keeping your subject tack sharp.",
+      content: "For portrait photography with the Canon EOS R5, I would recommend the RF 85mm f/1.2L USM. It's considered one of the best portrait lenses due to its ideal focal length and exceptional bokeh. The wide aperture creates beautiful background blur while keeping your subject tack sharp.",
     },
     {
       id: "note-3",
@@ -116,7 +114,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const [shareNoteId, setShareNoteId] = useState<string | null>(null)
   const [shareLink, setShareLink] = useState("")
 
-  // Mock conversations data with updated IDs and deviceId
   const mockConversations: Record<string, Conversation> = {
     "chat-1685432789000-device-1": {
       id: "chat-1685432789000-device-1",
@@ -162,8 +159,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         },
         {
           id: "ai-1",
-          content:
-            "For the Aspire Vero 14 Laptop (AV14-52P-55N4), you can upgrade the RAM by removing the bottom panel. This model supports up to 16GB of DDR4 RAM. Make sure to get compatible SO-DIMM DDR4 modules. Power off the laptop completely before installation and ground yourself to prevent static discharge.",
+          content: "For the Aspire Vero 14 Laptop (AV14-52P-55N4), you can upgrade the RAM by removing the bottom panel. This model supports up to 16GB of DDR4 RAM. Make sure to get compatible SO-DIMM DDR4 modules. Power off the laptop completely before installation and ground yourself to prevent static discharge.",
           sender: "ai",
           timestamp: new Date(Date.now() - 60000 * 60 * 24 * 2 + 60000 * 5),
         },
@@ -171,7 +167,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     },
   }
 
-  // Close menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
@@ -188,7 +183,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     }
   }, [])
 
-  // Load conversation based on ID
   useEffect(() => {
     const conversationId = id
     const conversation = mockConversations[conversationId]
@@ -197,7 +191,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       setDeviceName(conversation.title)
       setMessages(conversation.messages)
     } else {
-      // If conversation not found, check for initialMessage
       const initialMessage = sessionStorage.getItem("initialMessage")
 
       if (initialMessage) {
@@ -211,7 +204,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         setMessages([userMessage])
         setIsLoading(true)
 
-        // Simulate AI response
         setTimeout(() => {
           const aiResponses = [
             "I can help you analyze that PDF. Would you like me to extract specific information from it?",
@@ -234,34 +226,26 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
           setIsLoading(false)
         }, 1500)
       } else {
-        // If no conversation and no initialMessage, redirect to conservation page
         router.push("/home/conservation")
       }
     }
 
-    // Focus input
     inputRef.current?.focus()
   }, [id, router])
 
-  // Check for conversations in sessionStorage
   useEffect(() => {
-    // Check for conversations in sessionStorage
     const storedConversations = sessionStorage.getItem("conversations")
     if (storedConversations) {
       try {
         const parsedConversations = JSON.parse(storedConversations)
-        // Find if current conversation ID exists in stored conversations
         const currentConversation = parsedConversations.find((conv: any) => conv.id === id)
 
         if (currentConversation && !mockConversations[id]) {
-          // If this is a new conversation we created but not in our mock data
-          // Initialize with empty messages or a welcome message
           const selectedDevice = sessionStorage.getItem("selectedDevice")
           if (selectedDevice) {
             const device = JSON.parse(selectedDevice)
             setDeviceName(device.name)
 
-            // Add a welcome message
             const welcomeMessage: Message = {
               id: "welcome-" + Date.now(),
               content: `Welcome! How can I help you with your ${device.name}?`,
@@ -277,12 +261,10 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     }
   }, [id])
 
-  // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
-  // Check for system dark mode preference on initial load
   useEffect(() => {
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
   }, [])
@@ -290,7 +272,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return
 
-    // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
       content: inputValue,
@@ -302,28 +283,41 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     setInputValue("")
     setIsLoading(true)
 
-    // Simulate AI response after a delay
     setTimeout(() => {
-      const aiResponses = [
-        "I can help you analyze that PDF. Would you like me to extract specific information from it?",
-        "Based on your PDF, I can see several key points that might be relevant to your query.",
-        "Your document contains information about device specifications. Is there anything specific you'd like to know?",
-        "I've processed your PDF. It appears to be a technical manual. What information are you looking for?",
-        "I can see this is a report with multiple sections. Which part would you like me to focus on?",
-      ]
+      let aiMessage: Message
+      if (inputValue.toLowerCase() === "send image") {
+        aiMessage = {
+          id: Date.now().toString(),
+          content: "Here are some images:",
+          sender: "ai",
+          timestamp: new Date(),
+          images: [
+            "https://via.placeholder.com/300x200?text=Image+1",
+            "https://via.placeholder.com/300x200?text=Image+2",
+            "https://via.placeholder.com/300x200?text=Image+3",
+          ],
+        }
+      } else {
+        const aiResponses = [
+          "I can help you analyze that PDF. Would you like me to extract specific information from it?",
+          "Based on your PDF, I can see several key points that might be relevant to your query.",
+          "Your document contains information about device specifications. Is there anything specific you'd like to know?",
+          "I've processed your PDF. It appears to be a technical manual. What information are you looking for?",
+          "I can see this is a report with multiple sections. Which part would you like me to focus on?",
+        ]
 
-      const randomResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)]
+        const randomResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)]
 
-      const aiMessage: Message = {
-        id: Date.now().toString(),
-        content: randomResponse,
-        sender: "ai",
-        timestamp: new Date(),
+        aiMessage = {
+          id: Date.now().toString(),
+          content: randomResponse,
+          sender: "ai",
+          timestamp: new Date(),
+        }
       }
 
       setMessages((prev) => [...prev, aiMessage])
       setIsLoading(false)
-      // toast.success("Message sent successfully")
     }, 1500)
   }
 
@@ -339,13 +333,9 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   }
 
   const handleSaveNote = (message: Message) => {
-    // Create a new note from the message
     const newNote: Note = {
       id: `note-${Date.now()}`,
-      title:
-        message.sender === "user"
-          ? message.content
-          : messages.find((m) => m.sender === "user" && m.timestamp < message.timestamp)?.content || "Untitled",
+      title: message.sender === "user" ? message.content : messages.find((m) => m.sender === "user" && m.timestamp < message.timestamp)?.content || "Untitled",
       content: message.content,
     }
 
@@ -354,15 +344,10 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   }
 
   const handleCopyMessage = (content: string) => {
-    navigator.clipboard
-      .writeText(content)
-      .then(() => {
-        toast.success("Message copied to clipboard")
-      })
-      .catch((err) => {
-        console.error("Failed to copy text: ", err)
-        toast.error("Failed to copy message")
-      })
+    navigator.clipboard.writeText(content).then(() => toast.success("Message copied to clipboard")).catch((err) => {
+      console.error("Failed to copy text: ", err)
+      toast.error("Failed to copy message")
+    })
   }
 
   const handleDeleteNote = (id: string) => {
@@ -397,15 +382,10 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   }
 
   const handleCopyShareLink = () => {
-    navigator.clipboard
-      .writeText(shareLink)
-      .then(() => {
-        toast.success("Share link copied to clipboard")
-      })
-      .catch((err) => {
-        console.error("Failed to copy link: ", err)
-        toast.error("Failed to copy share link")
-      })
+    navigator.clipboard.writeText(shareLink).then(() => toast.success("Share link copied to clipboard")).catch((err) => {
+      console.error("Failed to copy link: ", err)
+      toast.error("Failed to copy share link")
+    })
   }
 
   const handleCloseShareModal = () => {
@@ -418,16 +398,13 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   return (
     <div className="flex h-full overflow-auto p-4 gap-4 bg-[#E6D9D9]">
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} closeOnClick pauseOnHover />
-      {/* Main chat area with rigid layout */}
       <div className="flex-1 flex flex-col h-full relative bg-white overflow-hidden rounded-[10px] border border-gray-200 shadow-sm">
-        {/* Chat header - fixed */}
         <div className="flex items-center justify-between p-4 border-b z-10 bg-white border-gray-200 text-[#2d336b] rounded-t-[10px]">
           <div className="flex items-center gap-3">
             <h1 className="text-lg font-medium">{deviceName || "New Conversation"}</h1>
           </div>
         </div>
 
-        {/* Chat content - scrollable area - ensure this has overflow-y: auto */}
         <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-white">
           {messages.map((message) => (
             <div key={message.id} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
@@ -437,21 +414,56 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                     message.sender === "user" ? "ml-3 bg-[#4045ef]" : `mr-3 bg-gray-200`
                   }`}
                 >
-                  {message.sender === "user" ? (
-                    <User className="h-5 w-5 text-white" />
-                  ) : (
-                    <Bot className="h-5 w-5 text-[#4045ef]" />
-                  )}
+                  {message.sender === "user" ? <User className="h-5 w-5 text-white" /> : <Bot className="h-5 w-5 text-[#4045ef]" />}
                 </div>
                 <div className="flex flex-col">
                   <div
                     className={`rounded-[10px] px-4 py-3 ${
-                      message.sender === "user"
-                        ? "bg-[#4045ef] text-white"
-                        : "bg-white text-[#2e3139] border border-gray-200"
+                      message.sender === "user" ? "bg-[#4045ef] text-white" : "bg-white text-[#2e3139] border border-gray-200"
                     }`}
                   >
                     <div className="text-sm whitespace-pre-line">{message.content}</div>
+                    {message.images && (
+                      <div className="mt-4 w-full">
+                        <div className="relative flex items-center gap-4">
+                          <button
+                            className="absolute left-[-40px] z-10 p-3 bg-white/90 rounded-full shadow-lg hover:bg-gray-100 transition-all"
+                            onClick={() => {
+                              const newImages = [...message.images!];
+                              newImages.unshift(newImages.pop()!);
+                              setMessages(messages.map(m => m.id === message.id ? { ...m, images: newImages } : m));
+                            }}
+                          >
+                            <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                            </svg>
+                          </button>
+                          <div className="flex gap-4 overflow-hidden">
+                            {message.images.slice(0, 3).map((img, index) => (
+                              <div key={index} className="flex-shrink-0 w-[200px] h-[150px] rounded-lg overflow-hidden shadow-md">
+                                <img
+                                  src={img}
+                                  alt={`Slide ${index + 1}`}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                          <button
+                            className="absolute right-[-40px] z-10 p-3 bg-white/90 rounded-full shadow-lg hover:bg-gray-100 transition-all"
+                            onClick={() => {
+                              const newImages = [...message.images!];
+                              newImages.push(newImages.shift()!);
+                              setMessages(messages.map(m => m.id === message.id ? { ...m, images: newImages } : m));
+                            }}
+                          >
+                            <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     <div
                       className={`text-xs mt-1 ${message.sender === "user" ? "text-blue-100" : "text-[#2e3139]/70"}`}
                     >
@@ -459,7 +471,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                     </div>
                   </div>
 
-                  {/* Action buttons for AI messages */}
                   {message.sender === "ai" && (
                     <div className="flex mt-2 space-x-2">
                       <Button
@@ -495,18 +506,9 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                 </div>
                 <div className={`rounded-[10px] px-4 py-3 bg-white border border-gray-200`}>
                   <div className="flex space-x-2">
-                    <div
-                      className={`w-2 h-2 rounded-full animate-bounce bg-gray-300`}
-                      style={{ animationDelay: "0ms" }}
-                    />
-                    <div
-                      className={`w-2 h-2 rounded-full animate-bounce bg-gray-300`}
-                      style={{ animationDelay: "300ms" }}
-                    />
-                    <div
-                      className={`w-2 h-2 rounded-full animate-bounce bg-gray-300`}
-                      style={{ animationDelay: "600ms" }}
-                    />
+                    <div className={`w-2 h-2 rounded-full animate-bounce bg-gray-300`} style={{ animationDelay: "0ms" }} />
+                    <div className={`w-2 h-2 rounded-full animate-bounce bg-gray-300`} style={{ animationDelay: "300ms" }} />
+                    <div className={`w-2 h-2 rounded-full animate-bounce bg-gray-300`} style={{ animationDelay: "600ms" }} />
                   </div>
                 </div>
               </div>
@@ -516,7 +518,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input area - fixed at bottom */}
         <div className="border-t p-4 bg-white border-gray-200 rounded-b-[10px]">
           <div className="flex items-center border rounded-[10px] overflow-hidden pr-2 bg-white border-gray-300">
             <Button
@@ -558,7 +559,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         </div>
       </div>
 
-      {/* Notes panel - right sidebar */}
       {notesCollapsed ? (
         <div className="w-12 h-full bg-white border border-gray-200 rounded-[10px] shadow-sm flex flex-col items-center py-4 space-y-4">
           <button onClick={toggleNotesPanel} className="p-2 text-[#2e3139] hover:bg-gray-100 rounded-md">
@@ -576,7 +576,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
             "bg-white border border-gray-200 rounded-[10px] shadow-sm",
           )}
         >
-          {/* Notes header - fixed */}
           <div className="p-4 border-b flex items-center justify-between bg-white border-gray-200 rounded-t-[10px]">
             <h2 className="font-bold text-[#2e3139]">YOUR NOTES</h2>
             <button onClick={toggleNotesPanel} className="text-[#2e3139] hover:bg-gray-100 p-1 rounded-md">
@@ -584,13 +583,11 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
             </button>
           </div>
 
-          {/* Notes content - scrollable - ensure this has overflow-y: auto */}
           <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300">
             <div className="p-4 space-y-4">
               {notes.map((note) => (
                 <div key={note.id} className={`border-b pb-4 border-gray-200`}>
                   <div className="flex items-start gap-3">
-                    <div className={"text-[#2e3139] mt-1"}>•</div>
                     <div className="flex-1">
                       <div className="flex items-start justify-between">
                         <h3 className={`font-bold text-[#2e3139]`}>{note.title}</h3>
@@ -603,15 +600,14 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                       </div>
                       <p className={`text-sm mt-1 text-[#2e3139]`}>{note.content}</p>
 
-                      {/* Delete note confirmation */}
                       {deleteNoteId === note.id && (
                         <div className="mt-2 p-2 bg-white rounded-[10px] border border-gray-200 shadow-lg">
                           <button
                             onClick={() => handleShareNote(note.id)}
-                            className="flex items-center gap-2 w-full text-left px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded"
+                            className="flex items-center gap-2 w-full text-left px-2 py-1 text-sm text-gray-700 hover:bg-gray-100 rounded"
                           >
                             <svg
-                              className="h-3 w-3"
+                              className="h-4 w-4"
                               viewBox="0 0 24 24"
                               fill="none"
                               stroke="currentColor"
@@ -624,9 +620,9 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                           </button>
                           <button
                             onClick={() => handleDeleteNote(note.id)}
-                            className="flex items-center gap-2 w-full text-left px-2 py-1 text-xs text-red-600 hover:bg-gray-100 rounded"
+                            className="flex items-center gap-2 w-full text-left px-2 py-1 text-sm text-red-600 hover:bg-gray-100 rounded"
                           >
-                            <Trash2 className="h-3 w-3" />
+                            <Trash2 className="h-4 w-4" />
                             Delete this note
                           </button>
                         </div>
@@ -638,7 +634,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
             </div>
           </div>
 
-          {/* Notes footer - fixed */}
           <div className="p-4 border-t bg-white border-gray-200 rounded-b-[10px]">
             <Button
               onClick={() =>
@@ -673,7 +668,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
           </div>
         </div>
       )}
-      {/* Share Note Modal */}
       {showShareModal && shareNoteId && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">

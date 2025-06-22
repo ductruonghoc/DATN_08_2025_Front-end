@@ -21,32 +21,20 @@
       "static/chunks/main-app.js",
       "static/chunks/app/home/page.js"
     ],
-    "/home/import/page": [
+    "/home/conversation/loading": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/home/import/page.css",
-      "static/chunks/app/home/import/page.js"
+      "static/chunks/app/home/conversation/loading.js"
     ],
-    "/home/import/pdfInformation/page": [
+    "/home/conversation/chat/loading": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/home/import/pdfInformation/page.css",
-      "static/chunks/app/home/import/pdfInformation/page.js"
+      "static/chunks/app/home/conversation/chat/loading.js"
     ],
-    "/home/track-progress/loading": [
+    "/home/conversation/chat/[id]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/home/track-progress/loading.js"
-    ],
-    "/home/track-progress/finish/loading": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/home/track-progress/finish/loading.js"
-    ],
-    "/home/track-progress/finish/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/home/track-progress/finish/page.js"
+      "static/chunks/app/home/conversation/chat/[id]/page.js"
     ]
   }
 }

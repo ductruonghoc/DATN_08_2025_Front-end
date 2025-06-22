@@ -662,6 +662,9 @@ video {
 .left-4 {
   left: 1rem;
 }
+.left-\[-40px\] {
+  left: -40px;
+}
 .left-\[50\%\] {
   left: 50%;
 }
@@ -682,6 +685,9 @@ video {
 }
 .right-4 {
   right: 1rem;
+}
+.right-\[-40px\] {
+  right: -40px;
 }
 .top-0 {
   top: 0px;
@@ -818,6 +824,9 @@ video {
 .ml-3 {
   margin-left: 0.75rem;
 }
+.ml-4 {
+  margin-left: 1rem;
+}
 .ml-64 {
   margin-left: 16rem;
 }
@@ -869,9 +878,6 @@ video {
 .mt-auto {
   margin-top: auto;
 }
-.ml-4 {
-  margin-left: 1rem;
-}
 .block {
   display: block;
 }
@@ -890,14 +896,14 @@ video {
 .hidden {
   display: none;
 }
+.aspect-\[8\.5\/11\] {
+  aspect-ratio: 8.5/11;
+}
 .aspect-square {
   aspect-ratio: 1 / 1;
 }
 .aspect-video {
   aspect-ratio: 16 / 9;
-}
-.aspect-\[8\.5\/11\] {
-  aspect-ratio: 8.5/11;
 }
 .size-4 {
   width: 1rem;
@@ -962,6 +968,9 @@ video {
 }
 .h-9 {
   height: 2.25rem;
+}
+.h-\[150px\] {
+  height: 150px;
 }
 .h-\[1px\] {
   height: 1px;
@@ -1115,6 +1124,9 @@ video {
 }
 .w-\[1px\] {
   width: 1px;
+}
+.w-\[200px\] {
+  width: 200px;
 }
 .w-\[800px\] {
   width: 800px;
@@ -1307,11 +1319,11 @@ video {
 .list-inside {
   list-style-position: inside;
 }
-.list-none {
-  list-style-type: none;
-}
 .list-disc {
   list-style-type: disc;
+}
+.list-none {
+  list-style-type: none;
 }
 .grid-cols-1 {
   grid-template-columns: repeat(1, minmax(0, 1fr));
@@ -1527,14 +1539,14 @@ video {
 .border-l {
   border-left-width: 1px;
 }
+.border-l-4 {
+  border-left-width: 4px;
+}
 .border-r {
   border-right-width: 1px;
 }
 .border-t {
   border-top-width: 1px;
-}
-.border-l-4 {
-  border-left-width: 4px;
 }
 .border-dashed {
   border-style: dashed;
@@ -1557,6 +1569,10 @@ video {
 }
 .border-\[--color-border\] {
   border-color: var(--color-border);
+}
+.border-blue-500 {
+  --tw-border-opacity: 1;
+  border-color: rgb(59 130 246 / var(--tw-border-opacity, 1));
 }
 .border-blue-600 {
   --tw-border-opacity: 1;
@@ -1602,10 +1618,6 @@ video {
 }
 .border-white\/20 {
   border-color: rgb(255 255 255 / 0.2);
-}
-.border-blue-500 {
-  --tw-border-opacity: 1;
-  border-color: rgb(59 130 246 / var(--tw-border-opacity, 1));
 }
 .border-l-transparent {
   border-left-color: transparent;
@@ -1790,6 +1802,9 @@ video {
 }
 .bg-white\/50 {
   background-color: rgb(255 255 255 / 0.5);
+}
+.bg-white\/90 {
+  background-color: rgb(255 255 255 / 0.9);
 }
 .bg-white\/95 {
   background-color: rgb(255 255 255 / 0.95);
