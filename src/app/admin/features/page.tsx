@@ -21,7 +21,7 @@ export default function HomePage() {
               <h2 className="text-xl font-semibold text-[#2e3139]">Upload PDF</h2>
             </div>
             <p className="text-gray-600 mb-6">Upload PDF documents and start querying instantly.</p>
-            <Link href="/home/import">
+            <Link href="/admin/features/import">
               <Button className="w-full rounded-[10px] bg-[#4045ef] text-white hover:bg-[#2d336b]/90">
                 Upload a PDF
               </Button>
@@ -37,7 +37,7 @@ export default function HomePage() {
               <h2 className="text-xl font-semibold text-[#2e3139]">New Conversation</h2>
             </div>
             <p className="text-gray-600 mb-6">Start a new conversation with PDF assistant.</p>
-            <Link href="/home/conversation">
+            <Link href="/admin/features/conversation">
               <Button className="w-full rounded-[10px] bg-[#4045ef] text-white hover:bg-[#2d336b]/90">
                 Start Conversation
               </Button>
@@ -53,7 +53,7 @@ export default function HomePage() {
               <h2 className="text-xl font-semibold text-[#2e3139]">Track Progress</h2>
             </div>
             <p className="text-gray-600 mb-6">Monitor the processing status of your PDF documents.</p>
-            <Link href="/home/track-progress/tracking">
+            <Link href="/admin/features/track-progress/tracking">
               <Button className="w-full rounded-[10px] bg-[#4045ef] text-white hover:bg-[#2d336b]/90">
                 View Progress
               </Button>
@@ -69,7 +69,7 @@ export default function HomePage() {
               <h2 className="text-xl font-semibold text-[#2e3139]">Device Management</h2>
             </div>
             <p className="text-gray-600 mb-6">Manage your connected devices and settings.</p>
-            <Link href="/home/device-management">
+            <Link href="/admin/features/device-management">
               <Button className="w-full rounded-[10px] bg-[#4045ef] text-white hover:bg-[#2d336b]/90">
                 Manage Devices
               </Button>

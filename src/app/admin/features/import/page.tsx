@@ -87,7 +87,7 @@ export default function ImportPDFPage() {
         sessionStorage.setItem("uploadedPdfUrl", pdfUrl)
         sessionStorage.setItem("uploadedPdfName", finalPdfName)
         toast.success("PDF uploaded successfully!")
-        router.push("/home/import/pdfInformation")
+        router.push("/admin/features/import/pdfInformation")
       } catch (error) {
         console.error("Upload failed:", error)
         setIsUploading(false)

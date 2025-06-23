@@ -78,7 +78,7 @@ export default function PDFInformationPage() {
     } else {
       // If no device info, redirect back to import page
       toast.error("Device information missing. Please start from the beginning.")
-      router.push("/home/import")
+      router.push("/admin/features/import")
     }
   }, [router])
 
@@ -132,7 +132,7 @@ export default function PDFInformationPage() {
     setCheckedPages(newCheckedPages)
     if (newCheckedPages.size === totalPages) {
       toast.success("All pages processed successfully!")
-      setTimeout(() => router.push("/home/track-progress/finish"), 1000)
+      setTimeout(() => router.push("/admin/features/track-progress/finish"), 1000)
     }
   }
 
