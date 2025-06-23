@@ -1,10 +1,8 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useRef, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import {
   Menu,
   Upload,
@@ -19,7 +17,7 @@ import {
   Trash2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { usePathname } from "next/navigation"
+import BASEURL from "../../api/backend/dmc_api_gateway/baseurl"
 
 interface Conversation {
   id: string
@@ -28,13 +26,8 @@ interface Conversation {
   timestamp: Date
 }
 
-type UserRole = "unlogged" | "logged" | "admin" | "super_admin"
 
-export default function HomeLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function HomeLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [activeConversationMenu, setActiveConversationMenu] = useState<string | null>(null)
@@ -54,18 +47,17 @@ export default function HomeLayout({
       timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
     },
   ])
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null) // Authorization state
 
   // User role state - you can change this to test different roles
   // In a real app, this would come from authentication context or props
-  const [userRole, setUserRole] = useState<UserRole>("admin") // Change this to test different roles
-
   const pathname = usePathname()
-  const router = useRouter()
   const userMenuRef = useRef<HTMLDivElement>(null)
   const conversationMenuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
-
+  const router = useRouter()
+  //functions here
   const handleNewConversation = () => {
-    router.push("/home/conversation")
+    router.push("admin/features/conversation")
   }
 
   const handleDeleteConversation = (conversationId: string) => {
@@ -81,8 +73,8 @@ export default function HomeLayout({
       setConversationToDelete(null)
 
       // If currently viewing the deleted conversation, redirect to conversation page
-      if (pathname.includes(`/home/conversation/chat/${conversationToDelete}`)) {
-        router.push("/home/conversation")
+      if (pathname.includes(`/admin/features/conversation/chat/${conversationToDelete}`)) {
+        router.push("/admin/features/conversation")
       }
     }
   }
@@ -97,8 +89,38 @@ export default function HomeLayout({
     e.stopPropagation()
     setActiveConversationMenu(activeConversationMenu === conversationId ? null : conversationId)
   }
+  //hooks here
+  useEffect(() => {
+    const checkAuthorization = async () => {
+      const token = localStorage.getItem("dmc_api_gateway_token")
+      if (!token) {
+        setIsAuthorized(false)
+        return
+      }
 
-  // Close menus when clicking outside
+      try {
+        const response = await fetch(`${BASEURL}/auth/admin_authorize`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        if (response.status === 200) {
+          setIsAuthorized(true)
+        } else {
+          setIsAuthorized(false)
+        }
+      } catch (error) {
+        console.error("Authorization check failed:", error)
+        setIsAuthorized(false)
+      }
+    }
+
+    checkAuthorization()
+  }, [])
+
+    // Close menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
@@ -137,39 +159,29 @@ export default function HomeLayout({
     setShowUserMenu(!showUserMenu)
   }
 
-  // Function to check if user has access to a specific feature
-  const hasAccess = (feature: string): boolean => {
-    switch (userRole) {
-      case "unlogged":
-        return feature === "new_conversation"
-      case "logged":
-        return ["new_conversation", "conversations"].includes(feature)
-      case "admin":
-        return ["new_conversation", "conversations", "upload_pdf", "device_management", "track_progress"].includes(
-          feature,
-        )
-      case "super_admin":
-        return ["new_conversation", "conversations", "admin_management"].includes(feature)
-      default:
-        return false
-    }
+  if (isAuthorized === null) {
+    return <div>Loading...</div> // Show a loading state while checking authorization
   }
 
-  // Get user display name based on role
-  const getUserDisplayName = (): string => {
-    switch (userRole) {
-      case "unlogged":
-        return "Guest"
-      case "logged":
-        return "User"
-      case "admin":
-        return "Admin"
-      case "super_admin":
-        return "Super Admin"
-      default:
-        return "Guest"
-    }
+  if (!isAuthorized) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-red-600">403 - Forbidden</h1>
+          <p className="mt-4 text-gray-600">You do not have permission to access this page.</p>
+          <button
+            onClick={() => router.push("/admin/log-in")}
+            className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    )
   }
+
+
+
 
   return (
     <div className="flex h-full overflow-hidden bg-white">
@@ -182,7 +194,7 @@ export default function HomeLayout({
       >
         <div className={cn("flex h-16 items-center px-4", sidebarOpen ? "justify-between" : "justify-center")}>
           {sidebarOpen && (
-            <Link href="/home" className="flex items-center gap-2">
+            <Link href="/admin/features" className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-[#4045ef] text-white">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -215,32 +227,32 @@ export default function HomeLayout({
 
         <div className="flex-1 overflow-auto py-4">
           {/* New Conversation Button - Available to all users */}
-          {hasAccess("new_conversation") && (
+          
             <div className={cn("px-4", sidebarOpen ? "" : "flex justify-center")}>
               <button
                 onClick={handleNewConversation}
                 className={cn(
                   "flex items-center gap-2 rounded-[10px] bg-white shadow-sm cursor-pointer hover:bg-gray-50 transition-colors",
                   sidebarOpen ? "w-full px-4 py-2 text-sm text-[#2d336b]" : "h-10 w-10 justify-center",
-                  pathname.includes("/home/conversation") ? "ring-2 ring-[#4045ef]/20" : "",
+                  pathname.includes("/admin/features/conversation") ? "ring-2 ring-[#4045ef]/20" : "",
                 )}
               >
                 <Plus className="h-4 w-4" />
                 {sidebarOpen && <span>New conversation</span>}
               </button>
             </div>
-          )}
+          
 
           {/* Navigation Menu */}
           <nav className={cn("mt-6", sidebarOpen ? "px-2" : "flex flex-col items-center px-0")}>
             {/* Upload PDF - Admin only */}
-            {hasAccess("upload_pdf") && (
+
               <Link
-                href="/home/import"
+                href="/admin/features/import"
                 className={cn(
                   "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
                   sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
-                  pathname.includes("/home/import")
+                  pathname.includes("/admin/features/import")
                     ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
                     : "",
                 )}
@@ -248,16 +260,14 @@ export default function HomeLayout({
                 <Upload className="h-5 w-5 text-[#2d336b]" />
                 {sidebarOpen && <span>Upload PDF</span>}
               </Link>
-            )}
 
             {/* Device Management - Admin only */}
-            {hasAccess("device_management") && (
               <Link
-                href="/home/device-management"
+                href="/admin/features/device-management"
                 className={cn(
                   "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
                   sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
-                  pathname.includes("/home/device-management")
+                  pathname.includes("/admin/features/device-management")
                     ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
                     : "",
                 )}
@@ -265,16 +275,14 @@ export default function HomeLayout({
                 <Settings className="h-5 w-5 text-[#2d336b]" />
                 {sidebarOpen && <span>Device Management</span>}
               </Link>
-            )}
 
             {/* Track Progress - Admin only */}
-            {hasAccess("track_progress") && (
               <Link
-                href="/home/track-progress/tracking"
+                href="/admin/features/track-progress/tracking"
                 className={cn(
                   "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
                   sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
-                  pathname.includes("/home/track-progress")
+                  pathname.includes("/admin/features/track-progress")
                     ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
                     : "",
                 )}
@@ -282,16 +290,15 @@ export default function HomeLayout({
                 <FileText className="h-5 w-5 text-[#2d336b]" />
                 {sidebarOpen && <span>Track Progress</span>}
               </Link>
-            )}
 
             {/* Admin Management - Super Admin only */}
-            {hasAccess("admin_management") && (
+            {/* {hasAccess("admin_management") && (
               <Link
-                href="/home/admin-management"
+                href="/admin/features/admin-management"
                 className={cn(
                   "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
                   sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
-                  pathname.includes("/home/admin-management")
+                  pathname.includes("/admin/features/admin-management")
                     ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
                     : "",
                 )}
@@ -299,11 +306,10 @@ export default function HomeLayout({
                 <Users className="h-5 w-5 text-[#2d336b]" />
                 {sidebarOpen && <span>Admin Management</span>}
               </Link>
-            )}
+            )} */}
           </nav>
 
           {/* Conversation history - Available to logged users, admin, and super admin */}
-          {hasAccess("conversations") && sidebarOpen && (
             <div className="mt-8 px-2">
               <h3 className="px-3 text-xs font-semibold uppercase text-[#2d336b] mb-2">Your conversations</h3>
               <div className="space-y-1">
@@ -312,10 +318,10 @@ export default function HomeLayout({
                     key={conversation.id}
                     className={cn(
                       "flex items-center justify-between rounded-[10px] px-3 py-2 hover:bg-white/50 relative",
-                      pathname.includes(`/home/conversation/chat/${conversation.id}`) ? "bg-white/50" : "",
+                      pathname.includes(`/admin/features/conversation/chat/${conversation.id}`) ? "bg-white/50" : "",
                     )}
                   >
-                    <Link href={`/home/conversation/chat/${conversation.id}`} className="flex-1 min-w-0">
+                    <Link href={`/admin/features/conversation/chat/${conversation.id}`} className="flex-1 min-w-0">
                       <div className="flex items-center">
                         <span className="font-medium text-sm truncate text-[#2d336b]">{conversation.title}</span>
                       </div>
@@ -355,29 +361,9 @@ export default function HomeLayout({
                 ))}
               </div>
             </div>
-          )}
         </div>
 
-        {/* User Role Switcher (for testing - remove in production) */}
-        {sidebarOpen && (
-          <div className="px-4 py-2 border-t border-white/20">
-            <div className="text-xs text-[#2d336b] mb-2">Current Role: {getUserDisplayName()}</div>
-            <div className="text-xs text-[#2d336b] mb-1 opacity-75">Switching roles redirects to conversation</div>
-            <select
-              value={userRole}
-              onChange={(e) => {
-                setUserRole(e.target.value as UserRole)
-                router.push("/home/conversation")
-              }}
-              className="w-full text-xs p-1 rounded border border-gray-300"
-            >
-              <option value="unlogged">Unlogged User</option>
-              <option value="logged">Logged User</option>
-              <option value="admin">Admin</option>
-              <option value="super_admin">Super Admin</option>
-            </select>
-          </div>
-        )}
+        
       </div>
 
       {/* Main content area with top bar */}
@@ -389,21 +375,11 @@ export default function HomeLayout({
       >
         {/* Top horizontal bar */}
         <div className="h-16 bg-white flex justify-end items-center px-4 sticky top-0 z-40">
-          {userRole === "unlogged" ? (
-            /* Unlogged user - show login and register */
-            <div className="flex items-center gap-4">
-              <Link href="/log-in" className="text-[#4045ef] hover:text-[#2d336b] transition-colors">
-                Log in
-              </Link>
-              <Link href="/sign-up" className="text-[#4045ef] hover:text-[#2d336b] transition-colors">
-                Register
-              </Link>
-            </div>
-          ) : (
+          {
             /* Logged users - show user menu */
             <div className="flex items-center gap-4 relative" ref={userMenuRef}>
               <button onClick={toggleUserMenu} className="flex items-center gap-2 text-[#2d336b] hover:underline">
-                <span>{getUserDisplayName()}</span>
+                <span>Admin</span>
                 <ChevronDown className="h-4 w-4" />
               </button>
 
@@ -443,7 +419,7 @@ export default function HomeLayout({
                 </svg>
               </div>
             </div>
-          )}
+          }
         </div>
 
         {/* Main content */}

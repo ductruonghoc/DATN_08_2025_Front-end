@@ -1,14 +1,16 @@
 "use client";
-import { User, Lock } from "lucide-react";
+import { User, Lock, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/form/input";
 import { useState } from "react";
+import { useRouter } from "next/navigation"; // Import useRouter
 import BASEURL from "../../api/backend/dmc_api_gateway/baseurl"; // Adjust the import path as necessary
 
 export default function SignInPage() {
-
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState(""); // State for error message
+  const router = useRouter(); // Initialize useRouter
 
   const handleLogin = async () => {
     try {
@@ -28,13 +30,14 @@ export default function SignInPage() {
       if (result.success) {
         // Store the token in local storage
         localStorage.setItem("dmc_api_gateway_token", result.data.token);
-        alert("Login successful!");
+        setErrorMessage(""); // Clear error message on success
+        router.push("/admin/features"); // Redirect to the features page
       } else {
-        alert(result.message || "Login failed!");
+        setErrorMessage(result.message || "Login failed!"); // Set error message
       }
     } catch (error) {
       console.error("Error during login:", error);
-      alert("An error occurred. Please try again.");
+      setErrorMessage("An error occurred. Please try again."); // Set error message
     }
   };
 
@@ -61,7 +64,12 @@ export default function SignInPage() {
               <p className="mt-2">Hi admin, let login with your account</p>
             </div>
 
-            <form className="space-y-6 text-black">
+            <form 
+              className="space-y-6 text-black bg-white p-5 rounded-lg shadow-md"
+              onSubmit={(e) => {
+                e.preventDefault(); // Prevent the default form submission
+                handleLogin(); // Call the login handler
+              }}>
               <div className="space-y-2">
                 <label htmlFor="username" className="block text-sm font-medium">
                   Username
@@ -81,7 +89,7 @@ export default function SignInPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 ">
                 <label htmlFor="password" className="block text-sm font-medium">
                   Password
                 </label>
@@ -96,13 +104,22 @@ export default function SignInPage() {
                     placeholder="Enter your password"
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10 rounded-full border-2 border-[#a9b5df] focus:border-[#4045ef] w-full placeholder:text-gray-300 py-[22px] "
-                    required     
+                    required
                   />
                 </div>
               </div>
 
+              {/* Error message */}
+              {errorMessage !== "" && (
+                <p 
+                  className="text-sm text-center bg-red-500 text-white p-2">
+                    <TriangleAlert className="inline mr-1" />
+                    {errorMessage}
+                    </p>
+              )}
+
               <Button
-                onClick={handleLogin}        
+                type="submit"
                 className="w-full bg-[#2e3470] text-white hover:bg-[#232759] rounded-full py-[22px]">
                 Log in
               </Button>
