@@ -503,7 +503,7 @@ export default function ImportPDFPage() {
                 ) : (
                   <Button
                     onClick={handleOCR}
-                    className="w-full bg-blue-300 hover:bg-green-700 text-white rounded py-2 text-base"
+                    className="w-full bg-blue-600 hover:bg-blue-300 text-white rounded py-2 text-base"
                     disabled={isAgentExtracting} // Disable if agent is extracting
                   >
                     {isAgentExtracting ? "Agent is Extracting..." : "Run OCR"}
