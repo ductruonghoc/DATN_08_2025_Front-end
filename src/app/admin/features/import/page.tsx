@@ -1,13 +1,14 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Upload, Mail, HelpCircle, Plus } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/form/select"
 import { Input } from "@/components/form/input"
 import { useRouter } from "next/navigation"
 import { toast, ToastContainer } from "react-toastify"
+import BASEURL from "@/src/app/api/backend/dmc_api_gateway/baseurl"
 import "react-toastify/dist/ReactToastify.css"
 
 export default function ImportPDFPage() {
@@ -18,24 +19,68 @@ export default function ImportPDFPage() {
   const [isUploading, setIsUploading] = useState(false)
   const [pdfName, setPdfName] = useState("")
   const [deviceName, setDeviceName] = useState("")
-  const [deviceBrand, setDeviceBrand] = useState("")
-  const [deviceType, setDeviceType] = useState("")
   const [showAddBrandModal, setShowAddBrandModal] = useState(false)
   const [showAddTypeModal, setShowAddTypeModal] = useState(false)
+  const [deviceBrand, setDeviceBrand] = useState<number | null>(null)
+  const [deviceType, setDeviceType] = useState<number | null>(null)
+  const [brands, setBrands] = useState<{ id: number; label: string }[]>([])
+  const [deviceTypes, setDeviceTypes] = useState<{ id: number; label: string }[]>([])
   const [newBrandName, setNewBrandName] = useState("")
   const [newTypeName, setNewTypeName] = useState("")
+
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleNextStep = () => {
+  useEffect(() => {
+    const fetchBrandsAndDeviceTypes = async () => {
+      try {
+        const response = await fetch(`${BASEURL}/pdf_process/get_brands_and_device_types`)
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success) {
+            setBrands(result.data.brands)
+            setDeviceTypes(result.data.deviceTypes)
+          } else {
+            toast.error(result.message || "Failed to fetch data")
+          }
+        } else {
+          toast.error("Failed to fetch brands and device types")
+        }
+      } catch (error) {
+        console.error("Error fetching brands and device types:", error)
+        toast.error("An error occurred while fetching data")
+      }
+    }
+
+    fetchBrandsAndDeviceTypes()
+  }, [])
+
+  const handleNextStep = async () => {
     if (!deviceName.trim() || !deviceBrand || !deviceType) {
       toast.error("Please fill in all required device information")
       return
     }
-    sessionStorage.setItem("deviceName", deviceName)
-    sessionStorage.setItem("deviceBrand", deviceBrand)
-    sessionStorage.setItem("deviceType", deviceType)
-    setStep(2)
-    toast.success("Device information saved. Please upload PDF file.")
+
+    try {
+      const response = await fetch(
+        `${BASEURL}/pdf_process/new_device?label=${encodeURIComponent(deviceName)}&brand_id=${deviceBrand}&device_type_id=${deviceType}`
+      )
+
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success) {
+          sessionStorage.setItem("device_id", String(result.data.device_id))
+          setStep(2)
+          toast.success("Device information saved. Please upload PDF file.")
+        } else {
+          toast.error(result.message || "Failed to insert device")
+        }
+      } else {
+        toast.error("Failed to insert device")
+      }
+    } catch (error) {
+      console.error("Error inserting device:", error)
+      toast.error("An error occurred while inserting the device")
+    }
   }
 
   const handleBackStep = () => setStep(1)
@@ -79,22 +124,68 @@ export default function ImportPDFPage() {
   const handleUploadClick = () => fileInputRef.current?.click()
 
   const handleUpload = async () => {
-    if (selectedFile) {
-      setIsUploading(true)
-      try {
-        const pdfUrl = URL.createObjectURL(selectedFile)
-        const finalPdfName = pdfName.trim() ? `${pdfName.trim()}.pdf` : selectedFile.name
-        sessionStorage.setItem("uploadedPdfUrl", pdfUrl)
-        sessionStorage.setItem("uploadedPdfName", finalPdfName)
-        toast.success("PDF uploaded successfully!")
-        router.push("/admin/features/import/pdfInformation")
-      } catch (error) {
-        console.error("Upload failed:", error)
-        setIsUploading(false)
-        toast.error("Upload failed. Please try again.")
-      }
-    }
+  if (!selectedFile) {
+    toast.error("No file selected for upload")
+    return
   }
+
+  setIsUploading(true)
+
+  try {
+    // Step 1: Fetch the signed URL
+    const deviceId = sessionStorage.getItem("device_id")
+    if (!deviceId) {
+      toast.error("Device ID not found in session storage")
+      setIsUploading(false)
+      return
+    }
+
+    const response = await fetch(`${BASEURL}/pdf_process/pdf_upload?device_id=${deviceId}&pdf_name=${encodeURIComponent(`pdfName`)}`, {
+      method: "GET",
+    })
+    if (!response.ok) {
+      toast.error("Failed to fetch signed URL for PDF upload")
+      setIsUploading(false)
+      return
+    }
+
+    const result = await response.json()
+    if (!result.success) {
+      toast.error(result.message || "Failed to generate signed URL")
+      setIsUploading(false)
+      return
+    }
+
+    const { pdf_id, signed_url } = result.data
+
+    // Step 2: Upload the PDF file to GCS using the signed URL
+    const uploadResponse = await fetch(signed_url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/pdf",
+      },
+      body: selectedFile,
+    })
+
+    if (!uploadResponse.ok) {
+      toast.error("Failed to upload PDF to GCS")
+      setIsUploading(false)
+      return
+    }
+
+    // Step 3: Store the PDF ID in session storage
+    sessionStorage.setItem("pdf_id", String(pdf_id))
+    toast.success("PDF uploaded successfully!")
+    setIsUploading(false)
+
+    // Optionally, navigate to another page or reset the form
+    router.push("/admin/features/import/pdfInformation")
+  } catch (error) {
+    console.error("Error during PDF upload:", error)
+    toast.error("An error occurred while uploading the PDF")
+    setIsUploading(false)
+  }
+}
 
   const handleAddBrand = () => {
     if (newBrandName.trim()) {
@@ -125,9 +216,8 @@ export default function ImportPDFPage() {
         <div className="flex items-center w-full">
           <div className="flex flex-col items-center flex-1">
             <div
-              className={`w-6 h-6 rounded-full flex items-center justify-center text-sm ${
-                step >= 1 ? "bg-indigo-600 text-white" : "border-2 border-gray-300 text-gray-300"
-              }`}
+              className={`w-6 h-6 rounded-full flex items-center justify-center text-sm ${step >= 1 ? "bg-indigo-600 text-white" : "border-2 border-gray-300 text-gray-300"
+                }`}
             >
               {step > 1 ? "✓" : "1"}
             </div>
@@ -136,9 +226,8 @@ export default function ImportPDFPage() {
           <div className={`h-0.5 flex-1 ${step >= 2 ? "bg-indigo-600" : "bg-gray-300"}`}></div>
           <div className="flex flex-col items-center flex-1">
             <div
-              className={`w-6 h-6 rounded-full flex items-center justify-center text-sm ${
-                step >= 2 ? "bg-indigo-600 text-white" : "border-2 border-gray-300 text-gray-300"
-              }`}
+              className={`w-6 h-6 rounded-full flex items-center justify-center text-sm ${step >= 2 ? "bg-indigo-600 text-white" : "border-2 border-gray-300 text-gray-300"
+                }`}
             >
               {step > 2 ? "✓" : "2"}
             </div>
@@ -151,45 +240,23 @@ export default function ImportPDFPage() {
         {step === 1 ? (
           /* Device Information Step */
           <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-center mb-4">
-              <div className="flex justify-center mb-2">
-                <div className="w-10 h-10 bg-indigo-600 rounded flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-6 w-6 text-white"
-                  >
-                    <rect width="20" height="14" x="2" y="3" rx="2" ry="2" />
-                    <line x1="8" x2="16" y1="21" y2="21" />
-                    <line x1="12" x2="12" y1="17" y2="21" />
-                  </svg>
-                </div>
-              </div>
-              <h2 className="text-xl font-semibold text-gray-800">Device Information</h2>
-              <p className="text-sm text-gray-600">Enter device details</p>
-            </div>
-
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
                   Device Brand <span className="text-red-500">*</span>
                 </label>
                 <div className="flex items-center gap-2">
-                  <Select onValueChange={setDeviceBrand} value={deviceBrand}>
-                    <SelectTrigger className="w-full border-gray-300 rounded focus:border-indigo-600">
-                      <SelectValue placeholder="Select brand..." />
+                  <Select onValueChange={(value) => setDeviceBrand(Number(value))} value={deviceBrand?.toString() || ""}>
+                    <SelectTrigger className={`${deviceBrand ? "capitalize" : ""} w-full border-gray-300 rounded focus:border-indigo-600`}>
+                      <SelectValue 
+                        placeholder="Select brand..." />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="lenovo">Lenovo</SelectItem>
-                      <SelectItem value="hp">HP</SelectItem>
-                      <SelectItem value="dell">Dell</SelectItem>
-                      <SelectItem value="apple">Apple</SelectItem>
-                      <SelectItem value="asus">Asus</SelectItem>
+                    <SelectContent className="capitalize">
+                      {brands.map((brand) => (
+                        <SelectItem key={brand.id} value={brand.id.toString()}>
+                          {brand.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <Button
@@ -199,10 +266,6 @@ export default function ImportPDFPage() {
                     <Plus className="w-4 h-4 text-white" />
                   </Button>
                 </div>
-                <div className="flex items-center mt-1 text-xs text-indigo-600">
-                  <HelpCircle className="w-3 h-3 mr-1" />
-                  <span>Select or add a brand</span>
-                </div>
               </div>
 
               <div>
@@ -210,16 +273,17 @@ export default function ImportPDFPage() {
                   Device Type <span className="text-red-500">*</span>
                 </label>
                 <div className="flex items-center gap-2">
-                  <Select onValueChange={setDeviceType} value={deviceType}>
-                    <SelectTrigger className="w-full border-gray-300 rounded focus:border-indigo-600">
-                      <SelectValue placeholder="Select type..." />
+                  <Select onValueChange={(value) => setDeviceType(Number(value))} value={deviceType?.toString() || ""}>
+                    <SelectTrigger className={`${deviceType ? "capitalize" : ""} w-full border-gray-300 rounded focus:border-indigo-600`}>
+                      <SelectValue 
+                        placeholder="Select type..." />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="laptop">Laptop</SelectItem>
-                      <SelectItem value="desktop">Desktop</SelectItem>
-                      <SelectItem value="tablet">Tablet</SelectItem>
-                      <SelectItem value="smartphone">Smartphone</SelectItem>
-                      <SelectItem value="server">Server</SelectItem>
+                    <SelectContent className="capitalize">
+                      {deviceTypes.map((type) => (
+                        <SelectItem key={type.id} value={type.id.toString()}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <Button
@@ -247,7 +311,9 @@ export default function ImportPDFPage() {
                     value={deviceName}
                     onChange={(e) => setDeviceName(e.target.value)}
                     placeholder="e.g., ThinkPad T570"
-                    className="pl-8 py-2 w-full border-gray-300 rounded focus:border-indigo-600"
+                    className="w-full 
+                              pl-8
+                              border-gray-300 rounded focus:border-indigo-600"
                   />
                 </div>
                 <div className="flex items-center mt-1 text-xs text-indigo-600">
@@ -301,9 +367,8 @@ export default function ImportPDFPage() {
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
-                className={`mb-4 cursor-pointer rounded border-2 border-dashed p-6 transition-colors ${
-                  isDragging ? "border-indigo-600 bg-indigo-50" : "border-gray-300 hover:border-gray-400"
-                }`}
+                className={`mb-4 cursor-pointer rounded border-2 border-dashed p-6 transition-colors ${isDragging ? "border-indigo-600 bg-indigo-50" : "border-gray-300 hover:border-gray-400"
+                  }`}
                 onClick={handleUploadClick}
               >
                 <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".pdf" className="hidden" />
@@ -348,9 +413,9 @@ export default function ImportPDFPage() {
             )}
 
             <div className="flex gap-3">
-              <Button onClick={handleBackStep} variant="outline" className="flex-1 rounded py-2 text-base">
+              {/* <Button onClick={handleBackStep} variant="outline" className="flex-1 rounded py-2 text-base">
                 Back
-              </Button>
+              </Button> */}
               <Button
                 onClick={selectedFile ? handleUpload : handleUploadClick}
                 className="flex-1 rounded bg-indigo-600 hover:bg-indigo-700 py-2 text-base text-white"
