@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation"
 import { toast, ToastContainer } from "react-toastify"
 import BASEURL from "@/src/app/api/backend/dmc_api_gateway/baseurl"
 import "react-toastify/dist/ReactToastify.css"
-import LoaderWithTimer from "@/components/loader/LoaderWithTimer" // Import the LoaderWithTimer component
+import LoaderWithTimer from "@/components/loader/loaderWithTimer" // Import the LoaderWithTimer component
 
 export default function ImportPDFPage() {
   const router = useRouter()
@@ -503,7 +503,7 @@ export default function ImportPDFPage() {
                 ) : (
                   <Button
                     onClick={handleOCR}
-                    className="w-full bg-blue-600 hover:bg-blue-300 text-white rounded py-2 text-base"
+                    className="w-full bg-blue-600 hover:bg-blue-300text-white rounded py-2 text-base"
                     disabled={isAgentExtracting} // Disable if agent is extracting
                   >
                     {isAgentExtracting ? "Agent is Extracting..." : "Run OCR"}
