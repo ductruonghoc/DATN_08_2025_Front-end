@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Upload, Mail, HelpCircle, Plus } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/form/select"
@@ -11,6 +11,7 @@ import { toast, ToastContainer } from "react-toastify"
 import BASEURL from "@/src/app/api/backend/dmc_api_gateway/baseurl"
 import "react-toastify/dist/ReactToastify.css"
 import LoaderWithTimer from "@/components/loader/loaderWithTimer" // Import the LoaderWithTimer component
+import { set } from "date-fns"
 
 export default function ImportPDFPage() {
   const router = useRouter()
@@ -34,6 +35,50 @@ export default function ImportPDFPage() {
 
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+ const checkAgentStatus = useCallback(() => {
+  let interval: NodeJS.Timeout | null = null;
+
+  const fetchAgentStatus = async () => {
+    try {
+      const response = await fetch(`${BASEURL}/pdf_process/agent_is_extracting_status`, {
+        method: "GET",
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          setIsAgentExtracting(result.agent_is_extracting);
+
+          // Stop the interval if the agent is no longer extracting
+          if (!result.agent_is_extracting && interval) {
+            clearInterval(interval);
+          }
+        } else {
+          toast.error(result.message || "Failed to fetch agent status");
+        }
+      } else {
+        toast.error("Failed to fetch agent status");
+      }
+    } catch (error) {
+      console.error("Error fetching agent status:", error);
+      toast.error("An error occurred while checking agent status");
+    }
+  };
+
+  // Start the interval to periodically check the agent status
+  interval = setInterval(fetchAgentStatus, 5000); // 5-second interval
+
+  // Immediately fetch the status once before the interval starts
+  fetchAgentStatus();
+
+  return () => {
+    // Cleanup the interval when the function is called again or the component unmounts
+    if (interval) {
+      clearInterval(interval);
+    }
+  };
+}, [setIsAgentExtracting]);
 
   useEffect(() => {
     const fetchBrandsAndDeviceTypes = async () => {
@@ -60,31 +105,10 @@ export default function ImportPDFPage() {
   }, [setBrands, setDeviceTypes])
 
   useEffect(() => {
-    const checkAgentStatus = async () => {
-      try {
-        const response = await fetch(`${BASEURL}/pdf_process/agent_is_extracting_status`, {
-          method: "GET",
-        })
-
-        if (response.ok) {
-          const result = await response.json()
-          if (result.success) {
-            setIsAgentExtracting(result.agent_is_extracting)
-          } else {
-            toast.error(result.message || "Failed to fetch agent status")
-          }
-        } else {
-          toast.error("Failed to fetch agent status")
-        }
-      } catch (error) {
-        console.error("Error fetching agent status:", error)
-        toast.error("An error occurred while checking agent status")
-      }
-    }
     if (showOCRButton) {
       checkAgentStatus()
     }
-  }, [setIsAgentExtracting, showOCRButton]) // Run once when the component mounts
+  }, [setIsAgentExtracting, showOCRButton, checkAgentStatus]) // Run once when the component mounts
 
 
   const handleNextStep = async () => {
@@ -231,7 +255,7 @@ export default function ImportPDFPage() {
       if (!response.ok) {
         toast.error("Failed to process OCR")
         setIsProcessingOCR(false)
-        console.log(await response.json())
+        checkAgentStatus(); // Refetch agent status on failure
         return
       }
 
