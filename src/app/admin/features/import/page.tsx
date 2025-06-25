@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation"
 import { toast, ToastContainer } from "react-toastify"
 import BASEURL from "@/src/app/api/backend/dmc_api_gateway/baseurl"
 import "react-toastify/dist/ReactToastify.css"
+import LoaderWithTimer from "@/components/loader/LoaderWithTimer" // Import the LoaderWithTimer component
 
 export default function ImportPDFPage() {
   const router = useRouter()
@@ -17,16 +18,20 @@ export default function ImportPDFPage() {
   const [isDragging, setIsDragging] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [isProcessingOCR, setIsProcessingOCR] = useState(false) // New state for OCR processing
   const [pdfName, setPdfName] = useState("")
   const [deviceName, setDeviceName] = useState("")
-  const [showAddBrandModal, setShowAddBrandModal] = useState(false)
-  const [showAddTypeModal, setShowAddTypeModal] = useState(false)
+  const [showOCRButton, setShowOCRButton] = useState(false) // New state to show OCR button
   const [deviceBrand, setDeviceBrand] = useState<number | null>(null)
   const [deviceType, setDeviceType] = useState<number | null>(null)
+  const [showAddBrandModal, setShowAddBrandModal] = useState(false)
+  const [showAddTypeModal, setShowAddTypeModal] = useState(false)
   const [brands, setBrands] = useState<{ id: number; label: string }[]>([])
   const [deviceTypes, setDeviceTypes] = useState<{ id: number; label: string }[]>([])
   const [newBrandName, setNewBrandName] = useState("")
   const [newTypeName, setNewTypeName] = useState("")
+  const [isAgentExtracting, setIsAgentExtracting] = useState(false) // New state to track agent status
+
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -52,7 +57,35 @@ export default function ImportPDFPage() {
     }
 
     fetchBrandsAndDeviceTypes()
-  }, [])
+  }, [setBrands, setDeviceTypes])
+
+  useEffect(() => {
+    const checkAgentStatus = async () => {
+      try {
+        const response = await fetch(`${BASEURL}/pdf_process/agent_is_extracting_status`, {
+          method: "GET",
+        })
+
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success) {
+            setIsAgentExtracting(result.agent_is_extracting)
+          } else {
+            toast.error(result.message || "Failed to fetch agent status")
+          }
+        } else {
+          toast.error("Failed to fetch agent status")
+        }
+      } catch (error) {
+        console.error("Error fetching agent status:", error)
+        toast.error("An error occurred while checking agent status")
+      }
+    }
+    if (showOCRButton) {
+      checkAgentStatus()
+    }
+  }, [setIsAgentExtracting, showOCRButton]) // Run once when the component mounts
+
 
   const handleNextStep = async () => {
     if (!deviceName.trim() || !deviceBrand || !deviceType) {
@@ -82,8 +115,6 @@ export default function ImportPDFPage() {
       toast.error("An error occurred while inserting the device")
     }
   }
-
-  const handleBackStep = () => setStep(1)
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
@@ -124,68 +155,101 @@ export default function ImportPDFPage() {
   const handleUploadClick = () => fileInputRef.current?.click()
 
   const handleUpload = async () => {
-  if (!selectedFile) {
-    toast.error("No file selected for upload")
-    return
+    if (!selectedFile) {
+      toast.error("No file selected for upload")
+      return
+    }
+
+    setIsUploading(true)
+
+    try {
+      const deviceId = sessionStorage.getItem("device_id")
+      if (!deviceId) {
+        toast.error("Device ID not found in session storage")
+        setIsUploading(false)
+        return
+      }
+
+      const response = await fetch(`${BASEURL}/pdf_process/pdf_upload?device_id=${deviceId}&pdf_name=${encodeURIComponent(pdfName)}`, {
+        method: "GET",
+      })
+      if (!response.ok) {
+        toast.error("Failed to fetch signed URL for PDF upload")
+        setIsUploading(false)
+        return
+      }
+
+      const result = await response.json()
+      if (!result.success) {
+        toast.error(result.message || "Failed to generate signed URL")
+        setIsUploading(false)
+        return
+      }
+
+      const { pdf_id, signed_url } = result.data
+
+      const uploadResponse = await fetch(signed_url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/pdf",
+        },
+        body: selectedFile,
+      })
+
+      if (!uploadResponse.ok) {
+        toast.error("Failed to upload PDF to GCS")
+        setIsUploading(false)
+        return
+      }
+
+      sessionStorage.setItem("pdf_id", String(pdf_id))
+      toast.success("PDF uploaded successfully!")
+      setIsUploading(false)
+      setShowOCRButton(true) // Show the OCR button after upload
+    } catch (error) {
+      console.error("Error during PDF upload:", error)
+      toast.error("An error occurred while uploading the PDF")
+      setIsUploading(false)
+    }
   }
 
-  setIsUploading(true)
+  const handleOCR = async () => {
+    setIsProcessingOCR(true)
 
-  try {
-    // Step 1: Fetch the signed URL
-    const deviceId = sessionStorage.getItem("device_id")
-    if (!deviceId) {
-      toast.error("Device ID not found in session storage")
-      setIsUploading(false)
-      return
+    try {
+      const pdfId = sessionStorage.getItem("pdf_id")
+      if (!pdfId) {
+        toast.error("PDF ID not found in session storage")
+        setIsProcessingOCR(false)
+        return
+      }
+
+      const response = await fetch(`${BASEURL}/pdf_process/extract_pdf?pdf_id=${pdfId}`, {
+        method: "GET",
+      })
+
+      if (!response.ok) {
+        toast.error("Failed to process OCR")
+        setIsProcessingOCR(false)
+        console.log(await response.json())
+        return
+      }
+
+      const result = await response.json()
+      if (!result.success) {
+        toast.error(result.message || "OCR processing failed")
+        setIsProcessingOCR(false)
+        return
+      }
+
+      toast.success("PDF extraction and database update successful!")
+      router.push("/admin/features/import/pdfInformation") // Route to PDFInformationPage
+    } catch (error) {
+      console.error("Error during OCR processing:", error)
+      toast.error("An error occurred while processing OCR")
+      setIsProcessingOCR(false)
     }
-
-    const response = await fetch(`${BASEURL}/pdf_process/pdf_upload?device_id=${deviceId}&pdf_name=${encodeURIComponent(`pdfName`)}`, {
-      method: "GET",
-    })
-    if (!response.ok) {
-      toast.error("Failed to fetch signed URL for PDF upload")
-      setIsUploading(false)
-      return
-    }
-
-    const result = await response.json()
-    if (!result.success) {
-      toast.error(result.message || "Failed to generate signed URL")
-      setIsUploading(false)
-      return
-    }
-
-    const { pdf_id, signed_url } = result.data
-
-    // Step 2: Upload the PDF file to GCS using the signed URL
-    const uploadResponse = await fetch(signed_url, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/pdf",
-      },
-      body: selectedFile,
-    })
-
-    if (!uploadResponse.ok) {
-      toast.error("Failed to upload PDF to GCS")
-      setIsUploading(false)
-      return
-    }
-
-    // Step 3: Store the PDF ID in session storage
-    sessionStorage.setItem("pdf_id", String(pdf_id))
-    toast.success("PDF uploaded successfully!")
-    setIsUploading(false)
-
-    // Optionally, navigate to another page or reset the form
-    router.push("/admin/features/import/pdfInformation")
-  } catch (error) {
-    console.error("Error during PDF upload:", error)
-    toast.error("An error occurred while uploading the PDF")
-    setIsUploading(false)
   }
-}
 
   const handleAddBrand = () => {
     if (newBrandName.trim()) {
@@ -248,7 +312,7 @@ export default function ImportPDFPage() {
                 <div className="flex items-center gap-2">
                   <Select onValueChange={(value) => setDeviceBrand(Number(value))} value={deviceBrand?.toString() || ""}>
                     <SelectTrigger className={`${deviceBrand ? "capitalize" : ""} w-full border-gray-300 rounded focus:border-indigo-600`}>
-                      <SelectValue 
+                      <SelectValue
                         placeholder="Select brand..." />
                     </SelectTrigger>
                     <SelectContent className="capitalize">
@@ -275,7 +339,7 @@ export default function ImportPDFPage() {
                 <div className="flex items-center gap-2">
                   <Select onValueChange={(value) => setDeviceType(Number(value))} value={deviceType?.toString() || ""}>
                     <SelectTrigger className={`${deviceType ? "capitalize" : ""} w-full border-gray-300 rounded focus:border-indigo-600`}>
-                      <SelectValue 
+                      <SelectValue
                         placeholder="Select type..." />
                     </SelectTrigger>
                     <SelectContent className="capitalize">
@@ -361,58 +425,62 @@ export default function ImportPDFPage() {
               <h2 className="text-xl font-semibold text-gray-800">Upload Device Manual</h2>
               <p className="text-sm text-gray-600">Upload PDF for {deviceName}</p>
             </div>
-
-            {!selectedFile ? (
-              <div
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                className={`mb-4 cursor-pointer rounded border-2 border-dashed p-6 transition-colors ${isDragging ? "border-indigo-600 bg-indigo-50" : "border-gray-300 hover:border-gray-400"
-                  }`}
-                onClick={handleUploadClick}
-              >
-                <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".pdf" className="hidden" />
-                <div className="text-center">
-                  <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                  <p className="text-sm text-gray-600">Drag and drop PDF or click to browse</p>
-                  <p className="text-xs text-gray-400">PDF up to 10MB</p>
-                </div>
-              </div>
-            ) : (
-              <div className="mb-4 space-y-3">
-                <div className="rounded border border-gray-200 p-4 bg-gray-50">
-                  <div className="flex items-center">
-                    <svg className="h-6 w-6 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fillRule="evenodd"
-                        d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <div className="ml-3 flex-1">
-                      <p className="text-sm font-medium text-gray-900">{selectedFile.name}</p>
-                      <p className="text-xs text-gray-500">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+            {
+              !showOCRButton &&
+              <div>
+                {!selectedFile ? (
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`mb-4 cursor-pointer rounded border-2 border-dashed p-6 transition-colors ${isDragging ? "border-indigo-600 bg-indigo-50" : "border-gray-300 hover:border-gray-400"
+                      }`}
+                    onClick={handleUploadClick}
+                  >
+                    <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".pdf" className="hidden" />
+                    <div className="text-center">
+                      <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-600">Drag and drop PDF or click to browse</p>
+                      <p className="text-xs text-gray-400">PDF up to 10MB</p>
                     </div>
                   </div>
-                </div>
-                <div>
-                  <label htmlFor="pdfName" className="block text-xs font-medium text-gray-700 mb-1">
-                    PDF Name (Optional)
-                  </label>
-                  <Input
-                    type="text"
-                    id="pdfName"
-                    value={pdfName}
-                    onChange={(e) => setPdfName(e.target.value)}
-                    placeholder="Enter custom PDF name"
-                    className="w-full rounded border-gray-300 focus:border-indigo-600"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">Default: {selectedFile.name}</p>
-                </div>
+                ) : (
+                  <div className="mb-4 space-y-3">
+                    <div className="rounded border border-gray-200 p-4 bg-gray-50">
+                      <div className="flex items-center">
+                        <svg className="h-6 w-6 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path
+                            fillRule="evenodd"
+                            d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <div className="ml-3 flex-1">
+                          <p className="text-sm font-medium text-gray-900">{selectedFile.name}</p>
+                          <p className="text-xs text-gray-500">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <label htmlFor="pdfName" className="block text-xs font-medium text-gray-700 mb-1">
+                        PDF Name (Optional)
+                      </label>
+                      <Input
+                        type="text"
+                        id="pdfName"
+                        value={pdfName}
+                        onChange={(e) => setPdfName(e.target.value)}
+                        placeholder="Enter custom PDF name"
+                        className="w-full rounded border-gray-300 focus:border-indigo-600"
+                      />
+                      <p className="mt-1 text-xs text-gray-500">Default: {selectedFile.name}</p>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+            }
 
-            <div className="flex gap-3">
+            {!showOCRButton && (<div className="flex gap-3">
               {/* <Button onClick={handleBackStep} variant="outline" className="flex-1 rounded py-2 text-base">
                 Back
               </Button> */}
@@ -423,7 +491,26 @@ export default function ImportPDFPage() {
               >
                 {isUploading ? "Processing..." : selectedFile ? "Process PDF" : "Select PDF"}
               </Button>
-            </div>
+            </div>)}
+
+
+            {showOCRButton && (
+              <div className="mt-4">
+                {isProcessingOCR ? (
+                  <div className="flex justify-center">
+                    <LoaderWithTimer /> {/* Show loader while OCR is processing */}
+                  </div>
+                ) : (
+                  <Button
+                    onClick={handleOCR}
+                    className="w-full bg-blue-300 hover:bg-green-700 text-white rounded py-2 text-base"
+                    disabled={isAgentExtracting} // Disable if agent is extracting
+                  >
+                    {isAgentExtracting ? "Agent is Extracting..." : "Run OCR"}
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

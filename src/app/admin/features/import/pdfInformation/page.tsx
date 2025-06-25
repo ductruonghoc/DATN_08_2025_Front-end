@@ -56,31 +56,20 @@ export default function PDFInformationPage() {
   const [snipStart, setSnipStart] = useState<{ x: number; y: number } | null>(null)
   const [snipImage, setSnipImage] = useState<string | null>(null)
   const [snipReady, setSnipReady] = useState(false)
+  const [pdfId, setPdfId] = useState<string | null>(null)
   const pdfViewerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    // Get PDF and device info from sessionStorage
-    const storedPdfUrl = sessionStorage.getItem("uploadedPdfUrl")
-    const storedPdfName = sessionStorage.getItem("uploadedPdfName")
-    const storedDeviceName = sessionStorage.getItem("deviceName")
-    const storedDeviceBrand = sessionStorage.getItem("deviceBrand")
-    const storedDeviceType = sessionStorage.getItem("deviceType")
+    const storedPdfId = sessionStorage.getItem("pdf_id") // Lấy pdf_id từ sessionStorage
 
-    if (storedPdfUrl) setPdfUrl(storedPdfUrl)
-    if (storedPdfName) setPdfName(storedPdfName)
-
-    if (storedDeviceName && storedDeviceBrand && storedDeviceType) {
-      setDeviceInfo({
-        name: storedDeviceName,
-        brand: storedDeviceBrand,
-        type: storedDeviceType,
-      })
-    } else {
-      // If no device info, redirect back to import page
-      toast.error("Device information missing. Please start from the beginning.")
+    if (!storedPdfId) {
+      // Nếu không tồn tại pdf_id, chuyển hướng về trang import
+      toast.error("PDF ID is missing. Please start from the beginning.")
       router.push("/admin/features/import")
+    } else {
+      setPdfId(storedPdfId)
     }
-  }, [router])
+  }, [router, setPdfId])
 
   const nextPage = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1)
@@ -141,9 +130,9 @@ export default function PDFInformationPage() {
       prev.map((data) =>
         data.pageNumber === currentPage
           ? {
-              ...data,
-              images: data.images.map((img) => (img.id === imageId ? { ...img, description } : img)),
-            }
+            ...data,
+            images: data.images.map((img) => (img.id === imageId ? { ...img, description } : img)),
+          }
           : data,
       ),
     )
@@ -161,9 +150,9 @@ export default function PDFInformationPage() {
       prev.map((data) =>
         data.pageNumber === currentPage
           ? {
-              ...data,
-              images: data.images.map((img) => (img.id === imageId ? { ...img, checked: true } : img)),
-            }
+            ...data,
+            images: data.images.map((img) => (img.id === imageId ? { ...img, checked: true } : img)),
+          }
           : data,
       ),
     )
@@ -198,9 +187,9 @@ export default function PDFInformationPage() {
       prev.map((data) =>
         data.pageNumber === currentPage
           ? {
-              ...data,
-              textChunks: data.textChunks.map((chunk) => (chunk.id === id ? { ...chunk, value } : chunk)),
-            }
+            ...data,
+            textChunks: data.textChunks.map((chunk) => (chunk.id === id ? { ...chunk, value } : chunk)),
+          }
           : data,
       ),
     )
@@ -264,12 +253,12 @@ export default function PDFInformationPage() {
         prev.map((data) =>
           data.pageNumber === currentPage
             ? {
-                ...data,
-                images: [
-                  ...data.images,
-                  { id: data.images.length + 1, src: newImageSrc, description: "", checked: false },
-                ],
-              }
+              ...data,
+              images: [
+                ...data.images,
+                { id: data.images.length + 1, src: newImageSrc, description: "", checked: false },
+              ],
+            }
             : data,
         ),
       )
@@ -325,9 +314,8 @@ export default function PDFInformationPage() {
                         setSnipImage(null)
                         setSnipReady(true)
                       }}
-                      className={`px-3 py-1 text-sm ${
-                        snipping ? "bg-green-600 hover:bg-green-700" : "bg-indigo-600 hover:bg-indigo-700"
-                      }`}
+                      className={`px-3 py-1 text-sm ${snipping ? "bg-green-600 hover:bg-green-700" : "bg-indigo-600 hover:bg-indigo-700"
+                        }`}
                       disabled={snipping}
                     >
                       {snipping ? <Check className="w-4 h-4 mr-1" /> : null}
@@ -434,11 +422,10 @@ export default function PDFInformationPage() {
             </div>
             <Button
               onClick={handleCheckPage}
-              className={`rounded-lg px-6 py-2 ${
-                isCurrentPageChecked
+              className={`rounded-lg px-6 py-2 ${isCurrentPageChecked
                   ? "bg-green-600 hover:bg-green-700 text-white"
                   : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
-              }`}
+                }`}
             >
               {isCurrentPageChecked ? (
                 <>
@@ -459,21 +446,19 @@ export default function PDFInformationPage() {
             <div className="flex rounded-lg overflow-hidden shadow-sm">
               <button
                 onClick={() => setActiveTab("texts")}
-                className={`flex-1 py-3 px-4 text-sm font-medium transition-all duration-200 ${
-                  activeTab === "texts"
+                className={`flex-1 py-3 px-4 text-sm font-medium transition-all duration-200 ${activeTab === "texts"
                     ? "bg-indigo-600 text-white shadow-md"
                     : "bg-indigo-50 text-gray-600 hover:bg-indigo-100"
-                }`}
+                  }`}
               >
                 Text Processing
               </button>
               <button
                 onClick={() => setActiveTab("images")}
-                className={`flex-1 py-3 px-4 text-sm font-medium transition-all duration-200 ${
-                  activeTab === "images"
+                className={`flex-1 py-3 px-4 text-sm font-medium transition-all duration-200 ${activeTab === "images"
                     ? "bg-indigo-500 text-white shadow-md"
                     : "bg-indigo-50 text-gray-600 hover:bg-indigo-100"
-                }`}
+                  }`}
               >
                 Image Labeling
               </button>
@@ -523,11 +508,10 @@ export default function PDFInformationPage() {
                           </Button>
                         </div>
                         <textarea
-                          className={`w-full h-32 p-3 pt-10 border rounded-lg text-sm resize-none transition-all duration-200 ${
-                            editingChunkId === chunk.id
+                          className={`w-full h-32 p-3 pt-10 border rounded-lg text-sm resize-none transition-all duration-200 ${editingChunkId === chunk.id
                               ? "border-indigo-600 ring-2 ring-indigo-600/20 bg-white"
                               : "border-gray-200 bg-gray-50"
-                          }`}
+                            }`}
                           value={chunk.value}
                           onChange={(e) => handleChunkChange(chunk.id, e.target.value)}
                           readOnly={editingChunkId !== chunk.id}
@@ -567,13 +551,12 @@ export default function PDFInformationPage() {
                           <Button
                             onClick={() => handleCheckImage(image.id)}
                             disabled={!image.description}
-                            className={`w-full ${
-                              image.checked
+                            className={`w-full ${image.checked
                                 ? "bg-green-600 hover:bg-green-700 text-white"
                                 : image.description
                                   ? "bg-indigo-600 hover:bg-indigo-700 text-white"
                                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                            } rounded-lg`}
+                              } rounded-lg`}
                           >
                             {image.checked ? (
                               <>
