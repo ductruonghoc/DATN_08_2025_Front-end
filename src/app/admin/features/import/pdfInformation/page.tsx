@@ -28,17 +28,6 @@ interface ImageData {
   checked: boolean
 }
 
-interface TextChunk {
-  id: number
-  value: string
-}
-
-interface PageData {
-  pageNumber: number
-  textChunks: TextChunk[]
-  images: ImageData[]
-}
-
 export default function PDFInformationPage() {
   const router = useRouter()
   const [currentPage, setCurrentPage] = useState(1)
@@ -48,20 +37,20 @@ export default function PDFInformationPage() {
   const [deviceInfo, setDeviceInfo] = useState({ name: "", brand: "", type: "" })
   const [checkedPages, setCheckedPages] = useState<Set<number>>(new Set())
   const [activeTab, setActiveTab] = useState<"texts" | "images">("texts")
-  const [pageData, setPageData] = useState<PageData[]>([])
+  const [paragraph, setParagraph] = useState<string>("")
+  const [images, setImages] = useState<ImageData[]>([])
   const [scale, setScale] = useState(1.0)
-  const [editingChunkId, setEditingChunkId] = useState<number | null>(null)
   const [snipping, setSnipping] = useState(false)
   const [snipRect, setSnipRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
   const [snipStart, setSnipStart] = useState<{ x: number; y: number } | null>(null)
   const [snipImage, setSnipImage] = useState<string | null>(null)
   const [snipReady, setSnipReady] = useState(false)
-  const [pdfId, setPdfId] = useState<string | null>(null)
+  const [pdfId, setPdfId] = useState<number | null>(null)
   const pdfViewerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const storedPdfId = sessionStorage.getItem("pdf_id") // Lấy pdf_id từ sessionStorage
-
+    //const storedPdfId = sessionStorage.getItem("pdf_id") // Lấy pdf_id từ sessionStorage
+    const storedPdfId = 17//mocked pdf_id
     if (!storedPdfId) {
       // Nếu không tồn tại pdf_id, chuyển hướng về trang import
       toast.error("PDF ID is missing. Please start from the beginning.")
@@ -70,6 +59,30 @@ export default function PDFInformationPage() {
       setPdfId(storedPdfId)
     }
   }, [router, setPdfId])
+
+  // Fetch single page data when currentPage changes
+  useEffect(() => {
+    if (!pdfId) return
+    // Replace this with your real API call
+    async function fetchPageData() {
+      // Example fetch, replace with your endpoint
+      // const res = await fetch(`/api/pdf/${pdfId}/page/${currentPage}`)
+      // const data = await res.json()
+      // setParagraph(data.paragraph)
+      // setImages(data.images)
+      // For demo:
+      setParagraph(`Sample paragraph for page ${currentPage} of ${deviceInfo.name} manual.`)
+      setImages(
+        Array.from({ length: Math.floor(Math.random() * 4) + 1 }, (_, idx) => ({
+          id: idx + 1,
+          src: `/placeholder.svg?page=${currentPage}&img=${idx + 1}&device=${deviceInfo.name}`,
+          description: "",
+          checked: false,
+        }))
+      )
+    }
+    fetchPageData()
+  }, [currentPage, pdfId, deviceInfo.name])
 
   const nextPage = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1)
@@ -81,27 +94,12 @@ export default function PDFInformationPage() {
 
   const handleDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setTotalPages(numPages)
-    setPageData((prev) => {
-      const newPageData = [...prev]
-      for (let i = 1; i <= numPages; i++) {
-        if (!newPageData.find((data) => data.pageNumber === i)) {
-          newPageData.push({
-            pageNumber: i,
-            textChunks: [
-              { id: 1, value: `Sample text from page ${i} of ${deviceInfo.name} manual.` },
-              { id: 2, value: `Technical specifications for ${deviceInfo.brand} ${deviceInfo.type}.` },
-            ],
-            images: Array.from({ length: Math.floor(Math.random() * 4) + 1 }, (_, idx) => ({
-              id: idx + 1,
-              src: `/placeholder.svg?page=${i}&img=${idx + 1}&device=${deviceInfo.name}`,
-              description: "",
-              checked: false,
-            })),
-          })
-        }
-      }
-      return newPageData
-    })
+  }
+
+  // Save paragraph (call API here if needed)
+  const handleParagraphChange = (value: string) => {
+    setParagraph(value)
+    // Optionally, debounce and save to server
   }
 
   const handleCheckPage = () => {
@@ -110,8 +108,7 @@ export default function PDFInformationPage() {
       newCheckedPages.delete(currentPage)
       toast.info(`Page ${currentPage} unchecked`)
     } else {
-      const currentPageData = pageData.find((data) => data.pageNumber === currentPage)
-      if (currentPageData && currentPageData.images.some((img) => !img.description)) {
+      if (images.some((img) => !img.description)) {
         toast.error("Please describe all images before checking the page")
         return
       }
@@ -126,87 +123,21 @@ export default function PDFInformationPage() {
   }
 
   const handleImageDescriptionChange = (imageId: number, description: string) => {
-    setPageData((prev) =>
-      prev.map((data) =>
-        data.pageNumber === currentPage
-          ? {
-            ...data,
-            images: data.images.map((img) => (img.id === imageId ? { ...img, description } : img)),
-          }
-          : data,
-      ),
+    setImages((prev) =>
+      prev.map((img) => (img.id === imageId ? { ...img, description } : img))
     )
   }
 
   const handleCheckImage = (imageId: number) => {
-    const currentPageData = pageData.find((data) => data.pageNumber === currentPage)
-    if (!currentPageData) return
-    const image = currentPageData.images.find((img) => img.id === imageId)
+    const image = images.find((img) => img.id === imageId)
     if (!image || !image.description || image.description.trim() === "") {
       toast.error("Image description required")
       return
     }
-    setPageData((prev) =>
-      prev.map((data) =>
-        data.pageNumber === currentPage
-          ? {
-            ...data,
-            images: data.images.map((img) => (img.id === imageId ? { ...img, checked: true } : img)),
-          }
-          : data,
-      ),
+    setImages((prev) =>
+      prev.map((img) => (img.id === imageId ? { ...img, checked: true } : img))
     )
     toast.success(`Image ${imageId} description saved`)
-  }
-
-  const handleToggleEdit = (id: number) => {
-    if (editingChunkId === id) {
-      const chunk = pageData
-        .find((data) => data.pageNumber === currentPage)
-        ?.textChunks.find((chunk) => chunk.id === id)
-      if (chunk) toast.success(`Text chunk ${id} saved`)
-      setEditingChunkId(null)
-    } else {
-      setEditingChunkId(id)
-    }
-  }
-
-  const handleDeleteChunk = (id: number) => {
-    setPageData((prev) =>
-      prev.map((data) =>
-        data.pageNumber === currentPage
-          ? { ...data, textChunks: data.textChunks.filter((chunk) => chunk.id !== id) }
-          : data,
-      ),
-    )
-    toast.success("Text chunk deleted")
-  }
-
-  const handleChunkChange = (id: number, value: string) => {
-    setPageData((prev) =>
-      prev.map((data) =>
-        data.pageNumber === currentPage
-          ? {
-            ...data,
-            textChunks: data.textChunks.map((chunk) => (chunk.id === id ? { ...chunk, value } : chunk)),
-          }
-          : data,
-      ),
-    )
-  }
-
-  const handleAddChunk = () => {
-    const currentPageData = pageData.find((data) => data.pageNumber === currentPage)
-    if (!currentPageData) return
-    const newId = Math.max(...currentPageData.textChunks.map((c) => c.id), 0) + 1
-    setPageData((prev) =>
-      prev.map((data) =>
-        data.pageNumber === currentPage
-          ? { ...data, textChunks: [...data.textChunks, { id: newId, value: "" }] }
-          : data,
-      ),
-    )
-    setEditingChunkId(newId)
   }
 
   const handleZoomIn = () => setScale((s) => Math.min(s + 0.2, 3))
@@ -249,25 +180,15 @@ export default function PDFInformationPage() {
     if (pdfViewerRef.current && snipRect && snipRect.w > 5 && snipRect.h > 5) {
       const newImageSrc = `/placeholder.svg?page=${currentPage}&snip=true&device=${deviceInfo.name}`
       setSnipImage(newImageSrc)
-      setPageData((prev) =>
-        prev.map((data) =>
-          data.pageNumber === currentPage
-            ? {
-              ...data,
-              images: [
-                ...data.images,
-                { id: data.images.length + 1, src: newImageSrc, description: "", checked: false },
-              ],
-            }
-            : data,
-        ),
-      )
+      setImages((prev) => [
+        ...prev,
+        { id: prev.length + 1, src: newImageSrc, description: "", checked: false },
+      ])
       toast.success("Area snipped and added to images")
     }
     setSnipRect(null)
   }
 
-  const currentPageData = pageData.find((data) => data.pageNumber === currentPage)
   const isCurrentPageChecked = checkedPages.has(currentPage)
 
   return (
@@ -278,12 +199,12 @@ export default function PDFInformationPage() {
       <div className="flex justify-center mb-6">
         <div className="bg-white rounded-lg shadow-sm p-4 max-w-2xl w-full">
           <div className="text-center">
-            <h1 className="text-xl font-semibold text-gray-800 mb-2">Processing Manual for {deviceInfo.name}</h1>
-            <div className="flex justify-center items-center gap-4 text-sm text-gray-600">
+            <h1 className="text-xl font-semibold text-gray-800 mb-2">Processing Manual - {pdfName}</h1>
+            {/* <div className="flex justify-center items-center gap-4 text-sm text-gray-600">
               <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">{deviceInfo.brand}</span>
               <span className="bg-green-100 text-green-800 px-2 py-1 rounded">{deviceInfo.type}</span>
               <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded">{pdfName}</span>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
@@ -469,56 +390,15 @@ export default function PDFInformationPage() {
               {activeTab === "texts" && (
                 <div className="space-y-4 h-full flex flex-col">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-800">Text Chunks - Page {currentPage}</h3>
-                    <Button
-                      onClick={handleAddChunk}
-                      size="sm"
-                      className="bg-indigo-600 hover:bg-indigo-700"
-                      disabled={currentPageData?.textChunks.some(
-                        (chunk) => editingChunkId === chunk.id && chunk.value === "",
-                      )}
-                    >
-                      <Plus className="w-4 h-4 mr-1" />
-                      Add
-                    </Button>
+                    <h3 className="text-lg font-semibold text-gray-800">Page Paragraph - Page {currentPage}</h3>
                   </div>
-                  <div className="flex-1 overflow-y-auto space-y-4 pr-2">
-                    {currentPageData?.textChunks.map((chunk, idx) => (
-                      <div key={chunk.id} className="relative">
-                        <div className="absolute top-2 right-2 flex gap-1 z-10">
-                          <Button
-                            onClick={() => handleToggleEdit(chunk.id)}
-                            size="sm"
-                            variant="outline"
-                            className="p-1 h-8 w-8"
-                          >
-                            {editingChunkId === chunk.id ? (
-                              <Save className="w-4 h-4" />
-                            ) : (
-                              <Pencil className="w-4 h-4" />
-                            )}
-                          </Button>
-                          <Button
-                            onClick={() => handleDeleteChunk(chunk.id)}
-                            size="sm"
-                            variant="outline"
-                            className="p-1 h-8 w-8 text-red-500 hover:text-red-700"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <textarea
-                          className={`w-full h-32 p-3 pt-10 border rounded-lg text-sm resize-none transition-all duration-200 ${editingChunkId === chunk.id
-                              ? "border-indigo-600 ring-2 ring-indigo-600/20 bg-white"
-                              : "border-gray-200 bg-gray-50"
-                            }`}
-                          value={chunk.value}
-                          onChange={(e) => handleChunkChange(chunk.id, e.target.value)}
-                          readOnly={editingChunkId !== chunk.id}
-                          placeholder={`Text chunk ${idx + 1}`}
-                        />
-                      </div>
-                    ))}
+                  <div className="flex-1 overflow-y-auto">
+                    <textarea
+                      className="w-full h-72 p-4 border rounded-lg text-base resize-none transition-all duration-200 border-indigo-600 ring-2 ring-indigo-600/20 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600/40"
+                      value={paragraph}
+                      onChange={(e) => handleParagraphChange(e.target.value)}
+                      placeholder="Write or edit the full page paragraph here, like in Google Docs or Notion..."
+                    />
                   </div>
                 </div>
               )}
@@ -527,10 +407,10 @@ export default function PDFInformationPage() {
                 <div className="space-y-6 h-full flex flex-col">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-gray-800">Image Labeling - Page {currentPage}</h3>
-                    <div className="text-sm text-gray-500">{currentPageData?.images.length || 0} images</div>
+                    <div className="text-sm text-gray-500">{images.length} images</div>
                   </div>
                   <div className="flex-1 overflow-y-auto space-y-4">
-                    {currentPageData?.images.map((image) => (
+                    {images.map((image) => (
                       <div key={image.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                         <img
                           src={image.src || "/placeholder.svg"}
