@@ -1,2 +1,5 @@
 /dmc_fe/.next
 /dmc_fe/.next
+/.next
+/node_modules
+next-env.d.ts
