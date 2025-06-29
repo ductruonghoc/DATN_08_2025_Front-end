@@ -1506,9 +1506,6 @@ video {
 .rounded-xl {
   border-radius: 0.75rem;
 }
-.rounded-\[10investigate10px\] {
-  border-radius: 10investigate10px;
-}
 .rounded-b-\[10px\] {
   border-bottom-right-radius: 10px;
   border-bottom-left-radius: 10px;
