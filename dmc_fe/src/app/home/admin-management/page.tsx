@@ -6,6 +6,7 @@ import { Search, MoreVertical, Pen, Trash2, Plus } from "lucide-react"
 import { Input } from "@/components/form/input"
 import { Button } from "@/components/ui/button"
 import { toast, ToastContainer } from "react-toastify"
+import gsap from "gsap"
 
 interface User {
   id: string
@@ -17,7 +18,7 @@ interface User {
 export default function AdminManagementPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [users, setUsers] = useState<User[]>([
-    { id: "1", staffName: "Ogoter", username: "Ogot12er", password: "mypassword1" }, // Giả sử mật khẩu thật
+    { id: "1", staffName: "Ogoter", username: "Ogot12er", password: "mypassword1" },
     { id: "2", staffName: "O'sulotus", username: "Ogot12er", password: "mypassword2" },
     { id: "3", staffName: "Hartswimmer", username: "Ogot12er.pdf", password: "mypassword3" },
     { id: "4", staffName: "Herbert", username: "Ogot12er", password: "mypassword4" },
@@ -41,8 +42,8 @@ export default function AdminManagementPage() {
   })
 
   const menuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
+  const modalRef = useRef<HTMLDivElement>(null)
 
-  // Update filteredUsers and show toast if no results
   const filteredUsers = users.filter((user) => {
     if (searchQuery) {
       return (
@@ -59,8 +60,29 @@ export default function AdminManagementPage() {
     }
   }, [searchQuery, filteredUsers])
 
+  useEffect(() => {
+    if ((showEditModal || showAddModal || showDeleteModal) && modalRef.current) {
+      gsap.fromTo(
+        modalRef.current,
+        { scale: 0.8, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.7)", overwrite: true }
+      )
+    }
+  }, [showEditModal, showAddModal, showDeleteModal])
+
   const toggleMenu = (userId: string) => {
-    setActiveMenu(activeMenu === userId ? null : userId)
+    if (activeMenu !== userId) {
+      setActiveMenu(userId)
+      if (menuRefs.current[userId]) {
+        gsap.fromTo(
+          menuRefs.current[userId],
+          { scale: 0, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.2, ease: "power2.out", overwrite: true }
+        )
+      }
+    } else {
+      setActiveMenu(null)
+    }
   }
 
   const handleEditUser = (userId: string) => {
@@ -121,8 +143,8 @@ export default function AdminManagementPage() {
                 username: editFormData.username,
                 password: editFormData.password,
               }
-            : user,
-        ),
+            : user
+        )
       )
       toast.success("User updated successfully")
       setShowEditModal(false)
@@ -189,9 +211,9 @@ export default function AdminManagementPage() {
     <div className="bg-white rounded-[10px] shadow-sm p-6 h-full overflow-auto" onClick={handleClickOutside}>
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} closeOnClick pauseOnHover />
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-[#2e3139]">Admin Management</h1>
+        <h1 className="text-2xl font-bold text-[#2e3139] gsap-title">Admin Management</h1>
         <div className="flex items-center gap-4">
-          <div className="relative w-80">
+          <div className="relative w-80 gsap-search">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               placeholder="Search"
@@ -202,7 +224,13 @@ export default function AdminManagementPage() {
           </div>
           <Button
             onClick={() => setShowAddModal(true)}
-            className="bg-[#4045ef] hover:bg-[#3035df] text-white px-4 py-2 rounded-[10px] flex items-center gap-2"
+            className="bg-[#4045ef] hover:bg-[#3035df] text-white px-4 py-2 rounded-[10px] flex items-center gap-2 gsap-btn"
+            onMouseEnter={(e) => {
+              gsap.to(e.currentTarget, { scale: 1.05, duration: 0.2, ease: "power2.out" })
+            }}
+            onMouseLeave={(e) => {
+              gsap.to(e.currentTarget, { scale: 1, duration: 0.2, ease: "power2.out" })
+            }}
           >
             <Plus className="h-4 w-4" />
             Add New Admin
@@ -223,17 +251,20 @@ export default function AdminManagementPage() {
           </thead>
           <tbody>
             {filteredUsers.map((user) => (
-              <tr key={user.id} className="border-b border-gray-200 last:border-b-0 hover:bg-gray-50">
+              <tr
+                key={user.id}
+                className="border-b border-gray-200 last:border-b-0 hover:bg-gray-50"
+              >
                 <td className="py-4 px-4 text-[#2e3139]">{user.staffName}</td>
                 <td className="py-4 px-4 text-[#2e3139]">{user.username}</td>
-                <td className="py-4 px-4 text-[#2e3139]">********</td> {/* Thay đổi tại đây */}
+                <td className="py-4 px-4 text-[#2e3139]">********</td>
                 <td className="py-4 px-4 relative">
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
                       toggleMenu(user.id)
                     }}
-                    className="text-gray-500 hover:text-[#4045ef]"
+                    className="text-gray-500 hover:text-[#4045ef] z-20"
                   >
                     <MoreVertical className="h-5 w-5" />
                   </button>
@@ -241,7 +272,7 @@ export default function AdminManagementPage() {
                   {activeMenu === user.id && (
                     <div
                       ref={(el) => { menuRefs.current[user.id] = el }}
-                      className="absolute right-10 z-10 bg-white border border-gray-200 rounded-[10px] shadow-lg py-1 w-40"
+                      className="absolute right-10 z-30 bg-white border border-gray-200 rounded-[10px] shadow-lg py-1 w-40"
                       style={{
                         top: users.indexOf(user) >= users.length - 2 ? "auto" : "100%",
                         bottom: users.indexOf(user) >= users.length - 2 ? "100%" : "auto",
@@ -279,7 +310,7 @@ export default function AdminManagementPage() {
       {/* Edit User Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+          <div ref={modalRef} className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
             <h2 className="text-xl font-bold mb-4 text-[#2e3139]">Edit user</h2>
             <div className="space-y-4">
               <div>
@@ -292,7 +323,13 @@ export default function AdminManagementPage() {
                   name="staffName"
                   value={editFormData.staffName}
                   onChange={handleEditFormChange}
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full p-2 border border-gray-300 rounded-md gsap-input"
+                  onFocus={(e) => {
+                    gsap.to(e.currentTarget, { borderColor: "#4045ef", duration: 0.3, ease: "power2.out" })
+                  }}
+                  onBlur={(e) => {
+                    gsap.to(e.currentTarget, { borderColor: "#d1d5db", duration: 0.3, ease: "power2.out" })
+                  }}
                 />
               </div>
               <div>
@@ -305,7 +342,13 @@ export default function AdminManagementPage() {
                   name="username"
                   value={editFormData.username}
                   onChange={handleEditFormChange}
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full p-2 border border-gray-300 rounded-md gsap-input"
+                  onFocus={(e) => {
+                    gsap.to(e.currentTarget, { borderColor: "#4045ef", duration: 0.3, ease: "power2.out" })
+                  }}
+                  onBlur={(e) => {
+                    gsap.to(e.currentTarget, { borderColor: "#d1d5db", duration: 0.3, ease: "power2.out" })
+                  }}
                 />
               </div>
               <div>
@@ -318,20 +361,38 @@ export default function AdminManagementPage() {
                   name="password"
                   value={editFormData.password}
                   onChange={handleEditFormChange}
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full p-2 border border-gray-300 rounded-md gsap-input"
+                  onFocus={(e) => {
+                    gsap.to(e.currentTarget, { borderColor: "#4045ef", duration: 0.3, ease: "power2.out" })
+                  }}
+                  onBlur={(e) => {
+                    gsap.to(e.currentTarget, { borderColor: "#d1d5db", duration: 0.3, ease: "power2.out" })
+                  }}
                 />
               </div>
             </div>
             <div className="flex justify-between mt-6">
               <Button
                 onClick={handleCancelEdit}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md gsap-btn"
+                onMouseEnter={(e) => {
+                  gsap.to(e.currentTarget, { scale: 1.05, duration: 0.2, ease: "power2.out" })
+                }}
+                onMouseLeave={(e) => {
+                  gsap.to(e.currentTarget, { scale: 1, duration: 0.2, ease: "power2.out" })
+                }}
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleEditFormSubmit}
-                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md"
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md gsap-btn"
+                onMouseEnter={(e) => {
+                  gsap.to(e.currentTarget, { scale: 1.05, duration: 0.2, ease: "power2.out" })
+                }}
+                onMouseLeave={(e) => {
+                  gsap.to(e.currentTarget, { scale: 1, duration: 0.2, ease: "power2.out" })
+                }}
               >
                 Confirm
               </Button>
@@ -343,7 +404,7 @@ export default function AdminManagementPage() {
       {/* Add User Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+          <div ref={modalRef} className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
             <h2 className="text-xl font-bold mb-4 text-[#2e3139]">Add new admin</h2>
             <div className="space-y-4">
               <div>
@@ -356,7 +417,13 @@ export default function AdminManagementPage() {
                   name="staffName"
                   value={addFormData.staffName}
                   onChange={handleAddFormChange}
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full p-2 border border-gray-300 rounded-md gsap-input"
+                  onFocus={(e) => {
+                    gsap.to(e.currentTarget, { borderColor: "#4045ef", duration: 0.3, ease: "power2.out" })
+                  }}
+                  onBlur={(e) => {
+                    gsap.to(e.currentTarget, { borderColor: "#d1d5db", duration: 0.3, ease: "power2.out" })
+                  }}
                 />
               </div>
               <div>
@@ -369,7 +436,13 @@ export default function AdminManagementPage() {
                   name="username"
                   value={addFormData.username}
                   onChange={handleAddFormChange}
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full p-2 border border-gray-300 rounded-md gsap-input"
+                  onFocus={(e) => {
+                    gsap.to(e.currentTarget, { borderColor: "#4045ef", duration: 0.3, ease: "power2.out" })
+                  }}
+                  onBlur={(e) => {
+                    gsap.to(e.currentTarget, { borderColor: "#d1d5db", duration: 0.3, ease: "power2.out" })
+                  }}
                 />
               </div>
               <div>
@@ -382,20 +455,38 @@ export default function AdminManagementPage() {
                   name="password"
                   value={addFormData.password}
                   onChange={handleAddFormChange}
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full p-2 border border-gray-300 rounded-md gsap-input"
+                  onFocus={(e) => {
+                    gsap.to(e.currentTarget, { borderColor: "#4045ef", duration: 0.3, ease: "power2.out" })
+                  }}
+                  onBlur={(e) => {
+                    gsap.to(e.currentTarget, { borderColor: "#d1d5db", duration: 0.3, ease: "power2.out" })
+                  }}
                 />
               </div>
             </div>
             <div className="flex justify-between mt-6">
               <Button
                 onClick={handleCancelAdd}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md gsap-btn"
+                onMouseEnter={(e) => {
+                  gsap.to(e.currentTarget, { scale: 1.05, duration: 0.2, ease: "power2.out" })
+                }}
+                onMouseLeave={(e) => {
+                  gsap.to(e.currentTarget, { scale: 1, duration: 0.2, ease: "power2.out" })
+                }}
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleAddFormSubmit}
-                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md"
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md gsap-btn"
+                onMouseEnter={(e) => {
+                  gsap.to(e.currentTarget, { scale: 1.05, duration: 0.2, ease: "power2.out" })
+                }}
+                onMouseLeave={(e) => {
+                  gsap.to(e.currentTarget, { scale: 1, duration: 0.2, ease: "power2.out" })
+                }}
               >
                 Add
               </Button>
@@ -407,18 +498,30 @@ export default function AdminManagementPage() {
       {/* Delete User Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+          <div ref={modalRef} className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
             <h2 className="text-lg font-medium mb-4 text-[#2e3139]">Are you sure you want to delete this user?</h2>
             <div className="flex justify-between">
               <Button
                 onClick={handleCancelDelete}
-                className="bg-[#6c63ff] hover:bg-[#5a52e0] text-white px-4 py-2 rounded-md"
+                className="bg-[#6c63ff] hover:bg-[#5a52e0] text-white px-4 py-2 rounded-md gsap-btn"
+                onMouseEnter={(e) => {
+                  gsap.to(e.currentTarget, { scale: 1.05, duration: 0.2, ease: "power2.out" })
+                }}
+                onMouseLeave={(e) => {
+                  gsap.to(e.currentTarget, { scale: 1, duration: 0.2, ease: "power2.out" })
+                }}
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleConfirmDelete}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md gsap-btn"
+                onMouseEnter={(e) => {
+                  gsap.to(e.currentTarget, { scale: 1.05, duration: 0.2, ease: "power2.out" })
+                }}
+                onMouseLeave={(e) => {
+                  gsap.to(e.currentTarget, { scale: 1, duration: 0.2, ease: "power2.out" })
+                }}
               >
                 Delete
               </Button>

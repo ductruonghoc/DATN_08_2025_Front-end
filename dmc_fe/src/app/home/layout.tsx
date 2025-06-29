@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -55,10 +54,7 @@ export default function HomeLayout({
     },
   ])
 
-  // User role state - you can change this to test different roles
-  // In a real app, this would come from authentication context or props
-  const [userRole, setUserRole] = useState<UserRole>("admin") // Change this to test different roles
-
+  const [userRole, setUserRole] = useState<UserRole>("admin")
   const pathname = usePathname()
   const router = useRouter()
   const userMenuRef = useRef<HTMLDivElement>(null)
@@ -79,8 +75,6 @@ export default function HomeLayout({
       setConversations(conversations.filter((conv) => conv.id !== conversationToDelete))
       setShowDeleteModal(false)
       setConversationToDelete(null)
-
-      // If currently viewing the deleted conversation, redirect to conversation page
       if (pathname.includes(`/home/conversation/chat/${conversationToDelete}`)) {
         router.push("/home/conversation")
       }
@@ -98,14 +92,11 @@ export default function HomeLayout({
     setActiveConversationMenu(activeConversationMenu === conversationId ? null : conversationId)
   }
 
-  // Close menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setShowUserMenu(false)
       }
-
-      // Close conversation menu if clicking outside
       if (
         activeConversationMenu &&
         !conversationMenuRefs.current[activeConversationMenu]?.contains(event.target as Node)
@@ -113,23 +104,19 @@ export default function HomeLayout({
         setActiveConversationMenu(null)
       }
     }
-
     document.addEventListener("mousedown", handleClickOutside)
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
   }, [activeConversationMenu])
 
-  // Format relative time
   const formatRelativeTime = (date: Date) => {
     const now = new Date()
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-
     if (diffInSeconds < 60) return "just now"
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
     if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`
-
     return date.toLocaleDateString()
   }
 
@@ -137,7 +124,6 @@ export default function HomeLayout({
     setShowUserMenu(!showUserMenu)
   }
 
-  // Function to check if user has access to a specific feature
   const hasAccess = (feature: string): boolean => {
     switch (userRole) {
       case "unlogged":
@@ -146,7 +132,7 @@ export default function HomeLayout({
         return ["new_conversation", "conversations"].includes(feature)
       case "admin":
         return ["new_conversation", "conversations", "upload_pdf", "device_management", "track_progress"].includes(
-          feature,
+          feature
         )
       case "super_admin":
         return ["new_conversation", "conversations", "admin_management"].includes(feature)
@@ -155,7 +141,6 @@ export default function HomeLayout({
     }
   }
 
-  // Get user display name based on role
   const getUserDisplayName = (): string => {
     switch (userRole) {
       case "unlogged":
@@ -173,40 +158,16 @@ export default function HomeLayout({
 
   return (
     <div className="flex h-full overflow-hidden bg-white">
-      {/* Sidebar - collapses to icon-only mode */}
       <div
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex flex-col bg-[#fff2f2] transition-all duration-300 ease-in-out",
-          sidebarOpen ? "w-64" : "w-16",
+          sidebarOpen ? "w-64" : "w-16"
         )}
       >
-        <div className={cn("flex h-16 items-center px-4", sidebarOpen ? "justify-between" : "justify-center")}>
-          {sidebarOpen && (
-            <Link href="/home" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-[#4045ef] text-white">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-5 w-5"
-                >
-                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-                  <polyline points="14 2 14 8 20 8" />
-                </svg>
-              </div>
-              <span className="text-xl font-bold text-[#2d336b]">DMC</span>
-            </Link>
-          )}
+        <div className="flex h-16 items-center px-2">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className={cn(
-              "flex items-center justify-center rounded-[10px] p-2 hover:bg-white/50",
-              sidebarOpen ? "" : "mx-auto",
-            )}
+            className="flex items-center justify-center rounded-[10px] p-2 hover:bg-white/50"
             aria-label="Toggle sidebar"
           >
             <Menu className="h-5 w-5 text-[#2d336b]" />
@@ -214,7 +175,6 @@ export default function HomeLayout({
         </div>
 
         <div className="flex-1 overflow-auto py-4">
-          {/* New Conversation Button - Available to all users */}
           {hasAccess("new_conversation") && (
             <div className={cn("px-4", sidebarOpen ? "" : "flex justify-center")}>
               <button
@@ -222,7 +182,7 @@ export default function HomeLayout({
                 className={cn(
                   "flex items-center gap-2 rounded-[10px] bg-white shadow-sm cursor-pointer hover:bg-gray-50 transition-colors",
                   sidebarOpen ? "w-full px-4 py-2 text-sm text-[#2d336b]" : "h-10 w-10 justify-center",
-                  pathname.includes("/home/conversation") ? "ring-2 ring-[#4045ef]/20" : "",
+                  pathname.includes("/home/conversation") ? "ring-2 ring-[#4045ef]/20" : ""
                 )}
               >
                 <Plus className="h-4 w-4" />
@@ -231,9 +191,7 @@ export default function HomeLayout({
             </div>
           )}
 
-          {/* Navigation Menu */}
           <nav className={cn("mt-6", sidebarOpen ? "px-2" : "flex flex-col items-center px-0")}>
-            {/* Upload PDF - Admin only */}
             {hasAccess("upload_pdf") && (
               <Link
                 href="/home/import"
@@ -242,15 +200,13 @@ export default function HomeLayout({
                   sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
                   pathname.includes("/home/import")
                     ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
-                    : "",
+                    : ""
                 )}
               >
                 <Upload className="h-5 w-5 text-[#2d336b]" />
                 {sidebarOpen && <span>Upload PDF</span>}
               </Link>
             )}
-
-            {/* Device Management - Admin only */}
             {hasAccess("device_management") && (
               <Link
                 href="/home/device-management"
@@ -259,15 +215,13 @@ export default function HomeLayout({
                   sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
                   pathname.includes("/home/device-management")
                     ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
-                    : "",
+                    : ""
                 )}
               >
                 <Settings className="h-5 w-5 text-[#2d336b]" />
                 {sidebarOpen && <span>Device Management</span>}
               </Link>
             )}
-
-            {/* Track Progress - Admin only */}
             {hasAccess("track_progress") && (
               <Link
                 href="/home/track-progress/tracking"
@@ -276,15 +230,13 @@ export default function HomeLayout({
                   sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
                   pathname.includes("/home/track-progress")
                     ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
-                    : "",
+                    : ""
                 )}
               >
                 <FileText className="h-5 w-5 text-[#2d336b]" />
                 {sidebarOpen && <span>Track Progress</span>}
               </Link>
             )}
-
-            {/* Admin Management - Super Admin only */}
             {hasAccess("admin_management") && (
               <Link
                 href="/home/admin-management"
@@ -293,7 +245,7 @@ export default function HomeLayout({
                   sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
                   pathname.includes("/home/admin-management")
                     ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
-                    : "",
+                    : ""
                 )}
               >
                 <Users className="h-5 w-5 text-[#2d336b]" />
@@ -302,7 +254,6 @@ export default function HomeLayout({
             )}
           </nav>
 
-          {/* Conversation history - Available to logged users, admin, and super admin */}
           {hasAccess("conversations") && sidebarOpen && (
             <div className="mt-8 px-2">
               <h3 className="px-3 text-xs font-semibold uppercase text-[#2d336b] mb-2">Your conversations</h3>
@@ -312,7 +263,7 @@ export default function HomeLayout({
                     key={conversation.id}
                     className={cn(
                       "flex items-center justify-between rounded-[10px] px-3 py-2 hover:bg-white/50 relative",
-                      pathname.includes(`/home/conversation/chat/${conversation.id}`) ? "bg-white/50" : "",
+                      pathname.includes(`/home/conversation/chat/${conversation.id}`) ? "bg-white/50" : ""
                     )}
                   >
                     <Link href={`/home/conversation/chat/${conversation.id}`} className="flex-1 min-w-0">
@@ -332,7 +283,6 @@ export default function HomeLayout({
                         >
                           <MoreHorizontal className="h-4 w-4" />
                         </button>
-
                         {activeConversationMenu === conversation.id && (
                           <div
                             ref={(el) => (conversationMenuRefs.current[conversation.id] = el)}
@@ -358,11 +308,8 @@ export default function HomeLayout({
           )}
         </div>
 
-        {/* User Role Switcher (for testing - remove in production) */}
         {sidebarOpen && (
           <div className="px-4 py-2 border-t border-white/20">
-            <div className="text-xs text-[#2d336b] mb-2">Current Role: {getUserDisplayName()}</div>
-            <div className="text-xs text-[#2d336b] mb-1 opacity-75">Switching roles redirects to conversation</div>
             <select
               value={userRole}
               onChange={(e) => {
@@ -380,17 +327,19 @@ export default function HomeLayout({
         )}
       </div>
 
-      {/* Main content area with top bar */}
       <div
         className={cn(
           "flex flex-1 flex-col transition-all duration-300 ease-in-out h-full",
-          sidebarOpen ? "ml-64" : "ml-16",
+          sidebarOpen ? "ml-64" : "ml-16"
         )}
       >
-        {/* Top horizontal bar */}
-        <div className="h-16 bg-white flex justify-end items-center px-4 sticky top-0 z-40">
+        <div className="h-16 bg-white flex items-center px-4 sticky top-0 z-40">
+          <Link href="/home" className="flex items-center gap-2">
+            <img src="/favicon.ico" alt="TechBot Icon" className="h-14 w-14" />
+            <span className="text-2xl font-bold text-[#2d336b]">TechBot</span>
+          </Link>
+          <div className="flex-1"></div>
           {userRole === "unlogged" ? (
-            /* Unlogged user - show login and register */
             <div className="flex items-center gap-4">
               <Link href="/log-in" className="text-[#4045ef] hover:text-[#2d336b] transition-colors">
                 Log in
@@ -400,13 +349,11 @@ export default function HomeLayout({
               </Link>
             </div>
           ) : (
-            /* Logged users - show user menu */
             <div className="flex items-center gap-4 relative" ref={userMenuRef}>
               <button onClick={toggleUserMenu} className="flex items-center gap-2 text-[#2d336b] hover:underline">
                 <span>{getUserDisplayName()}</span>
                 <ChevronDown className="h-4 w-4" />
               </button>
-
               {showUserMenu && (
                 <div className="absolute right-0 top-full mt-1 w-48 rounded-[10px] shadow-lg bg-white border border-gray-200 z-50">
                   <div className="py-1">
@@ -426,7 +373,6 @@ export default function HomeLayout({
                   </div>
                 </div>
               )}
-
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -445,12 +391,9 @@ export default function HomeLayout({
             </div>
           )}
         </div>
-
-        {/* Main content */}
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
 
-      {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
