@@ -18,6 +18,8 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import BASEURL from "../../api/backend/dmc_api_gateway/baseurl"
+import Loader from "@/components/loader/loader"; // Import the Loader component
+
 
 interface Conversation {
   id: string
@@ -160,8 +162,12 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
   }
 
   if (isAuthorized === null) {
-    return <div>Loading...</div> // Show a loading state while checking authorization
-  }
+  return (
+    <div className="flex items-center justify-center h-screen bg-gray-100">
+      <Loader /> {/* Replace loading text with the Loader component */}
+    </div>
+  );
+}
 
   if (!isAuthorized) {
     return (
