@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
 import { toast, ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
+import BASEURL from "@/src/app/api/backend/dmc_api_gateway/baseurl"
 
 const PDFViewer = dynamic(() => import("./pdf-viewer"), {
   ssr: false,
@@ -50,13 +51,50 @@ export default function PDFInformationPage() {
 
   useEffect(() => {
     //const storedPdfId = sessionStorage.getItem("pdf_id") // Lấy pdf_id từ sessionStorage
-    const storedPdfId = 17//mocked pdf_id
+    const storedPdfId = 17 //mocked pdf_id
     if (!storedPdfId) {
       // Nếu không tồn tại pdf_id, chuyển hướng về trang import
       toast.error("PDF ID is missing. Please start from the beginning.")
       router.push("/admin/features/import")
     } else {
       setPdfId(storedPdfId)
+      // Fetch initial PDF state
+      fetch(`${BASEURL}/pdf_process/get_pdf_initial_state?pdf_id=${storedPdfId}`)
+        .then(async (res) => {
+          if (!res.ok) throw new Error(await res.text())
+          return res.json()
+        })
+        .then((json) => {
+          if (!json.success) throw new Error(json.message)
+          const data = json.data
+          if (!data.pdf_ocr_flag) {
+            toast.error("PDF OCR failed. Please re-import.")
+            router.push("/admin/features/import")
+            return
+          }
+          setPdfName(data.pdf_name || "")
+          setPdfUrl(data.pdf_gcs_signed_read_url || null)
+          setParagraph(data.page_paragraph?.context || "")
+          setImages(
+            (data.images || []).map((img: any) => ({
+              id: img.id,
+              src: `/placeholder.svg?id=${img.id}`, // Replace with real image src if available
+              description: img.alt || "",
+              checked: !!img.modified,
+            }))
+          )
+          // If all images and paragraph are modified, mark as checked
+          if (
+            data.page_paragraph?.modified &&
+            (data.images || []).every((img: any) => img.modified)
+          ) {
+            setCheckedPages((prev) => new Set(prev).add(1)) // Assuming page 1 for initial load
+          }
+        })
+        .catch((err) => {
+          toast.error("Failed to load PDF state: " + err.message)
+          router.push("/admin/features/import")
+        })
     }
   }, [router, setPdfId])
 
@@ -102,25 +140,25 @@ export default function PDFInformationPage() {
     // Optionally, debounce and save to server
   }
 
-  const handleCheckPage = () => {
-    const newCheckedPages = new Set(checkedPages)
-    if (checkedPages.has(currentPage)) {
-      newCheckedPages.delete(currentPage)
-      toast.info(`Page ${currentPage} unchecked`)
-    } else {
-      if (images.some((img) => !img.description)) {
-        toast.error("Please describe all images before checking the page")
-        return
-      }
-      newCheckedPages.add(currentPage)
-      toast.success(`Page ${currentPage} checked`)
-    }
-    setCheckedPages(newCheckedPages)
-    if (newCheckedPages.size === totalPages) {
-      toast.success("All pages processed successfully!")
-      setTimeout(() => router.push("/admin/features/track-progress/finish"), 1000)
-    }
-  }
+  // const handleCheckPage = () => {
+  //   const newCheckedPages = new Set(checkedPages)
+  //   if (checkedPages.has(currentPage)) {
+  //     newCheckedPages.delete(currentPage)
+  //     toast.info(`Page ${currentPage} unchecked`)
+  //   } else {
+  //     if (images.some((img) => !img.description)) {
+  //       toast.error("Please describe all images before checking the page")
+  //       return
+  //     }
+  //     newCheckedPages.add(currentPage)
+  //     toast.success(`Page ${currentPage} checked`)
+  //   }
+  //   setCheckedPages(newCheckedPages)
+  //   if (newCheckedPages.size === totalPages) {
+  //     toast.success("All pages processed successfully!")
+  //     setTimeout(() => router.push("/admin/features/track-progress/finish"), 1000)
+  //   }
+  // }
 
   const handleImageDescriptionChange = (imageId: number, description: string) => {
     setImages((prev) =>
@@ -211,7 +249,7 @@ export default function PDFInformationPage() {
 
       <div className="flex flex-1 gap-6 px-6 pb-6">
         {/* PDF Viewer */}
-        <div className="flex-1 flex flex-col">
+        <div className="w-[60%] flex flex-col">
           <div
             ref={pdfViewerRef}
             className="flex-1 border border-gray-200 rounded-lg flex items-center justify-center bg-white overflow-hidden mb-4 relative shadow-sm"
@@ -273,7 +311,7 @@ export default function PDFInformationPage() {
 
             {/* PDF Content */}
             {pdfUrl ? (
-              <div style={{ transform: `scale(${scale})`, transformOrigin: "center center" }}>
+              <div className = "pt-[80px]" style={{ transform: `scale(${scale})`, transformOrigin: "center center" }}>
                 <PDFViewer pdfUrl={pdfUrl} currentPage={currentPage} onLoadSuccess={handleDocumentLoadSuccess} />
               </div>
             ) : (
@@ -341,11 +379,10 @@ export default function PDFInformationPage() {
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
-            <Button
-              onClick={handleCheckPage}
+            <div
               className={`rounded-lg px-6 py-2 ${isCurrentPageChecked
-                  ? "bg-green-600 hover:bg-green-700 text-white"
-                  : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
+                ? "bg-green-600 hover:bg-green-700 text-white"
+                : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
                 }`}
             >
               {isCurrentPageChecked ? (
@@ -354,22 +391,22 @@ export default function PDFInformationPage() {
                   Checked
                 </>
               ) : (
-                "Check Page"
+                "In progress"
               )}
-            </Button>
+            </div>
           </div>
         </div>
 
         {/* Processing Panel */}
-        <div className="w-96">
+        <div className="w-[40%]">
           <div className="space-y-6 h-full flex flex-col bg-white rounded-xl shadow-lg p-6">
             {/* Tab Navigation */}
             <div className="flex rounded-lg overflow-hidden shadow-sm">
               <button
                 onClick={() => setActiveTab("texts")}
                 className={`flex-1 py-3 px-4 text-sm font-medium transition-all duration-200 ${activeTab === "texts"
-                    ? "bg-indigo-600 text-white shadow-md"
-                    : "bg-indigo-50 text-gray-600 hover:bg-indigo-100"
+                  ? "bg-indigo-600 text-white shadow-md"
+                  : "bg-indigo-50 text-gray-600 hover:bg-indigo-100"
                   }`}
               >
                 Text Processing
@@ -377,8 +414,8 @@ export default function PDFInformationPage() {
               <button
                 onClick={() => setActiveTab("images")}
                 className={`flex-1 py-3 px-4 text-sm font-medium transition-all duration-200 ${activeTab === "images"
-                    ? "bg-indigo-500 text-white shadow-md"
-                    : "bg-indigo-50 text-gray-600 hover:bg-indigo-100"
+                  ? "bg-indigo-500 text-white shadow-md"
+                  : "bg-indigo-50 text-gray-600 hover:bg-indigo-100"
                   }`}
               >
                 Image Labeling
@@ -432,10 +469,10 @@ export default function PDFInformationPage() {
                             onClick={() => handleCheckImage(image.id)}
                             disabled={!image.description}
                             className={`w-full ${image.checked
-                                ? "bg-green-600 hover:bg-green-700 text-white"
-                                : image.description
-                                  ? "bg-indigo-600 hover:bg-indigo-700 text-white"
-                                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                              ? "bg-green-600 hover:bg-green-700 text-white"
+                              : image.description
+                                ? "bg-indigo-600 hover:bg-indigo-700 text-white"
+                                : "bg-gray-300 text-gray-500 cursor-not-allowed"
                               } rounded-lg`}
                           >
                             {image.checked ? (
@@ -458,12 +495,12 @@ export default function PDFInformationPage() {
             {/* Progress */}
             <div className="mt-4 p-4 bg-gray-50 rounded-lg">
               <div className="text-sm text-gray-600 mb-2">
-                Pages processed: {checkedPages.size}/{totalPages}
+                Current page: {currentPage}/{totalPages}
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
                   className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${(checkedPages.size / totalPages) * 100}%` }}
+                  style={{ width: `${(currentPage / totalPages) * 100}%` }}
                 ></div>
               </div>
             </div>
