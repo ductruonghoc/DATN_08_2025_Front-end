@@ -15,7 +15,7 @@ interface PDFFile {
   progress: {
     current: number
     total: number
-    status: "in-progress" | "complete"
+    status: "need-ocr" | "not-embed" | "complete"
   }
   uploadAt: string
   device: {
@@ -45,22 +45,31 @@ export default function TrackProgressPage() {
         const res = await fetch(`${BASEURL}/pdf_process/devices?${params.toString()}`)
         const json = await res.json()
         if (json.success && Array.isArray(json.data)) {
-          const mapped: PDFFile[] = json.data.map((item: any) => ({
-            id: String(item.device_id),
-            filename: item.devicename || `Device_${item.device_id}.pdf`,
-            lastAccess: "N/A", // Not provided by API
-            progress: {
-              current: item.scoring || 0,
-              total: 100, // Placeholder, adjust if API provides
-              status: (item.scoring && item.scoring >= 100) ? "complete" : "in-progress",
-            },
-            uploadAt: "N/A", // Not provided by API
-            device: {
-              brand: "Unknown", // Not provided by API
-              category: "Unknown", // Not provided by API
-              model: "Unknown", // Not provided by API
-            },
-          }))
+          const mapped: PDFFile[] = json.data
+            .filter((item: any) => item.scoring && item.scoring > 0) // Only include items with scoring > 0
+            .map((item: any) => ({
+              id: String(item.device_id),
+              filename: item.devicename || `Device_${item.device_id}.pdf`,
+              lastAccess: "N/A", // Not provided by API
+              progress: {
+                current: item.scoring || 0,
+                total: 3, // Placeholder, adjust if API provides
+                status:
+                  item.scoring === 1
+                    ? "need-ocr"
+                    : item.scoring === 2
+                      ? "not-embed"
+                      : item.scoring === 3
+                        ? "complete"
+                        : "in-progress",
+              },
+              uploadAt: "N/A", // Not provided by API
+              device: {
+                brand: "Unknown", // Not provided by API
+                category: "Unknown", // Not provided by API
+                model: "Unknown", // Not provided by API
+              },
+            }))
           setPdfFiles(mapped)
         } else {
           setPdfFiles([])
@@ -84,9 +93,7 @@ export default function TrackProgressPage() {
   const filteredFiles = pdfFiles
     .filter((file) => {
       if (statusFilter !== "all") {
-        return statusFilter === "complete"
-          ? file.progress.status === "complete"
-          : file.progress.status === "in-progress"
+        return true
       }
       return true
     })
@@ -142,9 +149,8 @@ export default function TrackProgressPage() {
                   {filteredFiles.map((file) => (
                     <tr
                       key={file.id}
-                      className={`border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${
-                        selectedFile?.id === file.id ? "bg-blue-50" : ""
-                      }`}
+                      className={`border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${selectedFile?.id === file.id ? "bg-blue-50" : ""
+                        }`}
                       onClick={() => handleRowClick(file)}
                     >
                       <td className="py-4 px-4 text-sm text-[#2e3139]">{file.filename}</td>
@@ -153,30 +159,45 @@ export default function TrackProgressPage() {
                         <div className="flex items-center gap-3">
                           <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-32">
                             <div
-                              className={`h-2 rounded-full ${
-                                file.progress.status === "complete" ? "bg-green-500" : "bg-blue-500"
-                              }`}
+                              className={`h-2 rounded-full ${file.progress.status === "complete" ? "bg-green-500" : "bg-blue-500"
+                                }`}
                               style={{ width: `${(file.progress.current / file.progress.total) * 100}%` }}
                             ></div>
                           </div>
-                          <span className="text-xs text-gray-500 whitespace-nowrap">
+                          {/* <span className="text-xs text-gray-500 whitespace-nowrap">
                             Pages: {file.progress.current}/{file.progress.total}
-                          </span>
+                          </span> */}
                         </div>
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-2">
                           <div
-                            className={`w-2 h-2 rounded-full ${
-                              file.progress.status === "complete" ? "bg-green-500" : "bg-blue-500"
-                            }`}
+                            className={`w-2 h-2 rounded-full ${file.progress.status === "complete"
+                                ? "bg-green-500"
+                                : file.progress.status === "need-ocr"
+                                  ? "bg-yellow-400"
+                                  : file.progress.status === "not-embed"
+                                    ? "bg-blue-500"
+                                    : "bg-gray-300"
+                              }`}
                           ></div>
                           <span
-                            className={`text-sm font-medium ${
-                              file.progress.status === "complete" ? "text-green-600" : "text-blue-600"
-                            }`}
+                            className={`text-sm font-medium ${file.progress.status === "complete"
+                                ? "text-green-600"
+                                : file.progress.status === "need-ocr"
+                                  ? "text-yellow-600"
+                                  : file.progress.status === "not-embed"
+                                    ? "text-blue-600"
+                                    : "text-gray-600"
+                              }`}
                           >
-                            {file.progress.status === "complete" ? "Complete" : "In Progress"}
+                            {file.progress.status === "complete"
+                              ? "Complete"
+                              : file.progress.status === "need-ocr"
+                                ? "Need OCR"
+                                : file.progress.status === "not-embed"
+                                  ? "Not yet embed all"
+                                  : "In Progress"}
                           </span>
                         </div>
                       </td>
