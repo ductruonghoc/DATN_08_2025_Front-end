@@ -1,18 +1,48 @@
-# Getting Started with Create React App
+# Getting Started with the Project
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project is built using [Next.js](https://nextjs.org/), a React framework for production.
+
+## Prerequisites
+
+Before setting up the workspace, ensure you have the following installed on your machine:
+
+- **Node.js** (version 16 or higher) - [Download Node.js](https://nodejs.org/)
+- **npm** (comes with Node.js) or **yarn** (optional) - [Install Yarn](https://yarnpkg.com/)
+- **Git** - [Download Git](https://git-scm.com/)
+
+## Setting Up the Workspace
+
+Follow these steps to set up the project on your local machine:
+
+1. **Clone the Repository**:
+
+   ```bash
+   git clone https://github.com/your-repo/DATN_08_2025_Front-end.git
+   cd DATN_08_2025_Front-end
+   ```
+
+2. **Install Dependencies**:
+
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+3. **Start the Development Server**:
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+
+The page will reload when you make changes.\
+You may also see any lint errors in the console.
 
 ## Available Scripts
 
 In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
 
 ### `npm test`
 
