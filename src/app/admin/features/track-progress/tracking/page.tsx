@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/form/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/form/select"
 import { useRouter } from "next/navigation"
+import BASEURL from "../../../../api/backend/dmc_api_gateway/baseurl"; // Adjust the import path as necessary
 
 interface PDFFile {
   id: string
@@ -29,128 +30,63 @@ export default function TrackProgressPage() {
   const [selectedFile, setSelectedFile] = useState<PDFFile | null>(null)
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [searchQuery, setSearchQuery] = useState("")
+  const [pdfFiles, setPdfFiles] = useState<PDFFile[]>([])
+  const [loading, setLoading] = useState(false)
 
-  const pdfFiles: PDFFile[] = [
-    {
-      id: "1",
-      filename: "Report_2023.pdf",
-      lastAccess: "January 24, 2025",
-      progress: {
-        current: 65,
-        total: 100,
-        status: "in-progress",
-      },
-      uploadAt: "Dec 24, 2024",
-      device: {
-        brand: "Lenovo",
-        category: "Laptop",
-        model: "Thinkpad T570",
-      },
-    },
-    {
-      id: "2",
-      filename: "BN81-25561C-620_EUG_ROPDVBEUD_EU_ENG_2408 26.0.pdf",
-      lastAccess: "12h ago",
-      progress: {
-        current: 122,
-        total: 122,
-        status: "complete",
-      },
-      uploadAt: "Dec 24, 2024",
-      device: {
-        brand: "Lenovo",
-        category: "Laptop",
-        model: "Thinkpad T570",
-      },
-    },
-    {
-      id: "3",
-      filename: "Report_2023.pdf",
-      lastAccess: "January 24, 2025",
-      progress: {
-        current: 65,
-        total: 100,
-        status: "in-progress",
-      },
-      uploadAt: "Dec 24, 2024",
-      device: {
-        brand: "Lenovo",
-        category: "Laptop",
-        model: "Thinkpad T570",
-      },
-    },
-    {
-      id: "4",
-      filename: "Report_2023.pdf",
-      lastAccess: "January 24, 2025",
-      progress: {
-        current: 65,
-        total: 100,
-        status: "in-progress",
-      },
-      uploadAt: "Dec 24, 2024",
-      device: {
-        brand: "Lenovo",
-        category: "Laptop",
-        model: "Thinkpad T570",
-      },
-    },
-    {
-      id: "5",
-      filename: "Report_2023.pdf",
-      lastAccess: "January 24, 2025",
-      progress: {
-        current: 65,
-        total: 100,
-        status: "in-progress",
-      },
-      uploadAt: "Dec 24, 2024",
-      device: {
-        brand: "Lenovo",
-        category: "Laptop",
-        model: "Thinkpad T570",
-      },
-    },
-    {
-      id: "6",
-      filename: "Report_2023.pdf",
-      lastAccess: "2 weeks ago",
-      progress: {
-        current: 22,
-        total: 22,
-        status: "complete",
-      },
-      uploadAt: "Dec 24, 2024",
-      device: {
-        brand: "Lenovo",
-        category: "Laptop",
-        model: "Thinkpad T570",
-      },
-    },
-  ]
+  useEffect(() => {
+    const fetchDevices = async () => {
+      setLoading(true)
+      try {
+        const params = new URLSearchParams()
+        params.append("offset", "1")
+        if (searchQuery) params.append("name", searchQuery)
+        // You can add brand/category filters here if needed
+
+        const res = await fetch(`${BASEURL}/pdf_process/devices?${params.toString()}`)
+        const json = await res.json()
+        if (json.success && Array.isArray(json.data)) {
+          const mapped: PDFFile[] = json.data.map((item: any) => ({
+            id: String(item.device_id),
+            filename: item.devicename || `Device_${item.device_id}.pdf`,
+            lastAccess: "N/A", // Not provided by API
+            progress: {
+              current: item.scoring || 0,
+              total: 100, // Placeholder, adjust if API provides
+              status: (item.scoring && item.scoring >= 100) ? "complete" : "in-progress",
+            },
+            uploadAt: "N/A", // Not provided by API
+            device: {
+              brand: "Unknown", // Not provided by API
+              category: "Unknown", // Not provided by API
+              model: "Unknown", // Not provided by API
+            },
+          }))
+          setPdfFiles(mapped)
+        } else {
+          setPdfFiles([])
+        }
+      } catch (e) {
+        setPdfFiles([])
+      }
+      setLoading(false)
+    }
+    fetchDevices()
+  }, [searchQuery, statusFilter])
 
   const handleRowClick = (file: PDFFile) => {
     setSelectedFile(file)
   }
 
   const handleProcessPDF = () => {
-    router.push("/home/track-progress/finish")
+    router.push("/admin/features//track-progress/finish")
   }
 
   const filteredFiles = pdfFiles
     .filter((file) => {
-      // Filter by status
       if (statusFilter !== "all") {
         return statusFilter === "complete"
           ? file.progress.status === "complete"
           : file.progress.status === "in-progress"
-      }
-      return true
-    })
-    .filter((file) => {
-      // Filter by search query
-      if (searchQuery) {
-        return file.filename.toLowerCase().includes(searchQuery.toLowerCase())
       }
       return true
     })
@@ -190,61 +126,65 @@ export default function TrackProgressPage() {
 
           {/* Table */}
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600 text-sm">Filename</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600 text-sm">Last Access</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600 text-sm">Progress</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600 text-sm">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredFiles.map((file) => (
-                  <tr
-                    key={file.id}
-                    className={`border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${
-                      selectedFile?.id === file.id ? "bg-blue-50" : ""
-                    }`}
-                    onClick={() => handleRowClick(file)}
-                  >
-                    <td className="py-4 px-4 text-sm text-[#2e3139]">{file.filename}</td>
-                    <td className="py-4 px-4 text-sm text-gray-600">{file.lastAccess}</td>
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-32">
+            {loading ? (
+              <div className="p-8 text-center text-gray-500">Loading...</div>
+            ) : (
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600 text-sm">Filename</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600 text-sm">Last Access</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600 text-sm">Progress</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600 text-sm">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredFiles.map((file) => (
+                    <tr
+                      key={file.id}
+                      className={`border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${
+                        selectedFile?.id === file.id ? "bg-blue-50" : ""
+                      }`}
+                      onClick={() => handleRowClick(file)}
+                    >
+                      <td className="py-4 px-4 text-sm text-[#2e3139]">{file.filename}</td>
+                      <td className="py-4 px-4 text-sm text-gray-600">{file.lastAccess}</td>
+                      <td className="py-4 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-32">
+                            <div
+                              className={`h-2 rounded-full ${
+                                file.progress.status === "complete" ? "bg-green-500" : "bg-blue-500"
+                              }`}
+                              style={{ width: `${(file.progress.current / file.progress.total) * 100}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-xs text-gray-500 whitespace-nowrap">
+                            Pages: {file.progress.current}/{file.progress.total}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className="flex items-center gap-2">
                           <div
-                            className={`h-2 rounded-full ${
+                            className={`w-2 h-2 rounded-full ${
                               file.progress.status === "complete" ? "bg-green-500" : "bg-blue-500"
                             }`}
-                            style={{ width: `${(file.progress.current / file.progress.total) * 100}%` }}
                           ></div>
+                          <span
+                            className={`text-sm font-medium ${
+                              file.progress.status === "complete" ? "text-green-600" : "text-blue-600"
+                            }`}
+                          >
+                            {file.progress.status === "complete" ? "Complete" : "In Progress"}
+                          </span>
                         </div>
-                        <span className="text-xs text-gray-500 whitespace-nowrap">
-                          Pages: {file.progress.current}/{file.progress.total}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            file.progress.status === "complete" ? "bg-green-500" : "bg-blue-500"
-                          }`}
-                        ></div>
-                        <span
-                          className={`text-sm font-medium ${
-                            file.progress.status === "complete" ? "text-green-600" : "text-blue-600"
-                          }`}
-                        >
-                          {file.progress.status === "complete" ? "Complete" : "In Progress"}
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       </div>
