@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
 
 export default function TrackProgressPage() {
-  redirect("/home/track-progress/tracking")
+  redirect("/admin/features/track-progress/tracking")
 }
