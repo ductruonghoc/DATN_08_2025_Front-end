@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { Document, Page, pdfjs } from "react-pdf"
-import "react-pdf/dist/esm/Page/AnnotationLayer.css"
-import "react-pdf/dist/esm/Page/TextLayer.css"
+import "@/node_modules/react-pdf/dist/esm/Page/AnnotationLayer.css"
+import "@/node_modules/react-pdf/dist/esm/Page/TextLayer.css"
 
 // Set workerSrc for pdfjs
 pdfjs.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.mjs`
@@ -31,7 +31,7 @@ export default function PDFViewer({ pdfUrl, currentPage, onLoadSuccess }: PDFVie
     return () => clearTimeout(timer)
   }, [onLoadSuccess, totalPages])
 
-   const handleLoadSuccess = ({ numPages }: { numPages: number }) => {
+  const handleLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages)
     setIsLoading(false)
     onLoadSuccess({ numPages })
@@ -64,7 +64,10 @@ export default function PDFViewer({ pdfUrl, currentPage, onLoadSuccess }: PDFVie
 
   return (
     <div className="w-full h-full flex items-center justify-center overflow-auto p-4">
-      <div className="bg-white shadow-md border border-gray-200 rounded-lg max-w-2xl w-full">
+      <div
+        className="bg-white shadow-md border border-gray-200 rounded-lg max-w-2xl w-full h-full overflow-y-auto"
+        style={{ maxHeight: "55vh" }}
+      >
         {/* Mock PDF Page */}
         <Document
           file={pdfUrl}
@@ -83,8 +86,8 @@ export default function PDFViewer({ pdfUrl, currentPage, onLoadSuccess }: PDFVie
             </div>
           }
         >
-          <Page pageNumber={currentPage} width={600} />
-        </Document>
+          <Page key={currentPage} pageNumber={currentPage} width={600} />
+        </Document> 
         <div className="text-center text-xs text-gray-400 mt-6 pt-4 border-t border-gray-200">
           Page {currentPage} of {numPages}
         </div>

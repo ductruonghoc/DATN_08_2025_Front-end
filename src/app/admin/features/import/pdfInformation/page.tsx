@@ -3,12 +3,13 @@
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, Check, Pencil, Save, Trash2, Plus } from "lucide-react"
+import { ChevronLeft, ChevronRight, Check, BadgeCheck, BadgeX } from "lucide-react"
 import { useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
 import { toast, ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import BASEURL from "@/src/app/api/backend/dmc_api_gateway/baseurl"
+import { init } from "next/dist/compiled/webpack/webpack"
 
 const PDFViewer = dynamic(() => import("./pdf-viewer"), {
   ssr: false,
@@ -39,6 +40,7 @@ export default function PDFInformationPage() {
   const [checkedPages, setCheckedPages] = useState<Set<number>>(new Set())
   const [activeTab, setActiveTab] = useState<"texts" | "images">("texts")
   const [paragraph, setParagraph] = useState<string>("")
+  const [isParagraphModified, setIsParagraphModified] = useState(false)
   const [images, setImages] = useState<ImageData[]>([])
   const [scale, setScale] = useState(1.0)
   const [snipping, setSnipping] = useState(false)
@@ -47,17 +49,20 @@ export default function PDFInformationPage() {
   const [snipImage, setSnipImage] = useState<string | null>(null)
   const [snipReady, setSnipReady] = useState(false)
   const [pdfId, setPdfId] = useState<number | null>(null)
+  const [embedLoading, setEmbedLoading] = useState(false)
+  const [paragraphId, setParagraphId] = useState<number | null>(null)
+  const [initialSetupDone, setInitialSetupDone] = useState(false)
   const pdfViewerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    //const storedPdfId = sessionStorage.getItem("pdf_id") // Lấy pdf_id từ sessionStorage
-    const storedPdfId = 17 //mocked pdf_id
+    const storedPdfId = sessionStorage.getItem("pdf_id") // Lấy pdf_id từ sessionStorage
+    //const storedPdfId = 17 //mocked pdf_id
     if (!storedPdfId) {
       // Nếu không tồn tại pdf_id, chuyển hướng về trang import
       toast.error("PDF ID is missing. Please start from the beginning.")
       router.push("/admin/features/import")
     } else {
-      setPdfId(storedPdfId)
+      setPdfId(storedPdfId ? Number(storedPdfId) : null)
       // Fetch initial PDF state
       fetch(`${BASEURL}/pdf_process/get_pdf_initial_state?pdf_id=${storedPdfId}`)
         .then(async (res) => {
@@ -75,6 +80,9 @@ export default function PDFInformationPage() {
           setPdfName(data.pdf_name || "")
           setPdfUrl(data.pdf_gcs_signed_read_url || null)
           setParagraph(data.page_paragraph?.context || "")
+          setParagraphId(data.page_paragraph?.id || null)
+          setIsParagraphModified(!!data.page_paragraph?.modified)
+          setTotalPages(data.pdf_number_of_pages || 0)
           setImages(
             (data.images || []).map((img: any) => ({
               id: img.id,
@@ -83,44 +91,45 @@ export default function PDFInformationPage() {
               checked: !!img.modified,
             }))
           )
-          // If all images and paragraph are modified, mark as checked
-          if (
-            data.page_paragraph?.modified &&
-            (data.images || []).every((img: any) => img.modified)
-          ) {
-            setCheckedPages((prev) => new Set(prev).add(1)) // Assuming page 1 for initial load
-          }
+          setInitialSetupDone(true)
         })
         .catch((err) => {
           toast.error("Failed to load PDF state: " + err.message)
-          router.push("/admin/features/import")
+          // router.push("/admin/features/import")
         })
     }
-  }, [router, setPdfId])
+  }, [setInitialSetupDone, router, setPdfId, setPdfUrl, setPdfName, setParagraph, setImages, setCheckedPages])
 
   // Fetch single page data when currentPage changes
   useEffect(() => {
     if (!pdfId) return
-    // Replace this with your real API call
+    if (initialSetupDone === false) return
     async function fetchPageData() {
-      // Example fetch, replace with your endpoint
-      // const res = await fetch(`/api/pdf/${pdfId}/page/${currentPage}`)
-      // const data = await res.json()
-      // setParagraph(data.paragraph)
-      // setImages(data.images)
-      // For demo:
-      setParagraph(`Sample paragraph for page ${currentPage} of ${deviceInfo.name} manual.`)
-      setImages(
-        Array.from({ length: Math.floor(Math.random() * 4) + 1 }, (_, idx) => ({
-          id: idx + 1,
-          src: `/placeholder.svg?page=${currentPage}&img=${idx + 1}&device=${deviceInfo.name}`,
-          description: "",
-          checked: false,
-        }))
-      )
+      try {
+        const res = await fetch(
+          `${BASEURL}/pdf_process/get_pdf_state?pdf_id=${pdfId}&page_number=${currentPage}`
+        )
+        if (!res.ok) throw new Error(await res.text())
+        const json = await res.json()
+        if (!json.success) throw new Error(json.message)
+        const data = json.data
+        setParagraph(data.page_paragraph?.context || "")
+        setParagraphId(data.page_paragraph?.id || null)
+        setIsParagraphModified(!!data.page_paragraph?.modified)
+        setImages(
+          (data.images || []).map((img: any) => ({
+            id: img.id,
+            src: `/placeholder.svg?id=${img.id}`, // Replace with real image src if available
+            description: img.alt || "",
+            checked: !!img.modified,
+          }))
+        )
+      } catch (err: any) {
+        toast.error("Failed to load page data: " + err.message)
+      }
     }
     fetchPageData()
-  }, [currentPage, pdfId, deviceInfo.name])
+  }, [currentPage, pdfId, initialSetupDone, setParagraph, setParagraphId, setIsParagraphModified, setImages])
 
   const nextPage = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1)
@@ -227,7 +236,6 @@ export default function PDFInformationPage() {
     setSnipRect(null)
   }
 
-  const isCurrentPageChecked = checkedPages.has(currentPage)
 
   return (
     <div className="flex flex-col h-full pt-6 bg-gray-50">
@@ -247,12 +255,12 @@ export default function PDFInformationPage() {
         </div>
       </div>
 
-      <div className="flex flex-1 gap-6 px-6 pb-6">
+      <div className="flex flex-1 gap-6 px-6 pb-6 h-[80vh]">
         {/* PDF Viewer */}
-        <div className="w-[60%] flex flex-col">
+        <div className="w-[60%] h-full flex flex-col">
           <div
             ref={pdfViewerRef}
-            className="flex-1 border border-gray-200 rounded-lg flex items-center justify-center bg-white overflow-hidden mb-4 relative shadow-sm"
+            className="flex-1 border border-gray-200 rounded-lg flex items-center justify-center bg-white overflow-hidden relative shadow-sm"
             style={{
               userSelect: snipping ? "none" : undefined,
               cursor: snipping ? "crosshair" : undefined,
@@ -294,6 +302,44 @@ export default function PDFInformationPage() {
                     </Button>
                   )}
                 </div>
+                <div className="flex justify-center items-center gap-4">
+                  <div className="flex items-center bg-indigo-50 rounded-lg">
+                    <button
+                      onClick={prevPage}
+                      className="p-2 text-indigo-600 disabled:text-gray-400"
+                      disabled={currentPage === 1 || !pdfUrl}
+                      aria-label="Previous page"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <span className="px-4 text-sm text-gray-800">
+                      {currentPage}/{totalPages}
+                    </span>
+                    <button
+                      onClick={nextPage}
+                      className="p-2 text-indigo-600 disabled:text-gray-400"
+                      disabled={currentPage === totalPages || !pdfUrl}
+                      aria-label="Next page"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                  {/* <div
+                    className={`rounded-lg px-6 py-2 ${isCurrentPageChecked
+                      ? "bg-green-600 hover:bg-green-700 text-white"
+                      : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
+                      }`}
+                  >
+                    {isCurrentPageChecked ? (
+                      <>
+                        <Check className="w-4 h-4 mr-2" />
+                        Checked
+                      </>
+                    ) : (
+                      "In progress"
+                    )}
+                  </div> */}
+                </div>
                 <div className="flex items-center gap-2">
                   <Button onClick={handleZoomOut} variant="outline" size="sm" className="px-2 py-1 text-xs">
                     -
@@ -311,7 +357,7 @@ export default function PDFInformationPage() {
 
             {/* PDF Content */}
             {pdfUrl ? (
-              <div className = "pt-[80px]" style={{ transform: `scale(${scale})`, transformOrigin: "center center" }}>
+              <div className="pt-[80px]" style={{ transform: `scale(${scale})`, transformOrigin: "center center" }}>
                 <PDFViewer pdfUrl={pdfUrl} currentPage={currentPage} onLoadSuccess={handleDocumentLoadSuccess} />
               </div>
             ) : (
@@ -357,44 +403,7 @@ export default function PDFInformationPage() {
           </div>
 
           {/* Navigation */}
-          <div className="flex justify-center items-center gap-4">
-            <div className="flex items-center bg-indigo-50 rounded-lg">
-              <button
-                onClick={prevPage}
-                className="p-2 text-indigo-600 disabled:text-gray-400"
-                disabled={currentPage === 1 || !pdfUrl}
-                aria-label="Previous page"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <span className="px-4 text-sm text-gray-800">
-                {currentPage}/{totalPages}
-              </span>
-              <button
-                onClick={nextPage}
-                className="p-2 text-indigo-600 disabled:text-gray-400"
-                disabled={currentPage === totalPages || !pdfUrl}
-                aria-label="Next page"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-            <div
-              className={`rounded-lg px-6 py-2 ${isCurrentPageChecked
-                ? "bg-green-600 hover:bg-green-700 text-white"
-                : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
-                }`}
-            >
-              {isCurrentPageChecked ? (
-                <>
-                  <Check className="w-4 h-4 mr-2" />
-                  Checked
-                </>
-              ) : (
-                "In progress"
-              )}
-            </div>
-          </div>
+
         </div>
 
         {/* Processing Panel */}
@@ -427,16 +436,59 @@ export default function PDFInformationPage() {
               {activeTab === "texts" && (
                 <div className="space-y-4 h-full flex flex-col">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-800">Page Paragraph - Page {currentPage}</h3>
+                    <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                      Page Paragraph - Page {currentPage}
+                      <span className="relative group ml-2">
+                        {isParagraphModified ? (
+                          <BadgeCheck className="w-5 h-5 text-green-600" />
+                        ) : (
+                          <BadgeX className="w-5 h-5 text-gray-400" />
+                        )}
+                        <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 rounded bg-black text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-10">
+                          {isParagraphModified ? "Modified" : "Unmodified"}
+                        </span>
+                      </span>
+                    </h3>
                   </div>
                   <div className="flex-1 overflow-y-auto">
                     <textarea
-                      className="w-full h-72 p-4 border rounded-lg text-base resize-none transition-all duration-200 border-indigo-600 ring-2 ring-indigo-600/20 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600/40"
+                      className="w-full h-80 p-4 border rounded-lg text-base resize-none transition-all duration-200 border-indigo-600 ring-2 ring-indigo-600/20 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600/40"
                       value={paragraph}
                       onChange={(e) => handleParagraphChange(e.target.value)}
                       placeholder="Write or edit the full page paragraph here, like in Google Docs or Notion..."
                     />
                   </div>
+                  <Button
+                    className="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg"
+                    disabled={embedLoading || !paragraphId}
+                    onClick={async () => {
+                      if (!paragraphId) {
+                        toast.error("Paragraph ID missing!")
+                        return
+                      }
+                      setEmbedLoading(true)
+                      try {
+                        const res = await fetch(`${BASEURL}/pdf_process/save_and_embed_paragraph`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            pdf_paragraph_id: paragraphId,
+                            context: paragraph,
+                          }),
+                        })
+                        const json = await res.json()
+                        if (!json.success) throw new Error(json.message)
+                        toast.success("Paragraph embedded successfully!")
+                        setIsParagraphModified(true)
+                      } catch (err: any) {
+                        toast.error("Failed to embed: " + err.message)
+                      } finally {
+                        setEmbedLoading(false)
+                      }
+                    }}
+                  >
+                    {embedLoading ? "Embedding..." : "Embed"}
+                  </Button>
                 </div>
               )}
 
@@ -493,7 +545,7 @@ export default function PDFInformationPage() {
             </div>
 
             {/* Progress */}
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+            {/* <div className="mt-4 p-4 bg-gray-50 rounded-lg">
               <div className="text-sm text-gray-600 mb-2">
                 Current page: {currentPage}/{totalPages}
               </div>
@@ -503,7 +555,7 @@ export default function PDFInformationPage() {
                   style={{ width: `${(currentPage / totalPages) * 100}%` }}
                 ></div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
