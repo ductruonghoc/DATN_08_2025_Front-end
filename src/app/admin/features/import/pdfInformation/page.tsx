@@ -83,6 +83,7 @@ export default function PDFInformationPage() {
           setParagraphId(data.page_paragraph?.id || null)
           setIsParagraphModified(!!data.page_paragraph?.modified)
           setTotalPages(data.pdf_number_of_pages || 0)
+          console.log("Total pages:", data.pdf_number_of_pages)
           setImages(
             (data.images || []).map((img: any) => ({
               id: img.id,
@@ -139,9 +140,9 @@ export default function PDFInformationPage() {
     if (currentPage > 1) setCurrentPage(currentPage - 1)
   }
 
-  const handleDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
-    setTotalPages(numPages)
-  }
+  // const handleDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
+    
+  // }
 
   // Save paragraph (call API here if needed)
   const handleParagraphChange = (value: string) => {
@@ -313,7 +314,7 @@ export default function PDFInformationPage() {
                       <ChevronLeft className="w-5 h-5" />
                     </button>
                     <span className="px-4 text-sm text-gray-800">
-                      {currentPage}/{totalPages}
+                      {currentPage} / {totalPages}
                     </span>
                     <button
                       onClick={nextPage}
@@ -358,7 +359,7 @@ export default function PDFInformationPage() {
             {/* PDF Content */}
             {pdfUrl ? (
               <div className="pt-[80px]" style={{ transform: `scale(${scale})`, transformOrigin: "center center" }}>
-                <PDFViewer pdfUrl={pdfUrl} currentPage={currentPage} onLoadSuccess={handleDocumentLoadSuccess} />
+                <PDFViewer pdfUrl={pdfUrl} currentPage={currentPage} onLoadSuccess={() => {}} />
               </div>
             ) : (
               <div className="text-center p-4">

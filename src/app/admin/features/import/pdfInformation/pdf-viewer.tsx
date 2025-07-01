@@ -86,7 +86,7 @@ export default function PDFViewer({ pdfUrl, currentPage, onLoadSuccess }: PDFVie
             </div>
           }
         >
-          <Page key={currentPage} pageNumber={currentPage} width={600} />
+          <Page pageNumber={currentPage} width={600} />
         </Document> 
         <div className="text-center text-xs text-gray-400 mt-6 pt-4 border-t border-gray-200">
           Page {currentPage} of {numPages}
