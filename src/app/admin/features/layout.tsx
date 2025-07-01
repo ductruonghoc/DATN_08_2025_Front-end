@@ -268,7 +268,7 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
               </Link>
 
             {/* Device Management - Admin only */}
-              <Link
+              {/* <Link
                 href="/admin/features/device-management"
                 className={cn(
                   "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
@@ -280,7 +280,7 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
               >
                 <Settings className="h-5 w-5 text-[#2d336b]" />
                 {sidebarOpen && <span>Device Management</span>}
-              </Link>
+              </Link> */}
 
             {/* Track Progress - Admin only */}
               <Link
