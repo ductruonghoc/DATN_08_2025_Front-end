@@ -2,9 +2,14 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'DMC PDF',
-  description: 'DMC PDF help you know deeper about your device manuals',
-  generator: 'DMC Team HCMUS & Mentor Ngô Ngọc Đăng KhoaKhoa',
+  title: 'Techbot',
+  icons: { 
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/favicon.ico',
+  },
+  description: 'Techbot help you know deeper about your device manuals',
+  generator: 'Techbot HCMUS & Mentor Ngô Ngọc Đăng Khoa',
 }
 
 export default function RootLayout({
@@ -14,6 +19,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      {/* <head>
+        <link rel="icon" href="/image.ico" sizes="any" type='image/x-icon'/>
+      </head> */}
       <body>{children}</body>
     </html>
   )
