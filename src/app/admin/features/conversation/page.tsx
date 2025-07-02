@@ -262,7 +262,7 @@ export default function ConservationPage() {
 
     if (existingConversation) {
       // If conversation exists, navigate to it
-      router.push(`/home/conservation/chat/${existingConversation.id}`)
+      router.push(`/admin/features/conversation/chat/${existingConversation.id}`)
     } else {
       // If no conversation exists, create a new one with a logical ID
       const newChatId = `chat-${Date.now()}-${device.id}`
@@ -282,7 +282,7 @@ export default function ConservationPage() {
       sessionStorage.setItem("conversations", JSON.stringify([...existingConversations, newConversation]))
 
       // Navigate to the new chat
-      router.push(`/home/conservation/chat/${newChatId}`)
+      router.push(`/admin/features/conversation/chat/${newChatId}`)
     }
   }
 
@@ -324,7 +324,13 @@ export default function ConservationPage() {
 
   // Enhanced helper functions with more comprehensive data
   const getCategoriesForLetter = (letter: string): string[] => {
-    const allCategories = {
+    type MyDictionary = {
+      [key: string]: string[]; // This is the string index signature
+      A: string[];
+      B: string[];
+      // ... and so on
+    };
+    const allCategories: MyDictionary = {
       A: [
         "Air conditioner",
         "Air fryer",
@@ -345,90 +351,21 @@ export default function ConservationPage() {
         "Binoculars",
         "Bicycle",
       ],
-      C: ["Camera", "Computer", "Cooker", "Coffee maker", "Ceiling fan", "Charger", "Clock", "Cleaner", "Calculator"],
-      D: ["Dishwasher", "Dryer", "Drone", "Digital camera", "DVD player", "Dehumidifier", "Desk lamp", "Door bell"],
-      E: [
-        "Electric kettle",
-        "Electric toothbrush",
-        "Earphones",
-        "Electric grill",
-        "Exercise bike",
-        "Electric blanket",
-        "Espresso machine",
-      ],
-      F: [
-        "Fan",
-        "Freezer",
-        "Food processor",
-        "Fitness tracker",
-        "Flash drive",
-        "Fire alarm",
-        "Fax machine",
-        "Flashlight",
-      ],
-      G: ["Gaming console", "GPS device", "Guitar", "Garage door opener", "Gas stove", "Grinder", "Generator", "Grill"],
-      H: ["Hair dryer", "Headphones", "Heater", "Humidifier", "Home theater", "Hard drive", "Helmet", "Hand mixer"],
-      I: ["Ice maker", "Iron", "Incubator", "Intercom", "Inverter", "iPad", "iPhone", "Induction cooker"],
-      J: ["Juicer", "Jukebox", "Joystick", "Jacket", "Jet ski"],
-      K: ["Kettle", "Keyboard", "Keurig", "Kitchen scale", "Knife sharpener"],
-      L: ["Laptop", "Lawnmower", "LED light", "Lamp", "Laser printer", "Loudspeaker", "Lock", "Ladder"],
-      M: ["Microwave", "Monitor", "Mouse", "Mixer", "Modem", "Mobile phone", "Music player", "Massage chair"],
-      N: ["Network router", "Nintendo", "Notebook", "Night light", "Nail dryer", "Navigation system"],
-      O: ["Oven", "Oscilloscope", "Outdoor grill", "Oil heater", "Optical drive"],
-      P: ["Printer", "Projector", "Phone", "Power bank", "Pressure cooker", "PlayStation", "Piano", "Purifier"],
-      Q: ["Quadcopter", "Quartz heater"],
-      R: ["Refrigerator", "Remote control", "Radio", "Router", "Rice cooker", "Robotic vacuum", "Record player"],
-      S: [
-        "Scanner",
-        "Shaver",
-        "Speaker",
-        "Smartphone",
-        "Smartwatch",
-        "Smart TV",
-        "Stereo",
-        "Security camera",
-        "Sewing machine",
-      ],
-      T: ["Tablet", "Television", "Toaster", "Treadmill", "Trimmer", "Turntable", "Thermometer", "Timer"],
-      U: ["USB drive", "Umbrella", "UPS", "Ultrasonic cleaner"],
-      V: ["Vacuum cleaner", "VR headset", "Video camera", "Ventilator", "Voice recorder", "Voltage regulator"],
-      W: ["Washing machine", "Water heater", "Webcam", "WiFi router", "Watch", "Walkie talkie", "Weather station"],
-      X: ["Xbox", "X-ray machine"],
-      Y: ["Yoga mat", "Yard trimmer"],
-      Z: ["Zoom lens", "Zone heater"],
     }
 
     return allCategories[letter] || []
   }
 
   const getBrandsForLetter = (letter: string): string[] => {
-    const allBrands = {
+    type MyDictionary = {
+      [key: string]: string[]; // This is the string index signature
+      A: string[];
+      B: string[];
+      // ... and so on
+    };
+    const allBrands: MyDictionary = {
       A: ["Acer", "Alienware", "Apple", "Asus", "AMD", "Amazon", "Anker", "AOC", "Aorus", "Avermedia"],
       B: ["Bang & Olufsen", "BenQ", "BlackBerry", "Bosch", "Bose", "Brother", "Buffalo", "Beats", "Belkin"],
-      C: ["Canon", "CyberPowerPC", "Corsair", "Cooler Master", "Cisco", "Crucial", "Creative", "Chromebook", "Compaq"],
-      D: ["Dell", "Dyson", "DJI", "D-Link", "Drobo", "Ducky", "Dahua", "Denon"],
-      E: ["Electrolux", "Epson", "EVGA", "Eizo", "Elgato", "Element", "Ericsson", "EKWB", "Edifier"],
-      F: ["Fitbit", "Fujitsu", "Fractal Design", "Fujifilm", "Fossil", "Foscam", "Filco"],
-      G: ["Google", "GoPro", "Gigabyte", "Garmin", "Grado", "G.Skill", "Gateway", "Glorious"],
-      H: ["Harman Kardon", "HP", "Huawei", "HyperX", "HTC", "Hisense", "Honeywell", "Hikvision"],
-      I: ["ICONIQ Motors", "Infinix", "iRobot", "Intel", "IBM", "Insta360", "Inwin", "Iiyama", "Incase", "Iomega"],
-      J: ["Jam Audio", "JBL", "JVC", "Jabra", "Jura", "Juniper", "Jaybird", "Jamo"],
-      K: ["Kenwood", "KitchenAid", "Kingston", "Keychron", "Kensington", "Kyocera", "Klipsch", "Kodak", "Koss"],
-      L: ["LG", "Lenovo", "Logitech", "Lexar", "Lian Li", "Leopold", "Linksys", "Leica"],
-      M: ["Microsoft", "Motorola", "MSI", "Micron", "Marshall", "Miele", "Maxtor", "Monoprice"],
-      N: ["Nintendo", "Nokia", "Nikon", "NZXT", "Netgear", "NEC", "Noctua"],
-      O: ["OnePlus", "Oppo", "Olympus", "Oculus", "OWC", "Optoma", "Orico"],
-      P: ["Panasonic", "Philips", "Pioneer", "PNY", "Patriot", "Polk Audio", "Pentax"],
-      Q: ["Qualcomm", "Qnap", "Quantum", "Quanta", "Qpad"],
-      R: ["Razer", "Roku", "Raspberry Pi", "Roland", "Rosewill", "Ricoh", "Realtek", "Rode"],
-      S: ["Samsung", "Sharp", "Sony", "Seagate", "SteelSeries", "Sennheiser", "Synology", "Sapphire"],
-      T: ["TCL", "Toshiba", "Tronsmart", "Thermaltake", "Thrustmaster", "Turtle Beach", "Tenda", "Tyan"],
-      U: ["Ultratec", "Ultimate Ears", "Uniden", "Ugreen", "Urbanears", "Ultrasone"],
-      V: ["Vizio", "ViewSonic", "Varmilo", "Vantec", "Verbatim", "Verizon", "Vivo", "Velodyne"],
-      W: ["Western Digital", "Whirlpool", "Wacom", "Withings", "Wiko", "Westone", "Wyze", "Wharfedale"],
-      X: ["Xiaomi", "Xbox", "XFX", "Xerox", "X-Rite", "XYZprinting"],
-      Y: ["Yamaha", "Yubikey", "Yealink", "Yubico", "Yanmai", "Yeston"],
-      Z: ["Zotac", "ZTE", "Zalman", "Zebra", "Zowie", "Zoom", "Zhiyun"],
     }
 
     return allBrands[letter] || []
@@ -636,9 +573,8 @@ export default function ConservationPage() {
               {paginatedDevices.map((device, index) => (
                 <tr
                   key={device.id}
-                  className={`${
-                    index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                  } border-b border-gray-200 hover:bg-blue-50 cursor-pointer transition-colors`}
+                  className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                    } border-b border-gray-200 hover:bg-blue-50 cursor-pointer transition-colors`}
                   onClick={() => handleDeviceSelect(device)}
                 >
                   <td className="py-4 px-4 text-[#2e3139]">{device.name}</td>
@@ -678,9 +614,8 @@ export default function ConservationPage() {
               <button
                 key={`page-${pageNumber}`}
                 onClick={() => setCurrentPage(pageNumber as number)}
-                className={`px-3 py-1 rounded ${
-                  currentPage === pageNumber ? "bg-[#2d336b] text-white" : "text-gray-700 hover:bg-gray-100"
-                }`}
+                className={`px-3 py-1 rounded ${currentPage === pageNumber ? "bg-[#2d336b] text-white" : "text-gray-700 hover:bg-gray-100"
+                  }`}
               >
                 {pageNumber}
               </button>

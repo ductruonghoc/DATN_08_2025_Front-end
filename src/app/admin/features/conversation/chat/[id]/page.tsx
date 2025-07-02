@@ -1,13 +1,14 @@
 "use client"
 
 import React from "react"
-import type { ReactNode } from "react"
+import BASEURL from "@/src/app/api/backend/dmc_api_gateway/baseurl"
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { User, Bot, Paperclip, Copy, Save, FileText, Trash2, Menu } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { toast, ToastContainer } from "react-toastify"
+import ReactMarkdown from "react-markdown"
 
 interface Message {
   id: string
@@ -302,29 +303,26 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     setInputValue("")
     setIsLoading(true)
 
-    // Simulate AI response after a delay
-    setTimeout(() => {
-      const aiResponses = [
-        "I can help you analyze that PDF. Would you like me to extract specific information from it?",
-        "Based on your PDF, I can see several key points that might be relevant to your query.",
-        "Your document contains information about device specifications. Is there anything specific you'd like to know?",
-        "I've processed your PDF. It appears to be a technical manual. What information are you looking for?",
-        "I can see this is a report with multiple sections. Which part would you like me to focus on?",
-      ]
-
-      const randomResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)]
-
+    try {
+      const res = await fetch(`${BASEURL}/conversation/rag_query`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: userMessage.content }),
+      })
+      const json = await res.json()
+      if (!json.success) throw new Error(json.message)
       const aiMessage: Message = {
         id: Date.now().toString(),
-        content: randomResponse,
+        content: json.data.response,
         sender: "ai",
         timestamp: new Date(),
       }
-
       setMessages((prev) => [...prev, aiMessage])
+    } catch (err: any) {
+      toast.error("Failed to get response: " + err.message)
+    } finally {
       setIsLoading(false)
-      // toast.success("Message sent successfully")
-    }, 1500)
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -433,9 +431,8 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
             <div key={message.id} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
               <div className={`flex max-w-[80%] ${message.sender === "user" ? "flex-row-reverse" : "flex-row"}`}>
                 <div
-                  className={`flex items-center justify-center h-8 w-8 rounded-full flex-shrink-0 ${
-                    message.sender === "user" ? "ml-3 bg-[#4045ef]" : `mr-3 bg-gray-200`
-                  }`}
+                  className={`flex items-center justify-center h-8 w-8 rounded-full flex-shrink-0 ${message.sender === "user" ? "ml-3 bg-[#4045ef]" : `mr-3 bg-gray-200`
+                    }`}
                 >
                   {message.sender === "user" ? (
                     <User className="h-5 w-5 text-white" />
@@ -445,13 +442,14 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                 </div>
                 <div className="flex flex-col">
                   <div
-                    className={`rounded-[10px] px-4 py-3 ${
-                      message.sender === "user"
-                        ? "bg-[#4045ef] text-white"
-                        : "bg-white text-[#2e3139] border border-gray-200"
-                    }`}
+                    className={`rounded-[10px] px-4 py-3 ${message.sender === "user"
+                      ? "bg-[#4045ef] text-white"
+                      : "bg-white text-[#2e3139] border border-gray-200"
+                      }`}
                   >
-                    <div className="text-sm whitespace-pre-line">{message.content}</div>
+                    <div className="text-sm whitespace-pre-line">
+                      <ReactMarkdown>{message.content}</ReactMarkdown>
+                    </div>
                     <div
                       className={`text-xs mt-1 ${message.sender === "user" ? "text-blue-100" : "text-[#2e3139]/70"}`}
                     >
