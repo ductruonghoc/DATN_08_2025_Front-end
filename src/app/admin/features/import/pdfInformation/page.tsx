@@ -86,7 +86,7 @@ export default function PDFInformationPage() {
           setParagraphId(data.page_paragraph?.id || null)
           setIsParagraphModified(!!data.page_paragraph?.modified)
           setTotalPages(data.pdf_number_of_pages || 0)
-          console.log("Total pages:", data)
+
           setImages(
             (data.images || []).map((img: any) => ({
               id: img.id,
