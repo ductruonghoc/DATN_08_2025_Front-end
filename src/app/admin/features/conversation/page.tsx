@@ -16,12 +16,13 @@ interface Device {
 interface Conversation {
   id: string
   title: string
-  deviceId: string
+  deviceId?: string
   lastMessage: string
-  timestamp: Date
+  timestamp: string // Store as ISO string for sessionStorage
+  messages?: { id: string; content: string; sender: "user" | "ai"; timestamp: string }[]
 }
 
-export default function ConservationPage() {
+export default function ConversationPage() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [showCategoryFilter, setShowCategoryFilter] = useState(false)
@@ -29,24 +30,6 @@ export default function ConservationPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
-
-  // Mock conversations data
-  const [conversations] = useState<Conversation[]>([
-    {
-      id: "chat-1685432789000-device-1",
-      title: "Galaxy S25 Ultra",
-      deviceId: "device-1",
-      lastMessage: "How to get the screen?",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-    },
-    {
-      id: "chat-1685346389000-device-4",
-      title: "Aspire Vero 14 Laptop",
-      deviceId: "device-4",
-      lastMessage: "What's the best lens for portraits?",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
-    },
-  ])
 
   // Mock devices data
   const devices: Device[] = [
@@ -205,7 +188,6 @@ export default function ConservationPage() {
   // Filter devices based on search query and selected filters
   const filteredDevices = devices.filter((device) => {
     let matches = true
-
     if (searchQuery) {
       matches =
         matches &&
@@ -213,15 +195,12 @@ export default function ConservationPage() {
           device.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
           device.brand.toLowerCase().includes(searchQuery.toLowerCase()))
     }
-
     if (selectedCategory) {
       matches = matches && device.category === selectedCategory
     }
-
     if (selectedBrand) {
       matches = matches && device.brand === selectedBrand
     }
-
     return matches
   })
 
@@ -252,37 +231,61 @@ export default function ConservationPage() {
     setCurrentPage(1)
   }
 
+  const generateConversationId = () => {
+    return `chat-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  }
+
   const handleDeviceSelect = (device: Device) => {
-    // Store selected device in sessionStorage
-    sessionStorage.setItem("selectedDevice", JSON.stringify(device))
+    const newConversation: Conversation = {
+      id: generateConversationId(),
+      title: device.name,
+      deviceId: device.id,
+      lastMessage: "",
+      timestamp: new Date().toISOString(),
+      messages: [
+        {
+          id: `welcome-${Date.now()}`,
+          content: `Welcome! How can I help you with your ${device.name}?`,
+          sender: "ai",
+          timestamp: new Date().toISOString(),
+        },
+      ],
+    }
 
-    // Check if there's already a conversation for this device in our mock data
-    // In a real app, this would be fetched from an API or database
-    const existingConversation = conversations.find((conv) => conv.deviceId === device.id)
-
-    if (existingConversation) {
-      // If conversation exists, navigate to it
-      router.push(`/admin/features/conversation/chat/${existingConversation.id}`)
-    } else {
-      // If no conversation exists, create a new one with a logical ID
-      const newChatId = `chat-${Date.now()}-${device.id}`
-
-      // In a real app, you would save this new conversation to your database
-      // For our mock implementation, we'll store it in sessionStorage
-      const newConversation = {
-        id: newChatId,
-        title: device.name,
-        deviceId: device.id,
-        lastMessage: "",
-        timestamp: new Date(),
-      }
-
-      // Store the new conversation in sessionStorage
+    try {
       const existingConversations = JSON.parse(sessionStorage.getItem("conversations") || "[]")
-      sessionStorage.setItem("conversations", JSON.stringify([...existingConversations, newConversation]))
+      const updatedConversations = [...existingConversations, newConversation]
+      sessionStorage.setItem("conversations", JSON.stringify(updatedConversations))
+      sessionStorage.setItem("selectedDevice", JSON.stringify(device))
+      router.push(`/admin/features/conversation/chat/${newConversation.id}`)
+    } catch (error) {
+      console.error("Error saving conversation to sessionStorage:", error)
+    }
+  }
 
-      // Navigate to the new chat
-      router.push(`/admin/features/conversation/chat/${newChatId}`)
+  const handleSkip = () => {
+    const newConversation: Conversation = {
+      id: generateConversationId(),
+      title: "New Conversation",
+      lastMessage: "",
+      timestamp: new Date().toISOString(),
+      messages: [
+        {
+          id: `welcome-${Date.now()}`,
+          content: "Welcome! How can I help you?",
+          sender: "ai",
+          timestamp: new Date().toISOString(),
+        },
+      ],
+    }
+
+    try {
+      const existingConversations = JSON.parse(sessionStorage.getItem("conversations") || "[]")
+      const updatedConversations = [...existingConversations, newConversation]
+      sessionStorage.setItem("conversations", JSON.stringify(updatedConversations))
+      router.push(`/admin/features/conversation/chat/${newConversation.id}`)
+    } catch (error) {
+      console.error("Error saving conversation to sessionStorage:", error)
     }
   }
 
@@ -290,7 +293,6 @@ export default function ConservationPage() {
   const getPaginationNumbers = () => {
     const pageNumbers = []
     const maxVisiblePages = 5
-
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {
         pageNumbers.push(i)
@@ -318,18 +320,16 @@ export default function ConservationPage() {
         pageNumbers.push(totalPages)
       }
     }
-
     return pageNumbers
   }
 
   // Enhanced helper functions with more comprehensive data
   const getCategoriesForLetter = (letter: string): string[] => {
     type MyDictionary = {
-      [key: string]: string[]; // This is the string index signature
-      A: string[];
-      B: string[];
-      // ... and so on
-    };
+      [key: string]: string[]
+      A: string[]
+      B: string[]
+    }
     const allCategories: MyDictionary = {
       A: [
         "Air conditioner",
@@ -352,22 +352,19 @@ export default function ConservationPage() {
         "Bicycle",
       ],
     }
-
     return allCategories[letter] || []
   }
 
   const getBrandsForLetter = (letter: string): string[] => {
     type MyDictionary = {
-      [key: string]: string[]; // This is the string index signature
-      A: string[];
-      B: string[];
-      // ... and so on
-    };
+      [key: string]: string[]
+      A: string[]
+      B: string[]
+    }
     const allBrands: MyDictionary = {
       A: ["Acer", "Alienware", "Apple", "Asus", "AMD", "Amazon", "Anker", "AOC", "Aorus", "Avermedia"],
       B: ["Bang & Olufsen", "BenQ", "BlackBerry", "Bosch", "Bose", "Brother", "Buffalo", "Beats", "Belkin"],
     }
-
     return allBrands[letter] || []
   }
 
@@ -375,6 +372,13 @@ export default function ConservationPage() {
     <div className="flex flex-col h-full p-6 bg-white pb-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-[#2e3139]">CHOOSE YOUR DEVICE</h1>
+        <Button
+          variant="outline"
+          className="rounded-md border-gray-300 text-gray-700 hover:bg-gray-50"
+          onClick={handleSkip}
+        >
+          Skip
+        </Button>
       </div>
 
       {/* Search and Filter Section */}
@@ -414,7 +418,7 @@ export default function ConservationPage() {
         </div>
       </div>
 
-      {/* Category Filter - Made taller and more comprehensive */}
+      {/* Category Filter */}
       {showCategoryFilter && (
         <div className="mb-6 border border-gray-200 rounded-lg overflow-hidden bg-white shadow-lg">
           <div className="p-6">
@@ -426,9 +430,7 @@ export default function ConservationPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            {/* Increased height from 400px to 600px for better visibility */}
             <div className="grid grid-cols-3 gap-8 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300">
-              {/* Generate category sections dynamically */}
               {[
                 "A",
                 "B",
@@ -458,10 +460,7 @@ export default function ConservationPage() {
                 "Z",
               ].map((letter) => {
                 const letterCategories = getCategoriesForLetter(letter)
-
-                // Only show sections that have categories
                 if (letterCategories.length === 0) return null
-
                 return (
                   <div key={letter} className="space-y-3">
                     <h3 className="text-xl font-bold sticky top-0 bg-white py-2 z-10 border-b border-gray-100">
@@ -486,7 +485,7 @@ export default function ConservationPage() {
         </div>
       )}
 
-      {/* Brand Filter - Made taller and more comprehensive */}
+      {/* Brand Filter */}
       {showBrandFilter && (
         <div className="mb-6 border border-gray-200 rounded-lg overflow-hidden bg-white shadow-lg">
           <div className="p-6">
@@ -498,9 +497,7 @@ export default function ConservationPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            {/* Increased height from 400px to 600px for better visibility */}
             <div className="grid grid-cols-3 gap-8 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300">
-              {/* Generate brand sections dynamically */}
               {[
                 "A",
                 "B",
@@ -530,10 +527,7 @@ export default function ConservationPage() {
                 "Z",
               ].map((letter) => {
                 const letterBrands = getBrandsForLetter(letter)
-
-                // Only show sections that have brands
                 if (letterBrands.length === 0) return null
-
                 return (
                   <div key={letter} className="space-y-3">
                     <h3 className="text-xl font-bold sticky top-0 bg-white py-2 z-10 border-b border-gray-100">
@@ -573,8 +567,7 @@ export default function ConservationPage() {
               {paginatedDevices.map((device, index) => (
                 <tr
                   key={device.id}
-                  className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    } border-b border-gray-200 hover:bg-blue-50 cursor-pointer transition-colors`}
+                  className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} border-b border-gray-200 hover:bg-blue-50 cursor-pointer transition-colors`}
                   onClick={() => handleDeviceSelect(device)}
                 >
                   <td className="py-4 px-4 text-[#2e3139]">{device.name}</td>
@@ -604,7 +597,6 @@ export default function ConservationPage() {
           >
             ‹
           </button>
-
           {getPaginationNumbers().map((pageNumber, index) =>
             pageNumber === "..." ? (
               <span key={`ellipsis-${index}`} className="px-3 py-1 text-gray-500">
@@ -614,14 +606,12 @@ export default function ConservationPage() {
               <button
                 key={`page-${pageNumber}`}
                 onClick={() => setCurrentPage(pageNumber as number)}
-                className={`px-3 py-1 rounded ${currentPage === pageNumber ? "bg-[#2d336b] text-white" : "text-gray-700 hover:bg-gray-100"
-                  }`}
+                className={`px-3 py-1 rounded ${currentPage === pageNumber ? "bg-[#2d336b] text-white" : "text-gray-700 hover:bg-gray-100"}`}
               >
                 {pageNumber}
               </button>
             ),
           )}
-
           <button
             onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
             disabled={currentPage === totalPages}
