@@ -4,10 +4,10 @@ import React from "react"
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { User, Bot, Paperclip, Copy, Save, FileText, Trash2, Menu } from "lucide-react"
-import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { toast, ToastContainer } from "react-toastify"
 import ReactMarkdown from "react-markdown"
+import BASEURL from "@/src/app/api/backend/dmc_api_gateway/baseurl"
 
 interface Message {
   id: string
@@ -110,7 +110,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const settingsRef = useRef<HTMLDivElement>(null)
   const userMenuRef = useRef<HTMLDivElement>(null)
-  const router = useRouter()
 
   const [showShareModal, setShowShareModal] = useState(false)
   const [shareNoteId, setShareNoteId] = useState<string | null>(null)
@@ -205,37 +204,25 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     setInputValue("")
     setIsLoading(true)
 
-    // Simulate AI response for demo
-    const aiMessage: Message = {
-      id: Date.now().toString(),
-      content: `This is a demo response to: "${inputValue}"`,
-      sender: "ai",
-      timestamp: new Date().toISOString(),
-    }
-    setMessages((prev) => [...prev, aiMessage])
-
     try {
-      const storedConversations = sessionStorage.getItem("conversations")
-      let conversations: Conversation[] = storedConversations ? JSON.parse(storedConversations) : []
-      const updatedConversations = conversations.map((conv: Conversation) =>
-        conv.id === id
-          ? { ...conv, messages: [...(conv.messages || []), userMessage, aiMessage], lastMessage: userMessage.content, timestamp: new Date().toISOString() }
-          : conv
-      )
-      if (!conversations.some((conv) => conv.id === id)) {
-        updatedConversations.push({
-          id,
-          title: deviceName || "New Conversation",
-          deviceId: sessionStorage.getItem("selectedDevice") ? JSON.parse(sessionStorage.getItem("selectedDevice")!).id : undefined,
-          lastMessage: userMessage.content,
-          timestamp: new Date().toISOString(),
-          messages: [userMessage, aiMessage],
-        })
+      const res = await fetch(`${BASEURL}/conversation/rag_query`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: userMessage.content }),
+      })
+      const json = await res.json()
+      if (!json.success) throw new Error(json.message)
+      const aiMessage: Message = {
+        id: Date.now().toString(),
+        content: json.data.response,
+        sender: "ai",
+        timestamp: new Date().toISOString(),
       }
-      sessionStorage.setItem("conversations", JSON.stringify(updatedConversations))
-    } catch (error) {
-      console.error("Error saving conversation to sessionStorage:", error)
-    } finally {
+      setMessages((prev) => [...prev, aiMessage])
+    } catch (err: any) {
+      toast.error("Failed to get response: " + err.message)
+    }
+    finally {
       setIsLoading(false)
     }
   }
