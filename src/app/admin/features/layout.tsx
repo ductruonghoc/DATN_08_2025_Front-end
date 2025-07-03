@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import type React from "react"
+import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
-import { useRouter, usePathname } from "next/navigation"
+import { useRouter } from "next/navigation"
 import {
   Menu,
   Upload,
@@ -12,14 +13,11 @@ import {
   MoreHorizontal,
   ChevronDown,
   LogOut,
-  UserIcon,
   Users,
   Trash2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import BASEURL from "../../api/backend/dmc_api_gateway/baseurl"
-import Loader from "@/components/loader/loader"; // Import the Loader component
-
+import { usePathname } from "next/navigation"
 
 interface Conversation {
   id: string
@@ -28,8 +26,11 @@ interface Conversation {
   timestamp: Date
 }
 
-
-export default function HomeLayout({ children }: { children: React.ReactNode }) {
+export default function HomeLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [activeConversationMenu, setActiveConversationMenu] = useState<string | null>(null)
@@ -40,26 +41,23 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
       id: "chat-1685432789000-device-1",
       title: "Lenovo Thinkpad T570",
       lastMessage: "How to get the screen?",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
     },
     {
       id: "chat-1685346389000-device-4",
       title: "Cannon Camera EOS R5",
       lastMessage: "What's the best lens for portraits?",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2),
     },
   ])
-  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null) // Authorization state
 
-  // User role state - you can change this to test different roles
-  // In a real app, this would come from authentication context or props
   const pathname = usePathname()
+  const router = useRouter()
   const userMenuRef = useRef<HTMLDivElement>(null)
   const conversationMenuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
-  const router = useRouter()
-  //functions here
+
   const handleNewConversation = () => {
-    router.push("admin/features/conversation")
+    router.push("/admin/features/conversation")
   }
 
   const handleDeleteConversation = (conversationId: string) => {
@@ -73,8 +71,6 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
       setConversations(conversations.filter((conv) => conv.id !== conversationToDelete))
       setShowDeleteModal(false)
       setConversationToDelete(null)
-
-      // If currently viewing the deleted conversation, redirect to conversation page
       if (pathname.includes(`/admin/features/conversation/chat/${conversationToDelete}`)) {
         router.push("/admin/features/conversation")
       }
@@ -91,45 +87,12 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
     e.stopPropagation()
     setActiveConversationMenu(activeConversationMenu === conversationId ? null : conversationId)
   }
-  //hooks here
-  useEffect(() => {
-    const checkAuthorization = async () => {
-      const token = localStorage.getItem("dmc_api_gateway_token")
-      if (!token) {
-        setIsAuthorized(false)
-        return
-      }
 
-      try {
-        const response = await fetch(`${BASEURL}/auth/admin_authorize`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-
-        if (response.status === 200) {
-          setIsAuthorized(true)
-        } else {
-          setIsAuthorized(false)
-        }
-      } catch (error) {
-        console.error("Authorization check failed:", error)
-        setIsAuthorized(false)
-      }
-    }
-
-    checkAuthorization()
-  }, [])
-
-    // Close menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setShowUserMenu(false)
       }
-
-      // Close conversation menu if clicking outside
       if (
         activeConversationMenu &&
         !conversationMenuRefs.current[activeConversationMenu]?.contains(event.target as Node)
@@ -137,23 +100,19 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
         setActiveConversationMenu(null)
       }
     }
-
     document.addEventListener("mousedown", handleClickOutside)
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
   }, [activeConversationMenu])
 
-  // Format relative time
   const formatRelativeTime = (date: Date) => {
     const now = new Date()
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-
     if (diffInSeconds < 60) return "just now"
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
     if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`
-
     return date.toLocaleDateString()
   }
 
@@ -161,70 +120,18 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
     setShowUserMenu(!showUserMenu)
   }
 
-  if (isAuthorized === null) {
-  return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-      <Loader /> {/* Replace loading text with the Loader component */}
-    </div>
-  );
-}
-
-  if (!isAuthorized) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-100">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-red-600">403 - Forbidden</h1>
-          <p className="mt-4 text-gray-600">You do not have permission to access this page.</p>
-          <button
-            onClick={() => router.push("/admin/log-in")}
-            className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Go to Login
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-
-
-
   return (
     <div className="flex h-full overflow-hidden bg-white">
-      {/* Sidebar - collapses to icon-only mode */}
       <div
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex flex-col bg-[#fff2f2] transition-all duration-300 ease-in-out",
-          sidebarOpen ? "w-64" : "w-16",
+          sidebarOpen ? "w-64" : "w-16"
         )}
       >
-        <div className={cn("flex h-16 items-center px-4", sidebarOpen ? "justify-between" : "justify-center")}>
-          {sidebarOpen && (
-            <Link href="/admin/features" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-[#4045ef] text-white">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-5 w-5"
-                >
-                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-                  <polyline points="14 2 14 8 20 8" />
-                </svg>
-              </div>
-              <span className="text-xl font-bold text-[#2d336b]">DMC</span>
-            </Link>
-          )}
+        <div className="flex h-16 items-center px-2">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className={cn(
-              "flex items-center justify-center rounded-[10px] p-2 hover:bg-white/50",
-              sidebarOpen ? "" : "mx-auto",
-            )}
+            className="flex items-center justify-center rounded-[10px] p-2 hover:bg-white/50"
             aria-label="Toggle sidebar"
           >
             <Menu className="h-5 w-5 text-[#2d336b]" />
@@ -232,90 +139,76 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         <div className="flex-1 overflow-auto py-4">
-          {/* New Conversation Button - Available to all users */}
-          
-            <div className={cn("px-4", sidebarOpen ? "" : "flex justify-center")}>
-              <button
-                onClick={handleNewConversation}
-                className={cn(
-                  "flex items-center gap-2 rounded-[10px] bg-white shadow-sm cursor-pointer hover:bg-gray-50 transition-colors",
-                  sidebarOpen ? "w-full px-4 py-2 text-sm text-[#2d336b]" : "h-10 w-10 justify-center",
-                  pathname.includes("/admin/features/conversation") ? "ring-2 ring-[#4045ef]/20" : "",
-                )}
-              >
-                <Plus className="h-4 w-4" />
-                {sidebarOpen && <span>New conversation</span>}
-              </button>
-            </div>
-          
+          <div className={cn("px-4", sidebarOpen ? "" : "flex justify-center")}>
+            <button
+              onClick={handleNewConversation}
+              className={cn(
+                "flex items-center gap-2 rounded-[10px] bg-white shadow-sm cursor-pointer hover:bg-gray-50 transition-colors",
+                sidebarOpen ? "w-full px-4 py-2 text-sm text-[#2d336b]" : "h-10 w-10 justify-center",
+                pathname.includes("/admin/features/conversation") ? "ring-2 ring-[#4045ef]/20" : ""
+              )}
+            >
+              <Plus className="h-4 w-4" />
+              {sidebarOpen && <span>New conversation</span>}
+            </button>
+          </div>
 
-          {/* Navigation Menu */}
           <nav className={cn("mt-6", sidebarOpen ? "px-2" : "flex flex-col items-center px-0")}>
-            {/* Upload PDF - Admin only */}
-
-              <Link
-                href="/admin/features/import"
-                className={cn(
-                  "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
-                  sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
-                  pathname.includes("/admin/features/import")
-                    ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
-                    : "",
-                )}
-              >
-                <Upload className="h-5 w-5 text-[#2d336b]" />
-                {sidebarOpen && <span>Upload PDF</span>}
-              </Link>
-
-            {/* Device Management - Admin only */}
-              {/* <Link
-                href="/admin/features/device-management"
-                className={cn(
-                  "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
-                  sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
-                  pathname.includes("/admin/features/device-management")
-                    ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
-                    : "",
-                )}
-              >
-                <Settings className="h-5 w-5 text-[#2d336b]" />
-                {sidebarOpen && <span>Device Management</span>}
-              </Link> */}
-
-            {/* Track Progress - Admin only */}
-              <Link
-                href="/admin/features/track-progress/tracking"
-                className={cn(
-                  "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
-                  sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
-                  pathname.includes("/admin/features/track-progress")
-                    ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
-                    : "",
-                )}
-              >
-                <FileText className="h-5 w-5 text-[#2d336b]" />
-                {sidebarOpen && <span>Track Progress</span>}
-              </Link>
-
-            {/* Admin Management - Super Admin only */}
-            {/* {hasAccess("admin_management") && (
-              <Link
-                href="/admin/features/admin-management"
-                className={cn(
-                  "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
-                  sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
-                  pathname.includes("/admin/features/admin-management")
-                    ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
-                    : "",
-                )}
-              >
-                <Users className="h-5 w-5 text-[#2d336b]" />
-                {sidebarOpen && <span>Admin Management</span>}
-              </Link>
-            )} */}
+            <Link
+              href="/admin/features/import"
+              className={cn(
+                "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
+                sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
+                pathname.includes("/admin/features/import")
+                  ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
+                  : ""
+              )}
+            >
+              <Upload className="h-5 w-5 text-[#2d336b]" />
+              {sidebarOpen && <span>Upload PDF</span>}
+            </Link>
+            {/* <Link
+              href="/admin/features/device-management"
+              className={cn(
+                "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
+                sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
+                pathname.includes("/admin/features/device-management")
+                  ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
+                  : ""
+              )}
+            >
+              <Settings className="h-5 w-5 text-[#2d336b]" />
+              {sidebarOpen && <span>Device Management</span>}
+            </Link> */}
+            <Link
+              href="/admin/features/track-progress/tracking"
+              className={cn(
+                "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
+                sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
+                pathname.includes("/admin/features/track-progress")
+                  ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
+                  : ""
+              )}
+            >
+              <FileText className="h-5 w-5 text-[#2d336b]" />
+              {sidebarOpen && <span>Track Progress</span>}
+            </Link>
+            {/* <Link
+              href="/admin/features/admin-management"
+              className={cn(
+                "flex items-center gap-3 rounded-[10px] hover:bg-white/50 relative",
+                sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
+                pathname.includes("/admin/features/admin-management")
+                  ? "bg-white/50 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-black"
+                  : ""
+              )}
+            >
+              <Users className="h-5 w-5 text-[#2d336b]" />
+              {sidebarOpen && <span>Admin Management</span>}
+            </Link> */}
           </nav>
 
-          {/* Conversation history - Available to logged users, admin, and super admin */}
+          {sidebarOpen && (
             <div className="mt-8 px-2">
               <h3 className="px-3 text-xs font-semibold uppercase text-[#2d336b] mb-2">Your conversations</h3>
               <div className="space-y-1">
@@ -324,7 +217,7 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
                     key={conversation.id}
                     className={cn(
                       "flex items-center justify-between rounded-[10px] px-3 py-2 hover:bg-white/50 relative",
-                      pathname.includes(`/admin/features/conversation/chat/${conversation.id}`) ? "bg-white/50" : "",
+                      pathname.includes(`/admin/features/conversation/chat/${conversation. id}`) ? "bg-white/50" : ""
                     )}
                   >
                     <Link href={`/admin/features/conversation/chat/${conversation.id}`} className="flex-1 min-w-0">
@@ -344,10 +237,9 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
                         >
                           <MoreHorizontal className="h-4 w-4" />
                         </button>
-
                         {activeConversationMenu === conversation.id && (
                           <div
-                            ref={(el) => {conversationMenuRefs.current[conversation.id] = el}}
+                            ref={(el) => (conversationMenuRefs.current[conversation.id] = el)}
                             className="absolute right-0 top-full mt-1 w-48 rounded-[10px] shadow-lg bg-white border border-gray-200 z-50"
                           >
                             <div className="py-1">
@@ -367,72 +259,57 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
                 ))}
               </div>
             </div>
+          )}
         </div>
-
-        
       </div>
 
-      {/* Main content area with top bar */}
       <div
         className={cn(
           "flex flex-1 flex-col transition-all duration-300 ease-in-out h-full",
-          sidebarOpen ? "ml-64" : "ml-16",
+          sidebarOpen ? "ml-64" : "ml-16"
         )}
       >
-        {/* Top horizontal bar */}
-        <div className="h-16 bg-white flex justify-end items-center px-4 sticky top-0 z-40">
-          {
-            /* Logged users - show user menu */
-            <div className="flex items-center gap-4 relative" ref={userMenuRef}>
-              <button onClick={toggleUserMenu} className="flex items-center gap-2 text-[#2d336b] hover:underline">
-                <span>Admin</span>
-                <ChevronDown className="h-4 w-4" />
-              </button>
-
-              {showUserMenu && (
-                <div className="absolute right-0 top-full mt-1 w-48 rounded-[10px] shadow-lg bg-white border border-gray-200 z-50">
-                  <div className="py-1">
-                    <button className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
-                      <UserIcon className="h-4 w-4" />
-                      <span>Profile</span>
-                    </button>
-                    <button className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
-                      <Settings className="h-4 w-4" />
-                      <span>Account Settings</span>
-                    </button>
-                    <div className="border-t border-gray-200 my-1"></div>
-                    <button className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left">
-                      <LogOut className="h-4 w-4" />
-                      <span>Sign out</span>
-                    </button>
-                  </div>
+        <div className="h-16 bg-white flex items-center px-4 sticky top-0 z-40">
+          <Link href="/admin/features" className="flex items-center gap-2">
+            <img src="/favicon.ico" alt="TechBot Icon" className="h-10 w-10" />
+            <span className="text-2xl font-bold text-[#2d336b]">TechBot</span>
+          </Link>
+          <div className="flex-1"></div>
+          <div className="flex items-center gap-4 relative" ref={userMenuRef}>
+            <button onClick={toggleUserMenu} className="flex items-center gap-2 text-[#2d336b] hover:underline">
+              <span>User</span>
+              <ChevronDown class posted_at="h-4 w-4" />
+            </button>
+            {showUserMenu && (
+              <div className="absolute right-0 top-full mt-1 w-48 rounded-[10px] shadow-lg bg-white border border-gray-200 z-50">
+                <div className="py-1">
+                  <button className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left">
+                    <LogOut className="h-4 w-4" />
+                    <span>Sign out</span>
+                  </button>
                 </div>
-              )}
-
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-5 w-5 text-gray-700"
-                >
-                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
               </div>
+            )}
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-5 w-5 text-gray-700"
+              >
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
             </div>
-          }
+          </div>
         </div>
-
-        {/* Main content */}
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
 
-      {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
