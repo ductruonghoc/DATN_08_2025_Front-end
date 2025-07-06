@@ -8,12 +8,15 @@ import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { toast, ToastContainer } from "react-toastify"
 import ReactMarkdown from "react-markdown"
+import Slider from "rc-slider"
+import "rc-slider/assets/index.css"
 
 interface Message {
   id: string
   content: string
   sender: "user" | "ai"
-  timestamp: string // Store as ISO string
+  timestamp: string
+  imageUrl?: string
 }
 
 interface Note {
@@ -106,6 +109,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     },
   ])
   const [deviceName, setDeviceName] = useState("")
+  const [sliderValue, setSliderValue] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const settingsRef = useRef<HTMLDivElement>(null)
@@ -115,6 +119,12 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const [showShareModal, setShowShareModal] = useState(false)
   const [shareNoteId, setShareNoteId] = useState<string | null>(null)
   const [shareLink, setShareLink] = useState("")
+
+  const images = [
+    "https://via.placeholder.com/300x200?text=Image+1",
+    "https://via.placeholder.com/300x200?text=Image+2",
+    "https://via.placeholder.com/300x200?text=Image+3",
+  ]
 
   useEffect(() => {
     const fetchConversation = async () => {
@@ -205,12 +215,22 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     setInputValue("")
     setIsLoading(true)
 
-    // Simulate AI response for demo
-    const aiMessage: Message = {
-      id: Date.now().toString(),
-      content: `This is a demo response to: "${inputValue}"`,
-      sender: "ai",
-      timestamp: new Date().toISOString(),
+    let aiMessage: Message
+    if (inputValue.toLowerCase() === "send image") {
+      aiMessage = {
+        id: Date.now().toString(),
+        content: "Please select an image using the slider below:",
+        sender: "ai",
+        timestamp: new Date().toISOString(),
+        imageUrl: images[sliderValue],
+      }
+    } else {
+      aiMessage = {
+        id: Date.now().toString(),
+        content: `This is a demo response to: "${inputValue}"`,
+        sender: "ai",
+        timestamp: new Date().toISOString(),
+      }
     }
     setMessages((prev) => [...prev, aiMessage])
 
@@ -364,6 +384,38 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                     <div className="text-sm whitespace-pre-line">
                       <ReactMarkdown>{message.content}</ReactMarkdown>
                     </div>
+                    {message.imageUrl && (
+                      <div className="mt-2 relative bg-gray-200 p-4 rounded-[10px]">
+                        <div className="text-sm text-gray-600 mb-2"></div>
+                        <img
+                          src={message.imageUrl}
+                          alt="Image"
+                          className="rounded-[10px] border border-white-300 max-w-full h-auto mx-auto"
+                        />
+                        <div className="flex justify-between items-center mt-2">
+                          <button
+                            onClick={() => setSliderValue((prev) => (prev > 0 ? prev - 1 : images.length - 1))}
+                            className="text-[#2d336b] hover:text-[#4045ef]"
+                          >
+                            &lt;
+                          </button>
+                          <div className="flex space-x-1">
+                            {images.map((_, idx) => (
+                              <span
+                                key={idx}
+                                className={`w-2 h-2 rounded-full ${sliderValue === idx ? "bg-[#4045ef]" : "bg-gray-300"}`}
+                              />
+                            ))}
+                          </div>
+                          <button
+                            onClick={() => setSliderValue((prev) => (prev < images.length - 1 ? prev + 1 : 0))}
+                            className="text-[#2d336b] hover:text-[#4045ef]"
+                          >
+                            &gt;
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     <div
                       className={`text-xs mt-1 ${message.sender === "user" ? "text-blue-100" : "text-[#2e3139]/70"}`}
                     >
@@ -472,9 +524,9 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
           <button onClick={toggleNotesPanel} className="p-2 text-[#2e3139] hover:bg-gray-100 rounded-md">
             <Menu className="h-5 w-5" />
           </button>
-          <button className="p-2 text-[#2e3139] hover:bg-gray-100 rounded-md">
+          {/* <button className="p-2 text-[#2e3139] hover:bg-gray-100 rounded-md">
             <FileText className="h-5 w-5" />
-          </button>
+          </button> */}
         </div>
       ) : (
         <div
@@ -496,7 +548,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
               {notes.map((note) => (
                 <div key={note.id} className={`border-b pb-4 border-gray-200`}>
                   <div className="flex items-start gap-3">
-                    {/* <div className={"text-[#2e3139] mt-1"}>â€¢</div> */}
                     <div className="flex-1">
                       <div className="flex items-start justify-between">
                         <h3 className={`font-bold text-[#2e3139]`}>{note.title}</h3>

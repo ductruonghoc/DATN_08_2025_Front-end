@@ -4,14 +4,14 @@ import { Upload, FileText, Settings, MessageSquare } from "lucide-react"
 
 export default function HomePage() {
   return (
-    <div className="flex h-full flex-col items-center justify-center p-4 overflow-auto">
-      <div className="w-full max-w-4xl">
+    <div className="flex min-h-screen flex-col items-center justify-center p-4 overflow-auto box-border">
+      <div className="w-full max-w-4xl px-4">
         <h1 className="mb-6 text-3xl font-bold text-center text-[#2e3139]">Welcome to QueryPDF</h1>
         <p className="mb-12 text-center text-gray-600">
           Your intelligent PDF assistant. Upload, manage, and interact with your documents.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {/* Upload PDF Card */}
           <div className="bg-white rounded-[10px] shadow-md p-6 border border-gray-100 hover:shadow-lg transition-shadow">
             <div className="flex items-center mb-4">
