@@ -10,13 +10,15 @@ import { cn } from "@/lib/utils"
 import { toast, ToastContainer } from "react-toastify"
 import ReactMarkdown from "react-markdown"
 import BASEURL from "@/src/app/api/backend/dmc_api_gateway/baseurl"
-import { set } from "date-fns"
+import Loader from "@/components/loader/loader"
+import MessageImageSlider from "@/components/slider/messege"
 
 interface Message {
   id: string
   content: string
   sender: "user" | "ai"
   timestamp: string // Store as ISO string
+  images_ids?: number[]
 }
 
 interface Note {
@@ -25,14 +27,14 @@ interface Note {
   content: string
 }
 
-interface Conversation {
-  id: string
-  title: string
-  deviceId?: string
-  lastMessage: string
-  timestamp: string
-  messages: Message[]
-}
+// interface Conversation {
+//   id: string
+//   title: string
+//   deviceId?: string
+//   lastMessage: string
+//   timestamp: string
+//   messages: Message[]
+// }
 
 export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   //Next.js router
@@ -122,7 +124,8 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   ])
   const [deviceName, setDeviceName] = useState("")
   const [deviceId, setDeviceId] = useState<number | null>(null)
-  const [isFirstMessage, setIsFirstMessage] = useState(false)
+  const [isFetchingConversation, setIsFetchingConversation] = useState(false)
+  const [firstMsgState, setFirstMsgState] = useState<{ ready: boolean, value: string }>({ ready: false, value: "" });
 
   const inputRef = useRef<HTMLInputElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -134,80 +137,68 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const [shareLink, setShareLink] = useState("")
 
   useEffect(() => {
-    // Get device id from sessionStorage if available
+    let isMounted = true
     const storedDeviceId = sessionStorage.getItem("selectedDeviceId")
     setDeviceId(storedDeviceId ? parseInt(storedDeviceId, 10) : null)
     const fetchConversation = async () => {
       if (id === "new") {
-        setDeviceName("New Conversation")
-        setMessages([]) // No messages for new
+        if (isMounted) {
+          setDeviceName("New Conversation")
+        }
         return
       }
       try {
-        // const storedConversations = sessionStorage.getItem("conversations")
-        // let conversations: Conversation[] = []
-        // if (storedConversations) {
-        //   conversations = JSON.parse(storedConversations).map((conv: any) => ({
-        //     ...conv,
-        //     timestamp: conv.timestamp,
-        //     messages: conv.messages?.map((msg: any) => ({
-        //       ...msg,
-        //       timestamp: msg.timestamp,
-        //     })) || [],
-        //   }))
-        // }
-        // const currentConversation = conversations.find((conv: Conversation) => conv.id === id)
-        // if (currentConversation) {
-        //   setDeviceName(currentConversation.title)
-        //   setMessages(currentConversation.messages || [
-        //     {
-        //       id: `welcome-${Date.now()}`,
-        //       content: `Welcome! How can I help you${currentConversation.title !== "New Conversation" ? ` with your ${currentConversation.title}` : ""}?`,
-        //       sender: "ai",
-        //       timestamp: new Date().toISOString(),
-        //     },
-        //   ])
-        // } else {
-        //   setMessages([
-        //     {
-        //       id: `welcome-${Date.now()}`,
-        //       content: "Welcome! How can I help you?",
-        //       sender: "ai",
-        //       timestamp: new Date().toISOString(),
-        //     },
-        //   ])
-        //   setDeviceName("New Conversation")
-        // }
-      } catch (error) {
-        console.error("Error loading conversation from sessionStorage:", error)
-        setMessages([
-          {
-            id: `welcome-${Date.now()}`,
-            content: "Welcome! How can I help you?",
-            sender: "ai",
-            timestamp: new Date().toISOString(),
+        setIsFetchingConversation(true)
+        const token = localStorage.getItem("dmc_api_gateway_token")
+        const res = await fetch(`${BASEURL}/conversation/${id}`, {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
-        ])
-        setDeviceName("New Conversation")
-      }
-
-      const firstMsg = searchParams.get("firstMsg")
-      if (firstMsg) {
-        setInputValue(firstMsg)
-        setIsFirstMessage(true)
-        // Remove firstMsg from URL after sending
-        const url = new URL(window.location.href)
-        url.searchParams.delete("firstMsg")
-        window.history.replaceState({}, document.title, url.pathname)
+        })
+        const json = await res.json()
+        if (!json.success) throw new Error(json.message)
+        const loadedMessages: Message[] = []
+        const pairs = json.data.pairs
+        if (!pairs || !Array.isArray(pairs) || pairs.length === 0) {
+          
+          return
+        }
+        pairs.forEach((pair: any) => {
+          loadedMessages.push({
+            id: `req-${pair.id}`,
+            content: pair.request,
+            sender: "user",
+            timestamp: pair.created_time,
+          })
+          loadedMessages.push({
+            id: `res-${pair.id}`,
+            content: pair.response,
+            sender: "ai",
+            timestamp: pair.created_time,
+            images_ids: pair.images || [],
+          })
+        })
+        if (isMounted) {
+          setDeviceName(json.data.title || "Conversation")
+          setDeviceId(json.data.device_id ?? null)
+          setMessages((prev) => [...prev, ...loadedMessages])
+        }
+      } catch (error: any) {
+        if (isMounted) setDeviceName("New Conversation")
+      } finally {
+        if (isMounted) setIsFetchingConversation(false)
       }
     }
-
     fetchConversation()
     inputRef.current?.focus()
-  }, [id, setDeviceId])
+    return () => {
+      isMounted = false
+    }
+  }, [id])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    console.log("Messages updated:", messages)
   }, [messages])
 
   useEffect(() => {
@@ -227,13 +218,30 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   }, [])
 
   useEffect(() => {
-    if (isFirstMessage) {
-      handleSendMessage() // Send first message silently
-      setIsFirstMessage(false)
+    if (id !== "new") {
+      const firstMsg = searchParams.get("firstMsg");
+      if (firstMsg) {
+        setFirstMsgState({ ready: true, value: firstMsg });
+        setInputValue(firstMsg); // Set input value to firstMsg
+        // Remove firstMsg from URL after sending
+        const url = new URL(window.location.href);
+        url.searchParams.delete("firstMsg");
+        window.history.replaceState({}, document.title, url.pathname);
+      }
     }
-  }, [isFirstMessage])
+  }, [id, searchParams]);
+
+  useEffect(() => {
+
+    if (firstMsgState.ready && firstMsgState.value.trim()) {
+      handleSendMessage() // Send first message silently
+      setFirstMsgState({ ready: false, value: "" });
+    }
+  }, [firstMsgState])
+
 
   const handleSendMessage = async () => {
+
     if (!inputValue.trim()) return
 
     const userMessage: Message = {
@@ -242,6 +250,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       sender: "user",
       timestamp: new Date().toISOString(),
     }
+
 
     setMessages((prev) => [...prev, userMessage])
     setInputValue("")
@@ -256,12 +265,14 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
             "Content-Type": "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
-          body: JSON.stringify(deviceId ? { device_id: deviceId } : {}),
+          body: JSON.stringify({
+            ...(deviceId ? { device_id: deviceId } : {}),
+          }),
         })
         const json = await res.json()
-        if (!json.success || !json.conversation_id) throw new Error(json.message || "Failed to create conversation")
+        if (!json.success || !json.data.conversation_id) throw new Error(json.message || "Failed to create conversation")
         // Redirect to new conversation page and send the message after navigation
-        router.replace(`/admin/features/conversation/chat/${json.conversation_id}?firstMsg=${encodeURIComponent(userMessage.content)}`)
+        router.replace(`/admin/features/conversation/chat/${json.data.conversation_id}?firstMsg=${encodeURIComponent(userMessage.content)}`)
         return
       } catch (err: any) {
         toast.error("Failed to create conversation: " + err.message)
@@ -271,18 +282,27 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     }
 
     try {
+      const token = localStorage.getItem("dmc_api_gateway_token")
       const res = await fetch(`${BASEURL}/conversation/rag_query`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: userMessage.content }),
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          query: userMessage.content,
+          ...(token ? { conversation_id: id } : {}),
+        }),
       })
       const json = await res.json()
-      if (!json.success) throw new Error(json.message)
+
+      if (!json.success) throw new Error(json.message || "Failed to get response")
       const aiMessage: Message = {
-        id: Date.now().toString(),
+        id: json.data.pair_id,
         content: json.data.response,
         sender: "ai",
         timestamp: new Date().toISOString(),
+        images_ids: json.data.images_ids || [], // <-- Add this line
       }
       setMessages((prev) => [...prev, aiMessage])
     } catch (err: any) {
@@ -340,15 +360,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     toast.success("Note deleted successfully")
   }
 
-  const toggleSettingsMenu = () => {
-    setShowSettingsMenu(!showSettingsMenu)
-    if (showUserMenu) setShowUserMenu(false)
-  }
-
-  const toggleUserMenu = () => {
-    setShowUserMenu(!showUserMenu)
-    if (showSettingsMenu) setShowSettingsMenu(false)
-  }
 
   const toggleNotesPanel = () => {
     setNotesCollapsed(!notesCollapsed)
@@ -384,283 +395,310 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     toast.info("Share modal closed")
   }
 
+  const components = {
+    p: ({ node, ...props }: any) => <p style={{ overflowWrap: 'break-word' }} {...props} />,
+    li: ({ node, ...props }: any) => <li style={{ overflowWrap: 'break-word' }} {...props} />,
+    // You can also target 'code' for inline code or 'pre' for code blocks
+    code: ({ node, inline, className, children, ...props }: any) => {
+      if (inline) {
+        return <code style={{ overflowWrap: 'break-word' }} className={className} {...props}>{children}</code>;
+      }
+      return (
+        <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }} className={className} {...props}>
+          <code>{children}</code>
+        </pre>
+      );
+    },
+  };
+
   return (
-    <div className="flex h-full overflow-auto p-4 gap-4 bg-[#E6D9D9]">
+    <div className="flex h-full overflow-auto p-4 gap-4 bg-[#E6D9D9] w-full">
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} closeOnClick pauseOnHover />
-      <div className="flex-1 flex flex-col h-full relative bg-white overflow-hidden rounded-[10px] border border-gray-200 shadow-sm">
-        <div className="flex items-center justify-between p-4 border-b z-10 bg-white border-gray-200 text-[#2d336b] rounded-t-[10px]">
-          <div className="flex items-center gap-3">
-            <h1 className="text-lg font-medium">{deviceName || "New Conversation"}</h1>
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-white">
-          {messages.map((message) => (
-            <div key={message.id} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`flex max-w-[80%] ${message.sender === "user" ? "flex-row-reverse" : "flex-row"}`}>
-                <div
-                  className={`flex items-center justify-center h-8 w-8 rounded-full flex-shrink-0 ${message.sender === "user" ? "ml-3 bg-[#4045ef]" : `mr-3 bg-gray-200`}`}
-                >
-                  {message.sender === "user" ? (
-                    <User className="h-5 w-5 text-white" />
-                  ) : (
-                    <Bot className="h-5 w-5 text-[#4045ef]" />
-                  )}
-                </div>
-                <div className="flex flex-col">
-                  <div
-                    className={`rounded-[10px] px-4 py-3 ${message.sender === "user"
-                      ? "bg-[#4045ef] text-white"
-                      : "bg-white text-[#2e3139] border border-gray-200"
-                      }`}
-                  >
-                    <div className="text-sm whitespace-pre-line">
-                      <ReactMarkdown>{message.content}</ReactMarkdown>
-                    </div>
-                    <div
-                      className={`text-xs mt-1 ${message.sender === "user" ? "text-blue-100" : "text-[#2e3139]/70"}`}
-                    >
-                      {formatTime(message.timestamp)}
-                    </div>
-                  </div>
-                  {message.sender === "ai" && (
-                    <div className="flex mt-2 space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#4045ef]"
-                        onClick={() => handleSaveNote(message)}
-                      >
-                        <Save className="h-3.5 w-3.5" />
-                        <span>Save as note</span>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#4045ef]"
-                        onClick={() => handleCopyMessage(message.content)}
-                      >
-                        <Copy className="h-3.5 w-3.5" />
-                        <span>Copy</span>
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="flex flex-row">
-                <div className={`flex items-center justify-center h-8 w-8 rounded-full mr-3 bg-gray-200`}>
-                  <Bot className="h-5 w-5 text-[#4045ef]" />
-                </div>
-                <div className={`rounded-[10px] px-4 py-3 bg-white border border-gray-200`}>
-                  <div className="flex space-x-2">
-                    <div
-                      className={`w-2 h-2 rounded-full animate-bounce bg-gray-300`}
-                      style={{ animationDelay: "0ms" }}
-                    />
-                    <div
-                      className={`w-2 h-2 rounded-full animate-bounce bg-gray-300`}
-                      style={{ animationDelay: "300ms" }}
-                    />
-                    <div
-                      className={`w-2 h-2 rounded-full animate-bounce bg-gray-300`}
-                      style={{ animationDelay: "600ms" }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} />
-        </div>
-
-        <div className="border-t p-4 bg-white border-gray-200 rounded-b-[10px]">
-          <div className="flex items-center border rounded-[10px] overflow-hidden pr-2 bg-white border-gray-300">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="text-[#2d336b] hover:text-[#4045ef]"
-              aria-label="Attach file"
-            >
-              <Paperclip className="h-5 w-5" />
-            </Button>
-            <input
-              ref={inputRef}
-              type="text"
-              placeholder="Ask me anything"
-              className="flex-1 border-0 focus:outline-none px-2 py-2 bg-white text-[#2d336b] placeholder-gray-400"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-            />
-            <Button
-              type="button"
-              size="icon"
-              className={cn(
-                "rounded-full h-8 w-8 flex items-center justify-center",
-                inputValue.trim() && !isLoading
-                  ? "bg-[#4045ef] text-white hover:bg-[#3035df]"
-                  : "bg-transparent text-[#2d336b]/50",
-              )}
-              onClick={handleSendMessage}
-              disabled={!inputValue.trim() || isLoading}
-              aria-label="Send message"
-            >
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M8 5v14l11-7-11-7z" fill="currentColor" />
-              </svg>
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {notesCollapsed ? (
-        <div className="w-12 h-full bg-white border border-gray-200 rounded-[10px] shadow-sm flex flex-col items-center py-4 space-y-4">
-          <button onClick={toggleNotesPanel} className="p-2 text-[#2e3139] hover:bg-gray-100 rounded-md">
-            <Menu className="h-5 w-5" />
-          </button>
-          <button className="p-2 text-[#2e3139] hover:bg-gray-100 rounded-md">
-            <FileText className="h-5 w-5" />
-          </button>
+      {isFetchingConversation ? (
+        <div className="flex flex-1 items-center justify-center h-full bg-white rounded-[10px] border border-gray-200 shadow-sm">
+          <Loader />
         </div>
       ) : (
-        <div
-          className={cn(
-            "h-full flex flex-col transition-all duration-300 ease-in-out",
-            notesOpen ? "w-80" : "w-0 opacity-0 overflow-hidden",
-            "bg-white border border-gray-200 rounded-[10px] shadow-sm",
-          )}
-        >
-          <div className="p-4 border-b flex items-center justify-between bg-white border-gray-200 rounded-t-[10px]">
-            <h2 className="font-bold text-[#2e3139]">YOUR NOTES</h2>
-            <button onClick={toggleNotesPanel} className="text-[#2e3139] hover:bg-gray-100 p-1 rounded-md">
-              <Menu className="h-5 w-5" />
-            </button>
-          </div>
+        <>
+          <div className="flex-1 flex flex-col h-full relative bg-white overflow-hidden rounded-[10px] border border-gray-200 shadow-sm">
+            <div className="flex items-center justify-between p-4 border-b z-10 bg-white border-gray-200 text-[#2d336b] rounded-t-[10px]">
+              <div className="flex items-center gap-3">
+                <h1 className="text-lg font-medium">{deviceName || "New Conversation"}</h1>
+              </div>
+            </div>
 
-          <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300">
-            <div className="p-4 space-y-4">
-              {notes.map((note) => (
-                <div key={note.id} className={`border-b pb-4 border-gray-200`}>
-                  <div className="flex items-start gap-3">
-                    {/* <div className={"text-[#2e3139] mt-1"}>â€¢</div> */}
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <h3 className={`font-bold text-[#2e3139]`}>{note.title}</h3>
-                        <button
-                          onClick={() => setDeleteNoteId(deleteNoteId === note.id ? null : note.id)}
-                          className="text-gray-500 hover:text-[#4045ef]"
+            <div className={`flex-1 overflow-y-auto p-4 space-y-6 bg-white max-w-[calc(100% - 16px)]`}>
+              {messages.map((message) => (
+                <div key={message.id} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
+                  <div className={`flex max-w-[700px] ${message.sender === "user" ? "flex-row-reverse" : "flex-row"}`}>
+                    <div
+                      className={`flex items-center justify-center h-8 w-8 rounded-full flex-shrink-0 ${message.sender === "user" ? "ml-3 bg-[#4045ef]" : `mr-3 bg-gray-200`}`}
+                    >
+                      {message.sender === "user" ? (
+                        <User className="h-5 w-5 text-white" />
+                      ) : (
+                        <Bot className="h-5 w-5 text-[#4045ef]" />
+                      )}
+                    </div>
+                    <div className="flex flex-col max-w-[700px]">
+                      <div
+                        className={`rounded-[10px] px-4 py-3 ${message.sender === "user"
+                          ? "bg-[#4045ef] text-white"
+                          : "bg-white text-[#2e3139] border border-gray-200"
+                          }`}
+                      >
+                        <div className="text-sm whitespace-pre-line break-words break-all max-w-[100%]">
+                          <ReactMarkdown components={components}>{message.content}</ReactMarkdown>
+                        </div>
+                        {message.images_ids && message.images_ids.length > 0 && (
+                          <MessageImageSlider images_ids={message.images_ids} />
+                        )}
+                        <div
+                          className={`text-xs mt-1 ${message.sender === "user" ? "text-blue-100" : "text-[#2e3139]/70"}`}
                         >
-                          <FileText className="h-4 w-4" />
-                        </button>
+                          {formatTime(message.timestamp)}
+                        </div>
                       </div>
-                      <p className={`text-sm mt-1 text-[#2e3139]`}>{note.content}</p>
-                      {deleteNoteId === note.id && (
-                        <div className="mt-2 p-2 bg-white rounded-[10px] border border-gray-200 shadow-lg">
-                          <button
-                            onClick={() => handleShareNote(note.id)}
-                            className="flex items-center gap-2 w-full text-left px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded"
+                      {message.sender === "ai" && (
+                        <div className="flex mt-2 space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#4045ef]"
+                            onClick={() => handleSaveNote(message)}
                           >
-                            <svg
-                              className="h-3 w-3"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                            >
-                              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                            </svg>
-                            Share with link
-                          </button>
-                          <button
-                            onClick={() => handleDeleteNote(note.id)}
-                            className="flex items-center gap-2 w-full text-left px-2 py-1 text-xs text-red-600 hover:bg-gray-100 rounded"
+                            <Save className="h-3.5 w-3.5" />
+                            <span>Save as note</span>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#4045ef]"
+                            onClick={() => handleCopyMessage(message.content)}
                           >
-                            <Trash2 className="h-3 w-3" />
-                            Delete this note
-                          </button>
+                            <Copy className="h-3.5 w-3.5" />
+                            <span>Copy</span>
+                          </Button>
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
               ))}
+
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="flex flex-row">
+                    <div className={`flex items-center justify-center h-8 w-8 rounded-full mr-3 bg-gray-200`}>
+                      <Bot className="h-5 w-5 text-[#4045ef]" />
+                    </div>
+                    <div className={`rounded-[10px] px-4 py-3 bg-white border border-gray-200`}>
+                      <div className="flex space-x-2">
+                        <div
+                          className={`w-2 h-2 rounded-full animate-bounce bg-gray-300`}
+                          style={{ animationDelay: "0ms" }}
+                        />
+                        <div
+                          className={`w-2 h-2 rounded-full animate-bounce bg-gray-300`}
+                          style={{ animationDelay: "300ms" }}
+                        />
+                        <div
+                          className={`w-2 h-2 rounded-full animate-bounce bg-gray-300`}
+                          style={{ animationDelay: "600ms" }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div ref={messagesEndRef} />
+            </div>
+
+            <div className="border-t p-4 bg-white border-gray-200 rounded-b-[10px]">
+              <div className="flex items-center border rounded-[10px] overflow-hidden pr-2 bg-white border-gray-300">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="text-[#2d336b] hover:text-[#4045ef]"
+                  aria-label="Attach file"
+                >
+                  <Paperclip className="h-5 w-5" />
+                </Button>
+                <input
+                  ref={inputRef}
+                  type="text"
+                  placeholder="Ask me anything"
+                  className="flex-1 border-0 focus:outline-none px-2 py-2 bg-white text-[#2d336b] placeholder-gray-400"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                />
+                <Button
+                  type="button"
+                  size="icon"
+                  className={cn(
+                    "rounded-full h-8 w-8 flex items-center justify-center",
+                    inputValue.trim() && !isLoading
+                      ? "bg-[#4045ef] text-white hover:bg-[#3035df]"
+                      : "bg-transparent text-[#2d336b]/50",
+                  )}
+                  onClick={handleSendMessage}
+                  disabled={!inputValue.trim() || isLoading}
+                  aria-label="Send message"
+                >
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 5v14l11-7-11-7z" fill="currentColor" />
+                  </svg>
+                </Button>
+              </div>
             </div>
           </div>
 
-          <div className="p-4 border-t bg-white border-gray-200 rounded-b-[10px]">
-            <Button
-              onClick={() =>
-                handleSaveNote(
-                  messages[messages.length - 1] || {
-                    id: "new",
-                    content: "New note",
-                    sender: "ai",
-                    timestamp: new Date().toISOString(),
-                  }
-                )
-              }
-              className="flex items-center gap-2 w-full justify-start px-3 py-2 rounded-[10px] bg-white border border-[#4045ef] hover:bg-[#f1f6ff]"
+          {notesCollapsed ? (
+            <div className="w-12 h-full bg-white border border-gray-200 rounded-[10px] shadow-sm flex flex-col items-center py-4 space-y-4">
+              <button onClick={toggleNotesPanel} className="p-2 text-[#2e3139] hover:bg-gray-100 rounded-md">
+                <Menu className="h-5 w-5" />
+              </button>
+              <button className="p-2 text-[#2e3139] hover:bg-gray-100 rounded-md">
+                <FileText className="h-5 w-5" />
+              </button>
+            </div>
+          ) : (
+            <div
+              className={cn(
+                "h-full flex flex-col transition-all duration-300 ease-in-out",
+                notesOpen ? "w-80" : "w-0 opacity-0 overflow-hidden",
+                "bg-white border border-gray-200 rounded-[10px] shadow-sm",
+              )}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-[#4045ef]"
-              >
-                <path d="M12 5v14" />
-                <path d="M5 12h14" />
-              </svg>
-              <span className="text-[#4045ef]">Save as note</span>
-            </Button>
-          </div>
-        </div>
-      )}
+              <div className="p-4 border-b flex items-center justify-between bg-white border-gray-200 rounded-t-[10px]">
+                <h2 className="font-bold text-[#2e3139]">YOUR NOTES</h2>
+                <button onClick={toggleNotesPanel} className="text-[#2e3139] hover:bg-gray-100 p-1 rounded-md">
+                  <Menu className="h-5 w-5" />
+                </button>
+              </div>
 
-      {showShareModal && shareNoteId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <h2 className="text-lg font-medium mb-4 text-[#2e3139]">
-              "{notes.find((n) => n.id === shareNoteId)?.title}"
-            </h2>
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Share link:</label>
-              <input
-                type="text"
-                value={shareLink}
-                readOnly
-                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm"
-              />
+              <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300">
+                <div className="p-4 space-y-4">
+                  {notes.map((note) => (
+                    <div key={note.id} className={`border-b pb-4 border-gray-200`}>
+                      <div className="flex items-start gap-3">
+                        {/* <div className={"text-[#2e3139] mt-1"}>â€¢</div> */}
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between">
+                            <h3 className={`font-bold text-[#2e3139]`}>{note.title}</h3>
+                            <button
+                              onClick={() => setDeleteNoteId(deleteNoteId === note.id ? null : note.id)}
+                              className="text-gray-500 hover:text-[#4045ef]"
+                            >
+                              <FileText className="h-4 w-4" />
+                            </button>
+                          </div>
+                          <p className={`text-sm mt-1 text-[#2e3139]`}>{note.content}</p>
+                          {deleteNoteId === note.id && (
+                            <div className="mt-2 p-2 bg-white rounded-[10px] border border-gray-200 shadow-lg">
+                              <button
+                                onClick={() => handleShareNote(note.id)}
+                                className="flex items-center gap-2 w-full text-left px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded"
+                              >
+                                <svg
+                                  className="h-3 w-3"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                >
+                                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                                </svg>
+                                Share with link
+                              </button>
+                              <button
+                                onClick={() => handleDeleteNote(note.id)}
+                                className="flex items-center gap-2 w-full text-left px-2 py-1 text-xs text-red-600 hover:bg-gray-100 rounded"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                                Delete this note
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-4 border-t bg-white border-gray-200 rounded-b-[10px]">
+                <Button
+                  onClick={() =>
+                    handleSaveNote(
+                      messages[messages.length - 1] || {
+                        id: "new",
+                        content: "New note",
+                        sender: "ai",
+                        timestamp: new Date().toISOString(),
+                      }
+                    )
+                  }
+                  className="flex items-center gap-2 w-full justify-start px-3 py-2 rounded-[10px] bg-white border border-[#4045ef] hover:bg-[#f1f6ff]"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-[#4045ef]"
+                  >
+                    <path d="M12 5v14" />
+                    <path d="M5 12h14" />
+                  </svg>
+                  <span className="text-[#4045ef]">Save as note</span>
+                </Button>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <button
-                onClick={handleCopyShareLink}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
-              >
-                Copy
-              </button>
-              <button
-                onClick={handleCloseShareModal}
-                className="px-4 py-2 bg-[#2d336b] text-white rounded-md hover:bg-[#1e2347] transition-colors"
-              >
-                Done
-              </button>
+          )}
+
+          {showShareModal && shareNoteId && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+                <h2 className="text-lg font-medium mb-4 text-[#2e3139]">
+                  "{notes.find((n) => n.id === shareNoteId)?.title}"
+                </h2>
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Share link:</label>
+                  <input
+                    type="text"
+                    value={shareLink}
+                    readOnly
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm"
+                  />
+                </div>
+                <div className="flex justify-between">
+                  <button
+                    onClick={handleCopyShareLink}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                  >
+                    Copy
+                  </button>
+                  <button
+                    onClick={handleCloseShareModal}
+                    className="px-4 py-2 bg-[#2d336b] text-white rounded-md hover:bg-[#1e2347] transition-colors"
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          )}
+        </>
       )}
     </div>
   )

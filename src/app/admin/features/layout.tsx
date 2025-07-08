@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -18,11 +19,12 @@ import { cn } from "@/lib/utils"
 import { usePathname } from "next/navigation"
 import BASEURL from "../../api/backend/dmc_api_gateway/baseurl"
 import Loader from "@/components/loader/loader"; // Import the Loader component
+import { set } from "date-fns"
 
 interface Conversation {
   id: string
   title: string
-  lastMessage: string
+  deviceName: string
   timestamp: Date
 }
 
@@ -37,20 +39,7 @@ export default function HomeLayout({
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null)
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
-  const [conversations, setConversations] = useState<Conversation[]>([
-    {
-      id: "chat-1685432789000-device-1",
-      title: "Lenovo Thinkpad T570",
-      lastMessage: "How to get the screen?",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
-    },
-    {
-      id: "chat-1685346389000-device-4",
-      title: "Cannon Camera EOS R5",
-      lastMessage: "What's the best lens for portraits?",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2),
-    },
-  ])
+  const [conversations, setConversations] = useState<Conversation[]>([])
 
   const pathname = usePathname()
   const router = useRouter()
@@ -138,6 +127,40 @@ export default function HomeLayout({
     }
   }, [activeConversationMenu])
 
+    // Fetch conversations from API
+  useEffect(() => {
+    const fetchConversations = async () => {
+      const token = localStorage.getItem("dmc_api_gateway_token")
+      if (!token) return
+
+      try {
+        const res = await fetch(`${BASEURL}/conversation/list`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        const json = await res.json()
+        if (json.status && json.data && Array.isArray(json.data.conversations)) {
+          setConversations(
+            json.data.conversations.map((conv: any) => ({
+              id: conv.conversation_id,
+              title: conv.conversation_title || "Untitled",
+              lastMessage: "", // You can fetch last message separately if needed
+              timestamp: new Date(conv.conversation_updated_time),
+              deviceName: conv.device_name,
+            }))
+            
+          )
+          console.log("Conversations fetched:", json.data.conversations)
+        }
+      } catch (error) {
+        console.error("Failed to fetch conversations:", error)
+      }
+    }
+    fetchConversations()
+    
+  }, [setConversations])
+
   const formatRelativeTime = (date: Date) => {
     const now = new Date()
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
@@ -166,12 +189,12 @@ export default function HomeLayout({
         <div className="text-center">
           <h1 className="text-3xl font-bold text-red-600">403 - Forbidden</h1>
           <p className="mt-4 text-gray-600">You do not have permission to access this page.</p>
-          <button
+          <Button
             onClick={() => router.push("/admin/log-in")}
             className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             Go to Login
-          </button>
+          </Button>
         </div>
       </div>
     )
@@ -279,10 +302,12 @@ export default function HomeLayout({
                   >
                     <Link href={`/admin/features/conversation/chat/${conversation.id}`} className="flex-1 min-w-0">
                       <div className="flex items-center">
-                        <span className="font-medium text-sm truncate text-[#2d336b]">{conversation.title}</span>
+                        <span className="font-medium text-sm truncate text-[#2d336b]">
+                          {conversation.deviceName || "Untitled"}
+                        </span>
                       </div>
                       <div className="flex items-center text-xs text-[#2d336b] mt-1">
-                        <span className="truncate">{conversation.lastMessage}</span>
+                        <span className="truncate">{conversation.title}</span>
                       </div>
                     </Link>
                     <div className="flex items-center">
