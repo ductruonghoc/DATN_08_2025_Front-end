@@ -9,15 +9,15 @@ import {
   Upload,
   Plus,
   FileText,
-  Settings,
   MoreHorizontal,
   ChevronDown,
   LogOut,
-  Users,
   Trash2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePathname } from "next/navigation"
+import BASEURL from "../../api/backend/dmc_api_gateway/baseurl"
+import Loader from "@/components/loader/loader"; // Import the Loader component
 
 interface Conversation {
   id: string
@@ -36,6 +36,7 @@ export default function HomeLayout({
   const [activeConversationMenu, setActiveConversationMenu] = useState<string | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null)
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
   const [conversations, setConversations] = useState<Conversation[]>([
     {
       id: "chat-1685432789000-device-1",
@@ -88,6 +89,37 @@ export default function HomeLayout({
     setActiveConversationMenu(activeConversationMenu === conversationId ? null : conversationId)
   }
 
+  //hooks here
+  useEffect(() => {
+    const checkAuthorization = async () => {
+      const token = localStorage.getItem("dmc_api_gateway_token")
+      if (!token) {
+        setIsAuthorized(false)
+        return
+      }
+
+      try {
+        const response = await fetch(`${BASEURL}/auth/admin_authorize`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        if (response.status === 200) {
+          setIsAuthorized(true)
+        } else {
+          setIsAuthorized(false)
+        }
+      } catch (error) {
+        console.error("Authorization check failed:", error)
+        setIsAuthorized(false)
+      }
+    }
+
+    checkAuthorization()
+  }, [])
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
@@ -118,6 +150,31 @@ export default function HomeLayout({
 
   const toggleUserMenu = () => {
     setShowUserMenu(!showUserMenu)
+  }
+
+  if (isAuthorized === null) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100">
+        <Loader /> {/* Replace loading text with the Loader component */}
+      </div>
+    );
+  }
+
+  if (!isAuthorized) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-red-600">403 - Forbidden</h1>
+          <p className="mt-4 text-gray-600">You do not have permission to access this page.</p>
+          <button
+            onClick={() => router.push("/admin/log-in")}
+            className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -217,7 +274,7 @@ export default function HomeLayout({
                     key={conversation.id}
                     className={cn(
                       "flex items-center justify-between rounded-[10px] px-3 py-2 hover:bg-white/50 relative",
-                      pathname.includes(`/admin/features/conversation/chat/${conversation. id}`) ? "bg-white/50" : ""
+                      pathname.includes(`/admin/features/conversation/chat/${conversation.id}`) ? "bg-white/50" : ""
                     )}
                   >
                     <Link href={`/admin/features/conversation/chat/${conversation.id}`} className="flex-1 min-w-0">
@@ -239,7 +296,7 @@ export default function HomeLayout({
                         </button>
                         {activeConversationMenu === conversation.id && (
                           <div
-                            ref={(el) => (conversationMenuRefs.current[conversation.id] = el)}
+                            ref={(el) => { conversationMenuRefs.current[conversation.id] = el }}
                             className="absolute right-0 top-full mt-1 w-48 rounded-[10px] shadow-lg bg-white border border-gray-200 z-50"
                           >
                             <div className="py-1">
@@ -278,7 +335,7 @@ export default function HomeLayout({
           <div className="flex items-center gap-4 relative" ref={userMenuRef}>
             <button onClick={toggleUserMenu} className="flex items-center gap-2 text-[#2d336b] hover:underline">
               <span>User</span>
-              <ChevronDown class posted_at="h-4 w-4" />
+              <ChevronDown className="h-4 w-4" />
             </button>
             {showUserMenu && (
               <div className="absolute right-0 top-full mt-1 w-48 rounded-[10px] shadow-lg bg-white border border-gray-200 z-50">

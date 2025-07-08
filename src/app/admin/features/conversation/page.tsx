@@ -1,14 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Search, ChevronDown, ChevronUp } from "lucide-react"
 import { Input } from "@/components/form/input"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
+import BASEURL from "@/src/app/api/backend/dmc_api_gateway/baseurl"
 
 interface Device {
-  id: string
-  name: string
+  device_id: number
+  device_name: string
   category: string
   brand: string
 }
@@ -30,184 +31,70 @@ export default function ConversationPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const [devices, setDevices] = useState<Device[]>([])
+  const [loading, setLoading] = useState(false)
+  const [prevPageExisted, setPrevPageExisted] = useState(false)
+  const [nextPageExisted, setNextPageExisted] = useState(false)
+  const [allBrands, setAllBrands] = useState<string[]>([])
+  const [allCategories, setAllCategories] = useState<string[]>([])
+  const [categorySearch, setCategorySearch] = useState("")
+  const [brandSearch, setBrandSearch] = useState("")
 
-  // Mock devices data
-  const devices: Device[] = [
-    {
-      id: "device-1",
-      name: "Galaxy S25 Ultra",
-      category: "Smartphone",
-      brand: "Samsung",
-    },
-    {
-      id: "device-2",
-      name: "Titan 18V 1 × 5Ah Li-Ion EXT Cordless Lawnmower & Grass Trimmer Set",
-      category: "Lawnmower",
-      brand: "Titan",
-    },
-    {
-      id: "device-3",
-      name: "Bosch EasyGrassCut / EasyMower 18V 1 × 4.0Ah Li-Ion Power for All Cordless Landscape...",
-      category: "Lawnmower",
-      brand: "Bosch",
-    },
-    {
-      id: "device-4",
-      name: "Aspire Vero 14 Laptop - AV14-52P-55N4",
-      category: "Laptop",
-      brand: "Acer",
-    },
-    {
-      id: "device-5",
-      name: "TV LG QNED 75QNED80TSA",
-      category: "Smart TV",
-      brand: "LG",
-    },
-    {
-      id: "device-6",
-      name: "AQUA Refrigerator Inverter AQR-T238FA(FB)",
-      category: "Refrigerator",
-      brand: "Aqua",
-    },
-    {
-      id: "device-7",
-      name: "Toshiba AW-DUN1800MV(SG)",
-      category: "Washing Machine",
-      brand: "Toshiba",
-    },
-    {
-      id: "device-8",
-      name: "MITSUBISHI ELECTRIC MSY-JW60VF",
-      category: "Air Conditioner",
-      brand: "Mitsubishi",
-    },
-    {
-      id: "device-9",
-      name: "Dell Inspiron 15 3520",
-      category: "Laptop",
-      brand: "Dell",
-    },
-    {
-      id: "device-10",
-      name: "Xiaomi Redmi Note 14 Pro+",
-      category: "Smartphone",
-      brand: "Xiaomi",
-    },
-    {
-      id: "device-11",
-      name: "iPhone 15 Pro Max",
-      category: "Smartphone",
-      brand: "Apple",
-    },
-    {
-      id: "device-12",
-      name: "MacBook Pro 16-inch M3",
-      category: "Laptop",
-      brand: "Apple",
-    },
-    {
-      id: "device-13",
-      name: "Sony WH-1000XM5 Wireless Headphones",
-      category: "Headphones",
-      brand: "Sony",
-    },
-    {
-      id: "device-14",
-      name: "Canon EOS R5 Mirrorless Camera",
-      category: "Camera",
-      brand: "Canon",
-    },
-    {
-      id: "device-15",
-      name: "Nintendo Switch OLED",
-      category: "Gaming Console",
-      brand: "Nintendo",
-    },
-    {
-      id: "device-16",
-      name: "Tesla Model S Plaid",
-      category: "Electric Vehicle",
-      brand: "Tesla",
-    },
-    {
-      id: "device-17",
-      name: "Dyson V15 Detect Cordless Vacuum",
-      category: "Vacuum Cleaner",
-      brand: "Dyson",
-    },
-    {
-      id: "device-18",
-      name: "KitchenAid Artisan Stand Mixer",
-      category: "Kitchen Appliance",
-      brand: "KitchenAid",
-    },
-    {
-      id: "device-19",
-      name: "Nest Learning Thermostat",
-      category: "Smart Home",
-      brand: "Google",
-    },
-    {
-      id: "device-20",
-      name: "Ring Video Doorbell Pro 2",
-      category: "Security Camera",
-      brand: "Ring",
-    },
-    {
-      id: "device-21",
-      name: "Bose QuietComfort 45 Headphones",
-      category: "Headphones",
-      brand: "Bose",
-    },
-    {
-      id: "device-22",
-      name: "iPad Pro 12.9-inch M2",
-      category: "Tablet",
-      brand: "Apple",
-    },
-    {
-      id: "device-23",
-      name: "Microsoft Surface Pro 9",
-      category: "Tablet",
-      brand: "Microsoft",
-    },
-    {
-      id: "device-24",
-      name: "HP Spectre x360 14",
-      category: "Laptop",
-      brand: "HP",
-    },
-    {
-      id: "device-25",
-      name: "Lenovo ThinkPad X1 Carbon Gen 11",
-      category: "Laptop",
-      brand: "Lenovo",
-    },
-  ]
+  // Fetch devices from API
+  useEffect(() => {
+    const fetchDevices = async () => {
+      setLoading(true)
+      try {
+        const params = new URLSearchParams()
+        params.append("offset", currentPage.toString())
+        if (searchQuery) params.append("name", searchQuery)
+        if (selectedBrand) params.append("brand", selectedBrand)
+        if (selectedCategory) params.append("category", selectedCategory)
 
-  // Filter devices based on search query and selected filters
-  const filteredDevices = devices.filter((device) => {
-    let matches = true
-    if (searchQuery) {
-      matches =
-        matches &&
-        (device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          device.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          device.brand.toLowerCase().includes(searchQuery.toLowerCase()))
+        const res = await fetch(`${BASEURL}/pdf_process/devices_for_chat?${params.toString()}`)
+        const json = await res.json()
+        if (json.status && json.data && Array.isArray(json.data.devices)) {
+          setDevices(json.data.devices)
+          setPrevPageExisted(!!json.data.PrevPageExisted)
+          setNextPageExisted(!!json.data.NextPageExisted)
+        } else if (json.status && json.data && json.data.devices) {
+          // In case devices is a single object, not array
+          setDevices([json.data.devices])
+          setPrevPageExisted(!!json.data.PrevPageExisted)
+          setNextPageExisted(!!json.data.NextPageExisted)
+        } else {
+          setDevices([])
+          setPrevPageExisted(false)
+          setNextPageExisted(false)
+        }
+      } catch (e) {
+        setDevices([])
+        setPrevPageExisted(false)
+        setNextPageExisted(false)
+      }
+      setLoading(false)
     }
-    if (selectedCategory) {
-      matches = matches && device.category === selectedCategory
-    }
-    if (selectedBrand) {
-      matches = matches && device.brand === selectedBrand
-    }
-    return matches
-  })
+    fetchDevices()
+  }, [searchQuery, selectedBrand, selectedCategory, currentPage])
 
-  // Pagination
-  const itemsPerPage = 8
-  const totalPages = Math.ceil(filteredDevices.length / itemsPerPage)
-  const paginatedDevices = filteredDevices.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+  // Fetch all brands and device types on mount
+  useEffect(() => {
+    const fetchBrandsAndTypes = async () => {
+      try {
+        const res = await fetch(`${BASEURL}/pdf_process/get_brands_and_device_types`)
+        const json = await res.json()
+        if (json.success && json.data) {
+          setAllBrands((json.data.brands || []).map((b: any) => b.label))
+          setAllCategories((json.data.deviceTypes || json.data.devices || []).map((d: any) => d.label))
+        }
+      } catch (e) {
+        setAllBrands([])
+        setAllCategories([])
+      }
+    }
+    fetchBrandsAndTypes()
+  }, [])
+
 
   const toggleCategoryFilter = () => {
     setShowCategoryFilter(!showCategoryFilter)
@@ -235,31 +122,13 @@ export default function ConversationPage() {
     return `chat-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
   }
 
+  // Update handleDeviceSelect to use API device fields
   const handleDeviceSelect = (device: Device) => {
-    const newConversation: Conversation = {
-      id: generateConversationId(),
-      title: device.name,
-      deviceId: device.id,
-      lastMessage: "",
-      timestamp: new Date().toISOString(),
-      messages: [
-        {
-          id: `welcome-${Date.now()}`,
-          content: `Welcome! How can I help you with your ${device.name}?`,
-          sender: "ai",
-          timestamp: new Date().toISOString(),
-        },
-      ],
-    }
-
     try {
-      const existingConversations = JSON.parse(sessionStorage.getItem("conversations") || "[]")
-      const updatedConversations = [...existingConversations, newConversation]
-      sessionStorage.setItem("conversations", JSON.stringify(updatedConversations))
-      sessionStorage.setItem("selectedDevice", JSON.stringify(device))
-      router.push(`/admin/features/conversation/chat/${newConversation.id}`)
+      sessionStorage.setItem("selectedDeviceId", device.device_id.toString())
+      router.push("/admin/features/conversation/chat/new")
     } catch (error) {
-      console.error("Error saving conversation to sessionStorage:", error)
+      console.error("Error saving device id to sessionStorage:", error)
     }
   }
 
@@ -289,83 +158,14 @@ export default function ConversationPage() {
     }
   }
 
-  // Generate pagination numbers
-  const getPaginationNumbers = () => {
-    const pageNumbers = []
-    const maxVisiblePages = 5
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= totalPages; i++) {
-        pageNumbers.push(i)
-      }
-    } else {
-      if (currentPage <= 3) {
-        for (let i = 1; i <= 4; i++) {
-          pageNumbers.push(i)
-        }
-        pageNumbers.push("...")
-        pageNumbers.push(totalPages)
-      } else if (currentPage >= totalPages - 2) {
-        pageNumbers.push(1)
-        pageNumbers.push("...")
-        for (let i = totalPages - 3; i <= totalPages; i++) {
-          pageNumbers.push(i)
-        }
-      } else {
-        pageNumbers.push(1)
-        pageNumbers.push("...")
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-          pageNumbers.push(i)
-        }
-        pageNumbers.push("...")
-        pageNumbers.push(totalPages)
-      }
-    }
-    return pageNumbers
-  }
-
-  // Enhanced helper functions with more comprehensive data
+  // Helper functions using fetched data
   const getCategoriesForLetter = (letter: string): string[] => {
-    type MyDictionary = {
-      [key: string]: string[]
-      A: string[]
-      B: string[]
-    }
-    const allCategories: MyDictionary = {
-      A: [
-        "Air conditioner",
-        "Air fryer",
-        "Air purifier",
-        "Alarm clock",
-        "Audio equipment",
-        "Amplifier",
-        "Antenna",
-        "Adapter",
-      ],
-      B: [
-        "Barcode scanner",
-        "Battery charger",
-        "Blender",
-        "Bluetooth speaker",
-        "Boiler",
-        "Bread maker",
-        "Binoculars",
-        "Bicycle",
-      ],
-    }
-    return allCategories[letter] || []
+    return allCategories
+      .filter((cat) => cat[0]?.toUpperCase() === letter)
+      .filter((cat) => cat.toLowerCase().includes(categorySearch.toLowerCase()))
   }
-
   const getBrandsForLetter = (letter: string): string[] => {
-    type MyDictionary = {
-      [key: string]: string[]
-      A: string[]
-      B: string[]
-    }
-    const allBrands: MyDictionary = {
-      A: ["Acer", "Alienware", "Apple", "Asus", "AMD", "Amazon", "Anker", "AOC", "Aorus", "Avermedia"],
-      B: ["Bang & Olufsen", "BenQ", "BlackBerry", "Bosch", "Bose", "Brother", "Buffalo", "Beats", "Belkin"],
-    }
-    return allBrands[letter] || []
+    return allBrands.filter((brand) => brand[0]?.toUpperCase() === letter)
   }
 
   return (
@@ -426,8 +226,8 @@ export default function ConversationPage() {
               <Input
                 placeholder="Search categories..."
                 className="w-full border-gray-300"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={categorySearch}
+                onChange={(e) => setCategorySearch(e.target.value)}
               />
             </div>
             <div className="grid grid-cols-3 gap-8 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300">
@@ -493,8 +293,8 @@ export default function ConversationPage() {
               <Input
                 placeholder="Search brands..."
                 className="w-full border-gray-300"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={brandSearch}
+                onChange={(e) => setBrandSearch(e.target.value)}
               />
             </div>
             <div className="grid grid-cols-3 gap-8 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300">
@@ -555,28 +355,32 @@ export default function ConversationPage() {
       {/* Device Table */}
       <div className="border border-gray-200 rounded-md overflow-hidden mb-6 flex-1">
         <div className="max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300">
-          <table className="w-full">
-            <thead className="sticky top-0 bg-white z-10">
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left py-4 px-4 font-medium text-gray-600">Device</th>
-                <th className="text-left py-4 px-4 font-medium text-gray-600">Category</th>
-                <th className="text-left py-4 px-4 font-medium text-gray-600">Brand</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedDevices.map((device, index) => (
-                <tr
-                  key={device.id}
-                  className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} border-b border-gray-200 hover:bg-blue-50 cursor-pointer transition-colors`}
-                  onClick={() => handleDeviceSelect(device)}
-                >
-                  <td className="py-4 px-4 text-[#2e3139]">{device.name}</td>
-                  <td className="py-4 px-4 text-[#2e3139]">{device.category}</td>
-                  <td className="py-4 px-4 text-[#2e3139]">{device.brand}</td>
+          {loading ? (
+            <div className="flex justify-center items-center h-40">Loading...</div>
+          ) : (
+            <table className="w-full">
+              <thead className="sticky top-0 bg-white z-10">
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  <th className="text-left py-4 px-4 font-medium text-gray-600">Device</th>
+                  <th className="text-left py-4 px-4 font-medium text-gray-600">Category</th>
+                  <th className="text-left py-4 px-4 font-medium text-gray-600">Brand</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {devices.map((device, index) => (
+                  <tr
+                    key={device.device_id}
+                    className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} border-b border-gray-200 hover:bg-blue-50 cursor-pointer transition-colors`}
+                    onClick={() => handleDeviceSelect(device)}
+                  >
+                    <td className="py-4 px-4 text-[#2e3139]">{device.device_name}</td>
+                    <td className="py-4 px-4 text-[#2e3139]">{device.category}</td>
+                    <td className="py-4 px-4 text-[#2e3139]">{device.brand}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
 
@@ -584,47 +388,21 @@ export default function ConversationPage() {
       <div className="flex justify-center items-center">
         <div className="flex items-center space-x-2">
           <button
-            onClick={() => setCurrentPage(1)}
-            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={!prevPageExisted || currentPage === 1}
             className="px-3 py-1 text-gray-500 hover:text-gray-700 disabled:opacity-50"
           >
-            «
+            ‹ Prev
           </button>
+          <span className="px-3 py-1 font-semibold text-[#2d336b] bg-gray-100 rounded">
+            Page {currentPage}
+          </span>
           <button
-            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={!nextPageExisted}
             className="px-3 py-1 text-gray-500 hover:text-gray-700 disabled:opacity-50"
           >
-            ‹
-          </button>
-          {getPaginationNumbers().map((pageNumber, index) =>
-            pageNumber === "..." ? (
-              <span key={`ellipsis-${index}`} className="px-3 py-1 text-gray-500">
-                ...
-              </span>
-            ) : (
-              <button
-                key={`page-${pageNumber}`}
-                onClick={() => setCurrentPage(pageNumber as number)}
-                className={`px-3 py-1 rounded ${currentPage === pageNumber ? "bg-[#2d336b] text-white" : "text-gray-700 hover:bg-gray-100"}`}
-              >
-                {pageNumber}
-              </button>
-            ),
-          )}
-          <button
-            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-            disabled={currentPage === totalPages}
-            className="px-3 py-1 text-gray-500 hover:text-gray-700 disabled:opacity-50"
-          >
-            ›
-          </button>
-          <button
-            onClick={() => setCurrentPage(totalPages)}
-            disabled={currentPage === totalPages}
-            className="px-3 py-1 text-gray-500 hover:text-gray-700 disabled:opacity-50"
-          >
-            »
+            Next ›
           </button>
         </div>
       </div>

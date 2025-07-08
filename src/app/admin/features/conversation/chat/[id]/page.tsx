@@ -1,13 +1,16 @@
 "use client"
-
+//React
 import React from "react"
 import { useState, useRef, useEffect } from "react"
+//Next.js
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { User, Bot, Paperclip, Copy, Save, FileText, Trash2, Menu } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast, ToastContainer } from "react-toastify"
 import ReactMarkdown from "react-markdown"
 import BASEURL from "@/src/app/api/backend/dmc_api_gateway/baseurl"
+import { set } from "date-fns"
 
 interface Message {
   id: string
@@ -32,9 +35,21 @@ interface Conversation {
 }
 
 export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
+  //Next.js router
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  //Params retrieval
   const { id } = React.use(params)
+  //State management
   const [inputValue, setInputValue] = useState("")
-  const [messages, setMessages] = useState<Message[]>([])
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: `welcome-${Date.now()}`,
+      content: "Hello! I'm your device manual assistant. I can help you with any questions about how to use your devices. Just ask me anything about setup, troubleshooting, or features!",
+      sender: "ai",
+      timestamp: new Date().toISOString(),
+    },
+  ])
   const [isLoading, setIsLoading] = useState(false)
   const [notesOpen, setNotesOpen] = useState(true)
   const [notesCollapsed, setNotesCollapsed] = useState(false)
@@ -106,6 +121,9 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     },
   ])
   const [deviceName, setDeviceName] = useState("")
+  const [deviceId, setDeviceId] = useState<number | null>(null)
+  const [isFirstMessage, setIsFirstMessage] = useState(false)
+
   const inputRef = useRef<HTMLInputElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const settingsRef = useRef<HTMLDivElement>(null)
@@ -116,42 +134,50 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const [shareLink, setShareLink] = useState("")
 
   useEffect(() => {
+    // Get device id from sessionStorage if available
+    const storedDeviceId = sessionStorage.getItem("selectedDeviceId")
+    setDeviceId(storedDeviceId ? parseInt(storedDeviceId, 10) : null)
     const fetchConversation = async () => {
+      if (id === "new") {
+        setDeviceName("New Conversation")
+        setMessages([]) // No messages for new
+        return
+      }
       try {
-        const storedConversations = sessionStorage.getItem("conversations")
-        let conversations: Conversation[] = []
-        if (storedConversations) {
-          conversations = JSON.parse(storedConversations).map((conv: any) => ({
-            ...conv,
-            timestamp: conv.timestamp,
-            messages: conv.messages?.map((msg: any) => ({
-              ...msg,
-              timestamp: msg.timestamp,
-            })) || [],
-          }))
-        }
-        const currentConversation = conversations.find((conv: Conversation) => conv.id === id)
-        if (currentConversation) {
-          setDeviceName(currentConversation.title)
-          setMessages(currentConversation.messages || [
-            {
-              id: `welcome-${Date.now()}`,
-              content: `Welcome! How can I help you${currentConversation.title !== "New Conversation" ? ` with your ${currentConversation.title}` : ""}?`,
-              sender: "ai",
-              timestamp: new Date().toISOString(),
-            },
-          ])
-        } else {
-          setMessages([
-            {
-              id: `welcome-${Date.now()}`,
-              content: "Welcome! How can I help you?",
-              sender: "ai",
-              timestamp: new Date().toISOString(),
-            },
-          ])
-          setDeviceName("New Conversation")
-        }
+        // const storedConversations = sessionStorage.getItem("conversations")
+        // let conversations: Conversation[] = []
+        // if (storedConversations) {
+        //   conversations = JSON.parse(storedConversations).map((conv: any) => ({
+        //     ...conv,
+        //     timestamp: conv.timestamp,
+        //     messages: conv.messages?.map((msg: any) => ({
+        //       ...msg,
+        //       timestamp: msg.timestamp,
+        //     })) || [],
+        //   }))
+        // }
+        // const currentConversation = conversations.find((conv: Conversation) => conv.id === id)
+        // if (currentConversation) {
+        //   setDeviceName(currentConversation.title)
+        //   setMessages(currentConversation.messages || [
+        //     {
+        //       id: `welcome-${Date.now()}`,
+        //       content: `Welcome! How can I help you${currentConversation.title !== "New Conversation" ? ` with your ${currentConversation.title}` : ""}?`,
+        //       sender: "ai",
+        //       timestamp: new Date().toISOString(),
+        //     },
+        //   ])
+        // } else {
+        //   setMessages([
+        //     {
+        //       id: `welcome-${Date.now()}`,
+        //       content: "Welcome! How can I help you?",
+        //       sender: "ai",
+        //       timestamp: new Date().toISOString(),
+        //     },
+        //   ])
+        //   setDeviceName("New Conversation")
+        // }
       } catch (error) {
         console.error("Error loading conversation from sessionStorage:", error)
         setMessages([
@@ -164,11 +190,21 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         ])
         setDeviceName("New Conversation")
       }
+
+      const firstMsg = searchParams.get("firstMsg")
+      if (firstMsg) {
+        setInputValue(firstMsg)
+        setIsFirstMessage(true)
+        // Remove firstMsg from URL after sending
+        const url = new URL(window.location.href)
+        url.searchParams.delete("firstMsg")
+        window.history.replaceState({}, document.title, url.pathname)
+      }
     }
 
     fetchConversation()
     inputRef.current?.focus()
-  }, [id])
+  }, [id, setDeviceId])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -190,6 +226,13 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     }
   }, [])
 
+  useEffect(() => {
+    if (isFirstMessage) {
+      handleSendMessage() // Send first message silently
+      setIsFirstMessage(false)
+    }
+  }, [isFirstMessage])
+
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return
 
@@ -203,6 +246,29 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     setMessages((prev) => [...prev, userMessage])
     setInputValue("")
     setIsLoading(true)
+    // If this is a new conversation, create it and redirect
+    if (id === "new") {
+      try {
+        const token = localStorage.getItem("dmc_api_gateway_token") // Adjust if you store token elsewhere
+        const res = await fetch(`${BASEURL}/conversation/storing`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify(deviceId ? { device_id: deviceId } : {}),
+        })
+        const json = await res.json()
+        if (!json.success || !json.conversation_id) throw new Error(json.message || "Failed to create conversation")
+        // Redirect to new conversation page and send the message after navigation
+        router.replace(`/admin/features/conversation/chat/${json.conversation_id}?firstMsg=${encodeURIComponent(userMessage.content)}`)
+        return
+      } catch (err: any) {
+        toast.error("Failed to create conversation: " + err.message)
+        setIsLoading(false)
+        return
+      }
+    }
 
     try {
       const res = await fetch(`${BASEURL}/conversation/rag_query`, {
