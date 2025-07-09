@@ -203,7 +203,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-    console.log("Messages updated:", messages)
+  
   }, [messages])
 
   useEffect(() => {
@@ -284,7 +284,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         })
         
         const json = await res.json()
-        console.log("Response from creating conversation:", json)
+   
         if (!json.success || !json.data.conversation_id) throw new Error(json.message || "Failed to create conversation")
         setConversations(prev => [
           {

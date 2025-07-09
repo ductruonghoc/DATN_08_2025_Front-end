@@ -145,7 +145,7 @@ export default function HomeLayout({
             }))
 
           )
-          console.log("Conversations fetched:", json.data.conversations)
+          
         }
       } catch (error) {
         console.error("Failed to fetch conversations:", error)
