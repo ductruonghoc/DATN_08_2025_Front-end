@@ -45,6 +45,7 @@ export default function TrackProgressPage() {
         const res = await fetch(`${BASEURL}/pdf_process/devices?${params.toString()}`)
         const json = await res.json()
         if (json.success && Array.isArray(json.data)) {
+          console.log("Fetched devices:", json.data) // Debugging log
           const mapped: PDFFile[] = json.data
             .filter((item: any) => item.scoring && item.scoring > 0) // Only include items with scoring > 0
             .map((item: any) => ({
@@ -70,6 +71,7 @@ export default function TrackProgressPage() {
                 model: "Unknown", // Not provided by API
               },
             }))
+            
           setPdfFiles(mapped)
         } else {
           setPdfFiles([])

@@ -58,8 +58,8 @@ export default function PDFInformationPage() {
   const pdfViewerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    //const storedPdfId = sessionStorage.getItem("pdf_id") // Lấy pdf_id từ sessionStorage
-    const storedPdfId = 50 //mocked pdf_id
+    const storedPdfId = sessionStorage.getItem("pdf_id") // Lấy pdf_id từ sessionStorage
+    //const storedPdfId = 50 //mocked pdf_id
     if (!storedPdfId) {
       // Nếu không tồn tại pdf_id, chuyển hướng về trang import
       toast.error("PDF ID is missing. Please start from the beginning.")
@@ -296,7 +296,7 @@ export default function PDFInformationPage() {
             {/* Controls */}
             <div className="absolute top-4 left-4 right-4 z-10">
               <div className="flex items-center justify-between bg-white/95 backdrop-blur-sm rounded-lg p-2 shadow-md">
-                <div className="flex items-center gap-2">
+                {/* <div className="flex items-center gap-2">
                   {!snipReady ? (
                     <Button
                       onClick={() => {
@@ -325,7 +325,7 @@ export default function PDFInformationPage() {
                       Confirm Snip
                     </Button>
                   )}
-                </div>
+                </div> */}
                 <div className="flex justify-center items-center gap-4">
                   <div className="flex items-center bg-indigo-50 rounded-lg">
                     <button
@@ -391,7 +391,7 @@ export default function PDFInformationPage() {
             )}
 
             {/* Snipping overlay */}
-            {snipping && snipRect && (
+            {/* {snipping && snipRect && (
               <div
                 style={{
                   position: "absolute",
@@ -405,10 +405,10 @@ export default function PDFInformationPage() {
                   zIndex: 20,
                 }}
               />
-            )}
+            )} */}
 
             {/* Snip preview */}
-            {snipImage && (
+            {/* {snipImage && (
               <div className="absolute bottom-4 left-4 z-30 bg-white p-2 rounded-lg shadow-md border max-w-[200px]">
                 <img src={snipImage || "/placeholder.svg"} alt="Snipped area" className="w-full h-auto rounded" />
                 <Button
@@ -423,7 +423,7 @@ export default function PDFInformationPage() {
                   Close Preview
                 </Button>
               </div>
-            )}
+            )} */}
           </div>
 
           {/* Navigation */}

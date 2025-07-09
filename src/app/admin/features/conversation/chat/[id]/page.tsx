@@ -160,7 +160,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         const loadedMessages: Message[] = []
         const pairs = json.data.pairs
         if (!pairs || !Array.isArray(pairs) || pairs.length === 0) {
-          
+
           return
         }
         pairs.forEach((pair: any) => {
@@ -179,12 +179,13 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
           })
         })
         if (isMounted) {
-          setDeviceName(json.data.title || "Conversation")
           setDeviceId(json.data.device_id ?? null)
           setMessages((prev) => [...prev, ...loadedMessages])
+          setDeviceName(json.data.title || "Conversation")
         }
+
       } catch (error: any) {
-        if (isMounted) setDeviceName("New Conversation")
+
       } finally {
         if (isMounted) setIsFetchingConversation(false)
       }
@@ -220,12 +221,19 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   useEffect(() => {
     if (id !== "new") {
       const firstMsg = searchParams.get("firstMsg");
+      const title = searchParams.get("title");
       if (firstMsg) {
         setFirstMsgState({ ready: true, value: firstMsg });
         setInputValue(firstMsg); // Set input value to firstMsg
         // Remove firstMsg from URL after sending
         const url = new URL(window.location.href);
         url.searchParams.delete("firstMsg");
+        window.history.replaceState({}, document.title, url.pathname);
+      }
+      if (title) {
+        setDeviceName(title)
+        const url = new URL(window.location.href);
+        url.searchParams.delete("title");
         window.history.replaceState({}, document.title, url.pathname);
       }
     }
@@ -267,12 +275,13 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
           },
           body: JSON.stringify({
             ...(deviceId ? { device_id: deviceId } : {}),
+            query: userMessage.content,
           }),
         })
         const json = await res.json()
         if (!json.success || !json.data.conversation_id) throw new Error(json.message || "Failed to create conversation")
         // Redirect to new conversation page and send the message after navigation
-        router.replace(`/admin/features/conversation/chat/${json.data.conversation_id}?firstMsg=${encodeURIComponent(userMessage.content)}`)
+        router.replace(`/admin/features/conversation/chat/${json.data.conversation_id}?firstMsg=${encodeURIComponent(userMessage.content)}&title=${encodeURIComponent(json.data.title)}`)
         return
       } catch (err: any) {
         toast.error("Failed to create conversation: " + err.message)
@@ -292,6 +301,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         body: JSON.stringify({
           query: userMessage.content,
           ...(token ? { conversation_id: id } : {}),
+          ...(deviceId ? { device_id: deviceId } : {}),
         }),
       })
       const json = await res.json()
@@ -396,17 +406,21 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   }
 
   const components = {
-    p: ({ node, ...props }: any) => <p style={{ overflowWrap: 'break-word' }} {...props} />,
-    li: ({ node, ...props }: any) => <li style={{ overflowWrap: 'break-word' }} {...props} />,
-    // You can also target 'code' for inline code or 'pre' for code blocks
+    li: ({ node, ...props }: any) => (
+      <li style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }} {...props} />
+    ),
     code: ({ node, inline, className, children, ...props }: any) => {
       if (inline) {
-        return <code style={{ overflowWrap: 'break-word' }} className={className} {...props}>{children}</code>;
+        return (
+          <code style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }} className={className} {...props}>
+            {children}
+          </code>
+        );
       }
       return (
-        <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }} className={className} {...props}>
+        <code style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', wordBreak: 'break-word' }} className={className} {...props}>
           <code>{children}</code>
-        </pre>
+        </code>
       );
     },
   };
