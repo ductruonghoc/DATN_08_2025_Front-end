@@ -9,7 +9,7 @@ import dynamic from "next/dynamic"
 import { toast, ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import BASEURL from "@/src/app/api/backend/dmc_api_gateway/baseurl"
-import { init } from "next/dist/compiled/webpack/webpack"
+import LazyImage from "@/components/images/lazyImage"
 
 const PDFViewer = dynamic(() => import("./pdf-viewer"), {
   ssr: false,
@@ -52,11 +52,14 @@ export default function PDFInformationPage() {
   const [embedLoading, setEmbedLoading] = useState(false)
   const [paragraphId, setParagraphId] = useState<number | null>(null)
   const [initialSetupDone, setInitialSetupDone] = useState(false)
+  // Add a loading state for each image
+  const [imageLoading, setImageLoading] = useState<{ [id: number]: boolean }>({})
+
   const pdfViewerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const storedPdfId = sessionStorage.getItem("pdf_id") // Lấy pdf_id từ sessionStorage
-    //const storedPdfId = 17 //mocked pdf_id
+    //const storedPdfId = 50 //mocked pdf_id
     if (!storedPdfId) {
       // Nếu không tồn tại pdf_id, chuyển hướng về trang import
       toast.error("PDF ID is missing. Please start from the beginning.")
@@ -83,7 +86,7 @@ export default function PDFInformationPage() {
           setParagraphId(data.page_paragraph?.id || null)
           setIsParagraphModified(!!data.page_paragraph?.modified)
           setTotalPages(data.pdf_number_of_pages || 0)
-          console.log("Total pages:", data.pdf_number_of_pages)
+
           setImages(
             (data.images || []).map((img: any) => ({
               id: img.id,
@@ -141,7 +144,7 @@ export default function PDFInformationPage() {
   }
 
   // const handleDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
-    
+
   // }
 
   // Save paragraph (call API here if needed)
@@ -176,16 +179,34 @@ export default function PDFInformationPage() {
     )
   }
 
-  const handleCheckImage = (imageId: number) => {
+  const handleCheckImage = async (imageId: number) => {
     const image = images.find((img) => img.id === imageId)
     if (!image || !image.description || image.description.trim() === "") {
       toast.error("Image description required")
       return
     }
-    setImages((prev) =>
-      prev.map((img) => (img.id === imageId ? { ...img, checked: true } : img))
-    )
-    toast.success(`Image ${imageId} description saved`)
+    setImageLoading((prev) => ({ ...prev, [imageId]: true }))
+    try {
+      const res = await fetch(`${BASEURL}/pdf_process/save_and_embed_img_alt`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pdf_image_id: imageId,
+          img_alt: image.description,
+        }),
+      })
+      const json = await res.json()
+      if (!json.success) throw new Error(json.message)
+      setImages((prev) =>
+        prev.map((img) => (img.id === imageId ? { ...img, checked: true } : img))
+      )
+      toast.success("Image alt saved and embedded successfully!")
+    } catch (err: any) {
+      toast.error("Failed to embed: " + err.message)
+    }
+    finally {
+      setImageLoading((prev) => ({ ...prev, [imageId]: false }))
+    }
   }
 
   const handleZoomIn = () => setScale((s) => Math.min(s + 0.2, 3))
@@ -238,6 +259,8 @@ export default function PDFInformationPage() {
   }
 
 
+
+
   return (
     <div className="flex flex-col h-full pt-6 bg-gray-50">
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} closeOnClick pauseOnHover />
@@ -273,7 +296,7 @@ export default function PDFInformationPage() {
             {/* Controls */}
             <div className="absolute top-4 left-4 right-4 z-10">
               <div className="flex items-center justify-between bg-white/95 backdrop-blur-sm rounded-lg p-2 shadow-md">
-                <div className="flex items-center gap-2">
+                {/* <div className="flex items-center gap-2">
                   {!snipReady ? (
                     <Button
                       onClick={() => {
@@ -302,7 +325,7 @@ export default function PDFInformationPage() {
                       Confirm Snip
                     </Button>
                   )}
-                </div>
+                </div> */}
                 <div className="flex justify-center items-center gap-4">
                   <div className="flex items-center bg-indigo-50 rounded-lg">
                     <button
@@ -359,7 +382,7 @@ export default function PDFInformationPage() {
             {/* PDF Content */}
             {pdfUrl ? (
               <div className="pt-[80px]" style={{ transform: `scale(${scale})`, transformOrigin: "center center" }}>
-                <PDFViewer pdfUrl={pdfUrl} currentPage={currentPage} onLoadSuccess={() => {}} />
+                <PDFViewer pdfUrl={pdfUrl} currentPage={currentPage} onLoadSuccess={() => { }} />
               </div>
             ) : (
               <div className="text-center p-4">
@@ -368,7 +391,7 @@ export default function PDFInformationPage() {
             )}
 
             {/* Snipping overlay */}
-            {snipping && snipRect && (
+            {/* {snipping && snipRect && (
               <div
                 style={{
                   position: "absolute",
@@ -382,10 +405,10 @@ export default function PDFInformationPage() {
                   zIndex: 20,
                 }}
               />
-            )}
+            )} */}
 
             {/* Snip preview */}
-            {snipImage && (
+            {/* {snipImage && (
               <div className="absolute bottom-4 left-4 z-30 bg-white p-2 rounded-lg shadow-md border max-w-[200px]">
                 <img src={snipImage || "/placeholder.svg"} alt="Snipped area" className="w-full h-auto rounded" />
                 <Button
@@ -400,7 +423,7 @@ export default function PDFInformationPage() {
                   Close Preview
                 </Button>
               </div>
-            )}
+            )} */}
           </div>
 
           {/* Navigation */}
@@ -496,14 +519,16 @@ export default function PDFInformationPage() {
               {activeTab === "images" && (
                 <div className="space-y-6 h-full flex flex-col">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-800">Image Labeling - Page {currentPage}</h3>
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      Image Labeling - Page {currentPage}
+                    </h3>
                     <div className="text-sm text-gray-500">{images.length} images</div>
                   </div>
                   <div className="flex-1 overflow-y-auto space-y-4">
                     {images.map((image) => (
                       <div key={image.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
-                        <img
-                          src={image.src || "/placeholder.svg"}
+                        <LazyImage
+                          imgId={image.id}
                           alt={`Image ${image.id}`}
                           className="w-full h-48 object-cover rounded-md mb-4"
                         />
@@ -520,7 +545,7 @@ export default function PDFInformationPage() {
                           )}
                           <Button
                             onClick={() => handleCheckImage(image.id)}
-                            disabled={!image.description}
+                            disabled={!image.description || imageLoading[image.id]}
                             className={`w-full ${image.checked
                               ? "bg-green-600 hover:bg-green-700 text-white"
                               : image.description
@@ -529,13 +554,11 @@ export default function PDFInformationPage() {
                               } rounded-lg`}
                           >
                             {image.checked ? (
-                              <>
-                                <Check className="w-4 h-4 mr-2" />
-                                Checked
-                              </>
+                              <BadgeCheck className="w-5 h-5 mr-2" />
                             ) : (
-                              "Check Image"
+                              <BadgeX className="w-5 h-5 mr-2" />
                             )}
+                            Image Captioning
                           </Button>
                         </div>
                       </div>

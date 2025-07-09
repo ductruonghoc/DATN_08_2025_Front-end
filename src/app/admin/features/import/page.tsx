@@ -238,17 +238,23 @@ export default function ImportPDFPage() {
 
   const handleOCR = async () => {
     setIsProcessingOCR(true)
+    // Set timeout to 1 hour (3600000 ms)
+    const timeout = 60 * 60 * 1000
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout); // Đặt timeout tùy chỉnh
 
     try {
       const pdfId = sessionStorage.getItem("pdf_id")
       if (!pdfId) {
         toast.error("PDF ID not found in session storage")
         setIsProcessingOCR(false)
+        clearTimeout(id)
         return
       }
 
       const response = await fetch(`${BASEURL}/pdf_process/extract_pdf?pdf_id=${pdfId}`, {
         method: "GET",
+        signal: controller.signal,
       })
 
       if (!response.ok) {

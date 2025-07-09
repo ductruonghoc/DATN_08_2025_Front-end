@@ -1,9 +1,11 @@
+
 import type { Metadata } from 'next'
+//Contexts
 import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Techbot',
-  icons: { 
+  icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon.ico',
     apple: '/favicon.ico',
@@ -22,7 +24,9 @@ export default function RootLayout({
       {/* <head>
         <link rel="icon" href="/image.ico" sizes="any" type='image/x-icon'/>
       </head> */}
-      <body>{children}</body>
+      <body>
+        {children}
+      </body>
     </html>
   )
 }
