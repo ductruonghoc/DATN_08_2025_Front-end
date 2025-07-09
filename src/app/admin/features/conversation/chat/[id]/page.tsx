@@ -12,6 +12,7 @@ import ReactMarkdown from "react-markdown"
 import BASEURL from "@/src/app/api/backend/dmc_api_gateway/baseurl"
 import Loader from "@/components/loader/loader"
 import MessageImageSlider from "@/components/slider/messege"
+import { useConversations } from "@/context/conversation"
 
 interface Message {
   id: string
@@ -135,6 +136,9 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const [showShareModal, setShowShareModal] = useState(false)
   const [shareNoteId, setShareNoteId] = useState<string | null>(null)
   const [shareLink, setShareLink] = useState("")
+
+  //Context for conversations
+  const { conversations, setConversations } = useConversations()
 
   useEffect(() => {
     let isMounted = true
@@ -278,8 +282,19 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
             query: userMessage.content,
           }),
         })
+        
         const json = await res.json()
+        console.log("Response from creating conversation:", json)
         if (!json.success || !json.data.conversation_id) throw new Error(json.message || "Failed to create conversation")
+        setConversations(prev => [
+          {
+            id: json.data.conversation_id,
+            title: json.data.title || "Untitled",
+            deviceName: json.data.device_name || "",
+            timestamp: new Date(json.data.conversation_updated_time),
+          },
+          ...prev,
+        ]);
         // Redirect to new conversation page and send the message after navigation
         router.replace(`/admin/features/conversation/chat/${json.data.conversation_id}?firstMsg=${encodeURIComponent(userMessage.content)}&title=${encodeURIComponent(json.data.title)}`)
         return

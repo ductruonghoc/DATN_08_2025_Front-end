@@ -133,26 +133,8 @@ export default function ConversationPage() {
   }
 
   const handleSkip = () => {
-    const newConversation: Conversation = {
-      id: generateConversationId(),
-      title: "New Conversation",
-      lastMessage: "",
-      timestamp: new Date().toISOString(),
-      messages: [
-        {
-          id: `welcome-${Date.now()}`,
-          content: "Welcome! How can I help you?",
-          sender: "ai",
-          timestamp: new Date().toISOString(),
-        },
-      ],
-    }
-
     try {
-      const existingConversations = JSON.parse(sessionStorage.getItem("conversations") || "[]")
-      const updatedConversations = [...existingConversations, newConversation]
-      sessionStorage.setItem("conversations", JSON.stringify(updatedConversations))
-      router.push(`/admin/features/conversation/chat/${newConversation.id}`)
+      router.push(`/admin/features/conversation/chat/new`)
     } catch (error) {
       console.error("Error saving conversation to sessionStorage:", error)
     }
