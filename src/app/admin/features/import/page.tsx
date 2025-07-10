@@ -6,14 +6,17 @@ import { Button } from "@/components/ui/button"
 import { Upload, Mail, HelpCircle, Plus } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/form/select"
 import { Input } from "@/components/form/input"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { toast, ToastContainer } from "react-toastify"
 import BASEURL from "@/src/app/api/backend/dmc_api_gateway/baseurl"
 import "react-toastify/dist/ReactToastify.css"
 import LoaderWithTimer from "@/components/loader/loaderWithTimer" // Import the LoaderWithTimer component
 
 export default function ImportPDFPage() {
+  //next-navigation
   const router = useRouter()
+  const searchParams = useSearchParams()
+  //states
   const [step, setStep] = useState(1)
   const [isDragging, setIsDragging] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -109,6 +112,22 @@ export default function ImportPDFPage() {
     }
   }, [setIsAgentExtracting, showOCRButton, checkAgentStatus]) // Run once when the component mounts
 
+    useEffect(() => {
+    // Check for scoring query param on mount
+    const scoring = searchParams.get("scoring")
+    if (scoring === "1") {
+      const pdfId = sessionStorage.getItem("pdf_id")
+      if (pdfId) {
+        setStep(2) // Jump to OCR/upload step
+        // Optionally, you could also set showOCRButton to true if you want to show OCR directly
+        setShowOCRButton(true)
+      } else {
+        setStep(1) // Start from beginning if no pdf_id
+      }
+    } else {
+      setStep(1) // Default: start from beginning
+    }
+  }, [searchParams])
 
   const handleNextStep = async () => {
     if (!deviceName.trim() || !deviceBrand || !deviceType) {

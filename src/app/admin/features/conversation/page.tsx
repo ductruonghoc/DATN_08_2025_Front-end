@@ -118,10 +118,6 @@ export default function ConversationPage() {
     setCurrentPage(1)
   }
 
-  const generateConversationId = () => {
-    return `chat-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-  }
-
   // Update handleDeviceSelect to use API device fields
   const handleDeviceSelect = (device: Device) => {
     try {

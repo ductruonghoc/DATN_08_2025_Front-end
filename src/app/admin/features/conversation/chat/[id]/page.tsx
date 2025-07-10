@@ -329,6 +329,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         timestamp: new Date().toISOString(),
         images_ids: json.data.images_ids || [], // <-- Add this line
       }
+
       setMessages((prev) => [...prev, aiMessage])
     } catch (err: any) {
       toast.error("Failed to get response: " + err.message)

@@ -7,6 +7,7 @@ import { Input } from "@/components/form/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/form/select"
 import { useRouter } from "next/navigation"
 import BASEURL from "../../../../api/backend/dmc_api_gateway/baseurl"; // Adjust the import path as necessary
+import { set } from "date-fns"
 
 interface PDFFile {
   id: string
@@ -15,7 +16,7 @@ interface PDFFile {
   progress: {
     current: number
     total: number
-    status: "need-ocr" | "not-embed" | "complete"
+    status: "need-ocr" | "not-full-embeded" | "complete"
   }
   uploadAt: string
   device: {
@@ -32,73 +33,123 @@ export default function TrackProgressPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [pdfFiles, setPdfFiles] = useState<PDFFile[]>([])
   const [loading, setLoading] = useState(false)
+  const [brandFilter, setBrandFilter] = useState("")
+  const [categoryFilter, setCategoryFilter] = useState("")
+  const [hasPrev, setHasPrev] = useState(false)
+  const [hasNext, setHasNext] = useState(false)
+  const [page, setPage] = useState(1)
+  const [allBrands, setAllBrands] = useState<string[]>([])
+  const [allCategories, setAllCategories] = useState<string[]>([])
 
+
+  // Fetch PDF files with filters and pagination
   useEffect(() => {
-    const fetchDevices = async () => {
+    const fetchPDFs = async () => {
       setLoading(true)
       try {
         const params = new URLSearchParams()
-        params.append("offset", "1")
-        if (searchQuery) params.append("name", searchQuery)
-        // You can add brand/category filters here if needed
+        params.append("offset", String(page))
+        if (searchQuery) params.append("nameQuery", searchQuery)
+         
+        if (brandFilter) params.append("brand", brandFilter === "*" ? "" : brandFilter)
+        if (categoryFilter) params.append("category", categoryFilter === "*" ? "" : categoryFilter)
+        params.append("sort", "scoring")
+        // Scoring filter
+        if (statusFilter === "in-progress") {
+          params.append("min_scoring", "1")
+          params.append("max_scoring", "2")
+        } else if (statusFilter === "complete") {
+          params.append("min_scoring", "3")
+          params.append("max_scoring", "3")
+        } else {
+          params.append("min_scoring", "1")
+          params.append("max_scoring", "3")
+        }
 
-        const res = await fetch(`${BASEURL}/pdf_process/devices?${params.toString()}`)
+        const res = await fetch(`${BASEURL}/pdf_process/list_pdfs_states?${params.toString()}`)
         const json = await res.json()
-        if (json.success && Array.isArray(json.data)) {
-
-          const mapped: PDFFile[] = json.data
-            .filter((item: any) => item.scoring && item.scoring > 0) // Only include items with scoring > 0
-            .map((item: any) => ({
-              id: String(item.device_id),
-              filename: item.devicename || `Device_${item.device_id}.pdf`,
-              lastAccess: "N/A", // Not provided by API
-              progress: {
-                current: item.scoring || 0,
-                total: 3, // Placeholder, adjust if API provides
-                status:
-                  item.scoring === 1
-                    ? "need-ocr"
-                    : item.scoring === 2
-                      ? "not-embed"
-                      : item.scoring === 3
-                        ? "complete"
-                        : "in-progress",
-              },
-              uploadAt: "N/A", // Not provided by API
-              device: {
-                brand: "Unknown", // Not provided by API
-                category: "Unknown", // Not provided by API
-                model: "Unknown", // Not provided by API
-              },
-            }))
-            
+        if (json.status && json.data && Array.isArray(json.data.pdfs)) {
+          const mapped: PDFFile[] = json.data.pdfs.map((item: any) => ({
+            id: String(item.pdf_id),
+            filename: item.pdf_label || `Device_${item.device_id}.pdf`,
+            lastAccess: item.pdf_lastModified
+              ? new Date(item.pdf_lastModified).toLocaleString()
+              : "N/A",
+            progress: {
+              current: item.pdf_scoring || 0,
+              total: 3,
+              status:
+                item.pdf_scoring === 1
+                  ? "need-ocr"
+                  : item.pdf_scoring === 2
+                    ? "not-full-embeded"
+                    : item.pdf_scoring === 3
+                      ? "complete"
+                      : "need-ocr",
+            },
+            uploadAt: item.pdf_lastModified
+              ? new Date(item.pdf_lastModified).toLocaleString()
+              : "N/A",
+            device: {
+              brand: item.brand || "Unknown",
+              category: item.category || "Unknown",
+              model: `Device ${item.device_id}`,
+            },
+          }))
           setPdfFiles(mapped)
+          setHasPrev(!!json.data.prevPage)
+          setHasNext(!!json.data.nextPage)
         } else {
           setPdfFiles([])
+          setHasPrev(false)
+          setHasNext(false)
         }
       } catch (e) {
         setPdfFiles([])
+        setHasPrev(false)
+        setHasNext(false)
       }
       setLoading(false)
     }
-    fetchDevices()
-  }, [searchQuery, statusFilter])
+    fetchPDFs()
+  }, [searchQuery, statusFilter, brandFilter, categoryFilter, page])
+  // Fetch all brands and categories for filters
+  useEffect(() => {
+    const fetchBrandsAndTypes = async () => {
+      try {
+        const res = await fetch(`${BASEURL}/pdf_process/get_brands_and_device_types`)
+        const json = await res.json()
+        if (json.success && json.data) {
+          setAllBrands((json.data.brands || []).map((b: any) => b.label))
+          setAllCategories((json.data.deviceTypes || json.data.devices || []).map((d: any) => d.label))
+        }
+      } catch (e) {
+        setAllBrands([])
+        setAllCategories([])
+      }
+    }
+    fetchBrandsAndTypes()
+  }, [setAllBrands, setAllCategories])
 
   const handleRowClick = (file: PDFFile) => {
     setSelectedFile(file)
   }
 
   const handleProcessPDF = () => {
-    router.push("/admin/features//track-progress/finish")
-  }
 
-  const filteredFiles = pdfFiles
-    .filter((file) => {
-      if (statusFilter !== "all") {
-        return true
-      }
-      return true
-    })
+    if (selectedFile && selectedFile.progress.current >= 2) {
+      sessionStorage.setItem("pdf_id", selectedFile.id)
+      router.push("/admin/features/track-progress/finish")
+    } else if (selectedFile?.progress.current === 1) {
+      sessionStorage.setItem("pdf_id", selectedFile.id);
+      router.push("/admin/features/import?scoring=1");
+    }
+    else {
+      // Optionally show a warning or do nothing
+      alert("PDF must be at least OCR processed before importing information.")
+    }
+
+  }
 
   return (
     <div className="flex h-full bg-gray-50">
@@ -108,7 +159,6 @@ export default function TrackProgressPage() {
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-xl font-bold text-[#2e3139]">PROGRESS DASHBOARD</h1>
-
             <div className="flex items-center gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -119,7 +169,30 @@ export default function TrackProgressPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-
+              <Select value={brandFilter} onValueChange={setBrandFilter}>
+                <SelectTrigger className="w-32 border-gray-300 rounded-md">
+                  <SelectValue placeholder="Brand" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="*">All Brands</SelectItem>
+                  {allBrands.map((brand) => (
+                    <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+                  ))}
+                  {/* Add more brands as needed */}
+                </SelectContent>
+              </Select>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-32 border-gray-300 rounded-md">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="*">All Categories</SelectItem>
+                  {allCategories.map((cat) => (
+                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                  {/* Add more categories as needed */}
+                </SelectContent>
+              </Select>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-32 border-gray-300 rounded-md">
                   <SelectValue placeholder="Status" />
@@ -132,82 +205,79 @@ export default function TrackProgressPage() {
               </Select>
             </div>
           </div>
-
           {/* Table */}
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             {loading ? (
               <div className="p-8 text-center text-gray-500">Loading...</div>
             ) : (
               <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="text-left py-3 px-4 font-medium text-gray-600 text-sm">Filename</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-600 text-sm">Last Access</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-600 text-sm">Progress</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-600 text-sm">Status</th>
+                <thead>
+                  <tr className="bg-gray-100 text-left">
+                    <th className="px-4 py-2">Filename</th>
+                    <th className="px-4 py-2">Brand</th>
+                    <th className="px-4 py-2">Category</th>
+                    <th className="px-4 py-2">Progress</th>
+                    <th className="px-4 py-2">Status</th>
+                    <th className="px-4 py-2">Last Modified</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredFiles.map((file) => (
-                    <tr
-                      key={file.id}
-                      className={`border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${selectedFile?.id === file.id ? "bg-blue-50" : ""
-                        }`}
-                      onClick={() => handleRowClick(file)}
-                    >
-                      <td className="py-4 px-4 text-sm text-[#2e3139]">{file.filename}</td>
-                      <td className="py-4 px-4 text-sm text-gray-600">{file.lastAccess}</td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-32">
-                            <div
-                              className={`h-2 rounded-full ${file.progress.status === "complete" ? "bg-green-500" : "bg-blue-500"
-                                }`}
-                              style={{ width: `${(file.progress.current / file.progress.total) * 100}%` }}
-                            ></div>
-                          </div>
-                          {/* <span className="text-xs text-gray-500 whitespace-nowrap">
-                            Pages: {file.progress.current}/{file.progress.total}
-                          </span> */}
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className={`w-2 h-2 rounded-full ${file.progress.status === "complete"
-                                ? "bg-green-500"
-                                : file.progress.status === "need-ocr"
-                                  ? "bg-yellow-400"
-                                  : file.progress.status === "not-embed"
-                                    ? "bg-blue-500"
-                                    : "bg-gray-300"
-                              }`}
-                          ></div>
-                          <span
-                            className={`text-sm font-medium ${file.progress.status === "complete"
-                                ? "text-green-600"
-                                : file.progress.status === "need-ocr"
-                                  ? "text-yellow-600"
-                                  : file.progress.status === "not-embed"
-                                    ? "text-blue-600"
-                                    : "text-gray-600"
-                              }`}
-                          >
-                            {file.progress.status === "complete"
-                              ? "Complete"
-                              : file.progress.status === "need-ocr"
-                                ? "Need OCR"
-                                : file.progress.status === "not-embed"
-                                  ? "Not yet embed all"
-                                  : "In Progress"}
-                          </span>
-                        </div>
-                      </td>
+                  {pdfFiles.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="text-center py-6 text-gray-400">No PDF files found.</td>
                     </tr>
-                  ))}
+                  ) : (
+                    pdfFiles.map((file) => {
+                      let barColor = "";
+                      if (file.progress.status === "not-full-embeded") barColor = "bg-yellow-200"; // orange yellow
+                      else if (file.progress.status === "need-ocr") barColor = "bg-sky-200"; // sky blue
+                      else if (file.progress.status === "complete") barColor = "bg-green-200"; // mint green
+                      const percent = Math.round((file.progress.current / file.progress.total) * 100);
+
+                      return (
+                        <tr
+                          key={file.id}
+                          className={`hover:bg-gray-50 cursor-pointer`}
+                          onClick={() => handleRowClick(file)}
+                        >
+                          <td className="px-4 py-2">{file.filename}</td>
+                          <td className="px-4 py-2">{file.device.brand}</td>
+                          <td className="px-4 py-2">{file.device.category}</td>
+                          <td className="px-4 py-2 w-40">
+                            <div className="w-full bg-gray-200 rounded h-3 relative">
+                              <div
+                                className={`h-3 rounded ${barColor}`}
+                                style={{ width: `${percent}%` }}
+                              ></div>
+
+                            </div>
+                          </td>
+                          <td className="px-4 py-2 capitalize">{file.progress.status.replace("-", " ")}</td>
+                          <td className="px-4 py-2">{file.lastAccess}</td>
+                        </tr>
+                      )
+                    })
+                  )}
                 </tbody>
               </table>
             )}
+          </div>
+          {/* Pagination */}
+          <div className="flex justify-end gap-2 mt-4">
+            <Button
+              variant="outline"
+              disabled={!hasPrev || loading}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              disabled={!hasNext || loading}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Next
+            </Button>
           </div>
         </div>
       </div>

@@ -3,8 +3,8 @@
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, Check, BadgeCheck, BadgeX } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { ChevronLeft, ChevronRight, BadgeCheck, BadgeX } from "lucide-react"
+import { useRouter, useSearchParams } from "next/navigation"
 import dynamic from "next/dynamic"
 import { toast, ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
@@ -32,8 +32,9 @@ interface ImageData {
 
 export default function PDFInformationPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
+  const [totalPages, setTotalPages] = useState(0)
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [pdfName, setPdfName] = useState<string>("")
   const [deviceInfo, setDeviceInfo] = useState({ name: "", brand: "", type: "" })
@@ -47,19 +48,24 @@ export default function PDFInformationPage() {
   const [snipRect, setSnipRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
   const [snipStart, setSnipStart] = useState<{ x: number; y: number } | null>(null)
   const [snipImage, setSnipImage] = useState<string | null>(null)
-  const [snipReady, setSnipReady] = useState(false)
+  //const [snipReady, setSnipReady] = useState(false)
   const [pdfId, setPdfId] = useState<number | null>(null)
   const [embedLoading, setEmbedLoading] = useState(false)
   const [paragraphId, setParagraphId] = useState<number | null>(null)
   const [initialSetupDone, setInitialSetupDone] = useState(false)
+
   // Add a loading state for each image
   const [imageLoading, setImageLoading] = useState<{ [id: number]: boolean }>({})
+
+  //State related
+  const isLastPage = currentPage === totalPages
+  const canViewProcesses = isLastPage && isParagraphModified
 
   const pdfViewerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const storedPdfId = sessionStorage.getItem("pdf_id") // Lấy pdf_id từ sessionStorage
-    //const storedPdfId = 50 //mocked pdf_id
+    //const storedPdfId = 57 //mocked pdf_id
     if (!storedPdfId) {
       // Nếu không tồn tại pdf_id, chuyển hướng về trang import
       toast.error("PDF ID is missing. Please start from the beginning.")
@@ -134,6 +140,16 @@ export default function PDFInformationPage() {
     }
     fetchPageData()
   }, [currentPage, pdfId, initialSetupDone, setParagraph, setParagraphId, setIsParagraphModified, setImages])
+
+  useEffect(() => {
+    const pageParam = searchParams.get("page_number")
+    if (pageParam) {
+      const pageNum = parseInt(pageParam, 10)
+      if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= totalPages) {
+        setCurrentPage(pageNum)
+      }
+    }
+  }, [searchParams, totalPages])
 
   const nextPage = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1)
@@ -567,6 +583,19 @@ export default function PDFInformationPage() {
                 </div>
               )}
             </div>
+
+             {/* View Processes Button */}
+            {canViewProcesses && (
+              <Button
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white mt-4"
+                onClick={() => {
+                  // Optionally set sessionStorage/pdf_id again if needed
+                  router.push("/admin/features/track-progress/finish")
+                }}
+              >
+                View Processes
+              </Button>
+            )}
 
             {/* Progress */}
             {/* <div className="mt-4 p-4 bg-gray-50 rounded-lg">
