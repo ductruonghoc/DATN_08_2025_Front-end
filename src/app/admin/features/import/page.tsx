@@ -1,7 +1,6 @@
 "use client"
 
-import type React from "react"
-import { useState, useRef, useEffect, useCallback } from "react"
+import React, { useState, useRef, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Upload, Mail, HelpCircle, Plus } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/form/select"
@@ -10,21 +9,19 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { toast, ToastContainer } from "react-toastify"
 import BASEURL from "@/src/app/api/backend/dmc_api_gateway/baseurl"
 import "react-toastify/dist/ReactToastify.css"
-import LoaderWithTimer from "@/components/loader/loaderWithTimer" // Import the LoaderWithTimer component
+import LoaderWithTimer from "@/components/loader/loaderWithTimer"
 
 export default function ImportPDFPage() {
-  //next-navigation
   const router = useRouter()
   const searchParams = useSearchParams()
-  //states
   const [step, setStep] = useState(1)
   const [isDragging, setIsDragging] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
-  const [isProcessingOCR, setIsProcessingOCR] = useState(false) // New state for OCR processing
+  const [isProcessingOCR, setIsProcessingOCR] = useState(false)
   const [pdfName, setPdfName] = useState("")
   const [deviceName, setDeviceName] = useState("")
-  const [showOCRButton, setShowOCRButton] = useState(false) // New state to show OCR button
+  const [showOCRButton, setShowOCRButton] = useState(false)
   const [deviceBrand, setDeviceBrand] = useState<number | null>(null)
   const [deviceType, setDeviceType] = useState<number | null>(null)
   const [showAddBrandModal, setShowAddBrandModal] = useState(false)
@@ -33,54 +30,37 @@ export default function ImportPDFPage() {
   const [deviceTypes, setDeviceTypes] = useState<{ id: number; label: string }[]>([])
   const [newBrandName, setNewBrandName] = useState("")
   const [newTypeName, setNewTypeName] = useState("")
-  const [isAgentExtracting, setIsAgentExtracting] = useState(false) // New state to track agent status
-
+  const [isAgentExtracting, setIsAgentExtracting] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
- const checkAgentStatus = useCallback(() => {
-  let interval: NodeJS.Timeout | null = null;
-
-  const fetchAgentStatus = async () => {
-    try {
-      const response = await fetch(`${BASEURL}/pdf_process/agent_is_extracting_status`, {
-        method: "GET",
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success) {
-          setIsAgentExtracting(result.agent_is_extracting);
-
-          // Stop the interval if the agent is no longer extracting
-          if (!result.agent_is_extracting && interval) {
-            clearInterval(interval);
+  const checkAgentStatus = useCallback(() => {
+    let interval: NodeJS.Timeout | null = null
+    const fetchAgentStatus = async () => {
+      try {
+        const response = await fetch(`${BASEURL}/pdf_process/agent_is_extracting_status`, { method: "GET" })
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success) {
+            setIsAgentExtracting(result.agent_is_extracting)
+            if (!result.agent_is_extracting && interval) clearInterval(interval)
+          } else {
+            toast.error(result.message || "Failed to fetch agent status")
           }
         } else {
-          toast.error(result.message || "Failed to fetch agent status");
+          toast.error("Failed to fetch agent status")
         }
-      } else {
-        toast.error("Failed to fetch agent status");
+      } catch (error) {
+        console.error("Error fetching agent status:", error)
+        toast.error("An error occurred while checking agent status")
       }
-    } catch (error) {
-      console.error("Error fetching agent status:", error);
-      toast.error("An error occurred while checking agent status");
     }
-  };
-
-  // Start the interval to periodically check the agent status
-  interval = setInterval(fetchAgentStatus, 5000); // 5-second interval
-
-  // Immediately fetch the status once before the interval starts
-  fetchAgentStatus();
-
-  return () => {
-    // Cleanup the interval when the function is called again or the component unmounts
-    if (interval) {
-      clearInterval(interval);
+    interval = setInterval(fetchAgentStatus, 5000)
+    fetchAgentStatus()
+    return () => {
+      if (interval) clearInterval(interval)
     }
-  };
-}, [setIsAgentExtracting]);
+  }, [setIsAgentExtracting])
 
   useEffect(() => {
     const fetchBrandsAndDeviceTypes = async () => {
@@ -102,30 +82,25 @@ export default function ImportPDFPage() {
         toast.error("An error occurred while fetching data")
       }
     }
-
     fetchBrandsAndDeviceTypes()
   }, [setBrands, setDeviceTypes])
 
   useEffect(() => {
-    if (showOCRButton) {
-      checkAgentStatus()
-    }
-  }, [setIsAgentExtracting, showOCRButton, checkAgentStatus]) // Run once when the component mounts
+    if (showOCRButton) checkAgentStatus()
+  }, [setIsAgentExtracting, showOCRButton, checkAgentStatus])
 
-    useEffect(() => {
-    // Check for scoring query param on mount
+  useEffect(() => {
     const scoring = searchParams.get("scoring")
     if (scoring === "1") {
       const pdfId = sessionStorage.getItem("pdf_id")
       if (pdfId) {
-        setStep(2) // Jump to OCR/upload step
-        // Optionally, you could also set showOCRButton to true if you want to show OCR directly
+        setStep(2)
         setShowOCRButton(true)
       } else {
-        setStep(1) // Start from beginning if no pdf_id
+        setStep(1)
       }
     } else {
-      setStep(1) // Default: start from beginning
+      setStep(1)
     }
   }, [searchParams])
 
@@ -134,12 +109,10 @@ export default function ImportPDFPage() {
       toast.error("Please fill in all required device information")
       return
     }
-
     try {
       const response = await fetch(
         `${BASEURL}/pdf_process/new_device?label=${encodeURIComponent(deviceName)}&brand_id=${deviceBrand}&device_type_id=${deviceType}`
       )
-
       if (response.ok) {
         const result = await response.json()
         if (result.success) {
@@ -201,9 +174,7 @@ export default function ImportPDFPage() {
       toast.error("No file selected for upload")
       return
     }
-
     setIsUploading(true)
-
     try {
       const deviceId = sessionStorage.getItem("device_id")
       if (!deviceId) {
@@ -211,7 +182,6 @@ export default function ImportPDFPage() {
         setIsUploading(false)
         return
       }
-
       const response = await fetch(`${BASEURL}/pdf_process/pdf_upload?device_id=${deviceId}&pdf_name=${encodeURIComponent(pdfName)}`, {
         method: "GET",
       })
@@ -220,34 +190,27 @@ export default function ImportPDFPage() {
         setIsUploading(false)
         return
       }
-
       const result = await response.json()
       if (!result.success) {
         toast.error(result.message || "Failed to generate signed URL")
         setIsUploading(false)
         return
       }
-
       const { pdf_id, signed_url } = result.data
-
       const uploadResponse = await fetch(signed_url, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/pdf",
-        },
+        headers: { "Content-Type": "application/pdf" },
         body: selectedFile,
       })
-
       if (!uploadResponse.ok) {
         toast.error("Failed to upload PDF to GCS")
         setIsUploading(false)
         return
       }
-
       sessionStorage.setItem("pdf_id", String(pdf_id))
       toast.success("PDF uploaded successfully!")
       setIsUploading(false)
-      setShowOCRButton(true) // Show the OCR button after upload
+      setShowOCRButton(true)
     } catch (error) {
       console.error("Error during PDF upload:", error)
       toast.error("An error occurred while uploading the PDF")
@@ -257,11 +220,9 @@ export default function ImportPDFPage() {
 
   const handleOCR = async () => {
     setIsProcessingOCR(true)
-    // Set timeout to 1 hour (3600000 ms)
     const timeout = 60 * 60 * 1000
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), timeout); // Đặt timeout tùy chỉnh
-
+    const controller = new AbortController()
+    const id = setTimeout(() => controller.abort(), timeout)
     try {
       const pdfId = sessionStorage.getItem("pdf_id")
       if (!pdfId) {
@@ -270,28 +231,24 @@ export default function ImportPDFPage() {
         clearTimeout(id)
         return
       }
-
       const response = await fetch(`${BASEURL}/pdf_process/extract_pdf?pdf_id=${pdfId}`, {
         method: "GET",
         signal: controller.signal,
       })
-
       if (!response.ok) {
         toast.error("Failed to process OCR")
         setIsProcessingOCR(false)
-        checkAgentStatus(); // Refetch agent status on failure
+        checkAgentStatus()
         return
       }
-
       const result = await response.json()
       if (!result.success) {
         toast.error(result.message || "OCR processing failed")
         setIsProcessingOCR(false)
         return
       }
-
       toast.success("PDF extraction and database update successful!")
-      router.push("/admin/features/import/pdfInformation") // Route to PDFInformationPage
+      router.push("/admin/features/import/pdfInformation")
     } catch (error) {
       console.error("Error during OCR processing:", error)
       toast.error("An error occurred while processing OCR")
@@ -320,52 +277,45 @@ export default function ImportPDFPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-start">
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} closeOnClick pauseOnHover />
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col items-center justify-start p-4">
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} closeOnClick pauseOnHover theme="light" />
 
       {/* Progress Steps */}
-      <div className="flex justify-center w-full max-w-lg my-4">
-        <div className="flex items-center w-full">
+      <div className="flex justify-center w-full max-w-2xl my-6">
+        <div className="flex items-center w-full gap-4">
           <div className="flex flex-col items-center flex-1">
-            <div
-              className={`w-6 h-6 rounded-full flex items-center justify-center text-sm ${step >= 1 ? "bg-indigo-600 text-white" : "border-2 border-gray-300 text-gray-300"
-                }`}
-            >
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${step >= 1 ? "bg-indigo-600 text-white" : "border-2 border-gray-300 text-gray-400"}`}>
               {step > 1 ? "✓" : "1"}
             </div>
-            <span className={`text-xs ${step >= 1 ? "text-gray-800" : "text-gray-500"}`}>Device Info</span>
+            <span className={`mt-2 text-sm font-medium ${step >= 1 ? "text-gray-900" : "text-gray-500"}`}>Device Info</span>
           </div>
-          <div className={`h-0.5 flex-1 ${step >= 2 ? "bg-indigo-600" : "bg-gray-300"}`}></div>
+          <div className={`h-1 flex-1 rounded-full transition-all duration-300 ${step >= 2 ? "bg-indigo-600" : "bg-gray-200"}`}></div>
           <div className="flex flex-col items-center flex-1">
-            <div
-              className={`w-6 h-6 rounded-full flex items-center justify-center text-sm ${step >= 2 ? "bg-indigo-600 text-white" : "border-2 border-gray-300 text-gray-300"
-                }`}
-            >
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${step >= 2 ? "bg-indigo-600 text-white" : "border-2 border-gray-300 text-gray-400"}`}>
               {step > 2 ? "✓" : "2"}
             </div>
-            <span className={`text-xs ${step >= 2 ? "text-gray-800" : "text-gray-500"}`}>PDF Upload</span>
+            <span className={`mt-2 text-sm font-medium ${step >= 2 ? "text-gray-900" : "text-gray-500"}`}>PDF Upload</span>
           </div>
         </div>
       </div>
 
-      <div className="w-full max-w-lg p-4">
+      <div className="w-full max-w-2xl">
         {step === 1 ? (
-          /* Device Information Step */
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="space-y-4">
+          <div className="bg-white rounded-xl shadow-lg p-6 transition-all duration-300">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Device Information</h2>
+            <div className="space-y-6">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Device Brand <span className="text-red-500">*</span>
                 </label>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <Select onValueChange={(value) => setDeviceBrand(Number(value))} value={deviceBrand?.toString() || ""}>
-                    <SelectTrigger className={`${deviceBrand ? "capitalize" : ""} w-full border-gray-300 rounded focus:border-indigo-600`}>
-                      <SelectValue
-                        placeholder="Select brand..." />
+                    <SelectTrigger className="w-full border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
+                      <SelectValue placeholder="Select brand..." />
                     </SelectTrigger>
-                    <SelectContent className="capitalize">
+                    <SelectContent className="rounded-lg bg-white shadow-lg max-h-60 overflow-y-auto">
                       {brands.map((brand) => (
-                        <SelectItem key={brand.id} value={brand.id.toString()}>
+                        <SelectItem key={brand.id} value={brand.id.toString()} className="hover:bg-indigo-50">
                           {brand.label}
                         </SelectItem>
                       ))}
@@ -373,26 +323,25 @@ export default function ImportPDFPage() {
                   </Select>
                   <Button
                     onClick={() => setShowAddBrandModal(true)}
-                    className="w-8 h-8 rounded-full bg-indigo-600 hover:bg-indigo-700 flex items-center justify-center"
+                    className="w-10 h-10 rounded-full bg-indigo-600 hover:bg-indigo-700 flex items-center justify-center transition-all duration-200"
                   >
-                    <Plus className="w-4 h-4 text-white" />
+                    <Plus className="w-5 h-5 text-white" />
                   </Button>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Device Type <span className="text-red-500">*</span>
                 </label>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <Select onValueChange={(value) => setDeviceType(Number(value))} value={deviceType?.toString() || ""}>
-                    <SelectTrigger className={`${deviceType ? "capitalize" : ""} w-full border-gray-300 rounded focus:border-indigo-600`}>
-                      <SelectValue
-                        placeholder="Select type..." />
+                    <SelectTrigger className="w-full border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
+                      <SelectValue placeholder="Select type..." />
                     </SelectTrigger>
-                    <SelectContent className="capitalize">
+                    <SelectContent className="rounded-lg bg-white shadow-lg max-h-60 overflow-y-auto">
                       {deviceTypes.map((type) => (
-                        <SelectItem key={type.id} value={type.id.toString()}>
+                        <SelectItem key={type.id} value={type.id.toString()} className="hover:bg-indigo-50">
                           {type.label}
                         </SelectItem>
                       ))}
@@ -400,36 +349,34 @@ export default function ImportPDFPage() {
                   </Select>
                   <Button
                     onClick={() => setShowAddTypeModal(true)}
-                    className="w-8 h-8 rounded-full bg-indigo-600 hover:bg-indigo-700 flex items-center justify-center"
+                    className="w-10 h-10 rounded-full bg-indigo-600 hover:bg-indigo-700 flex items-center justify-center transition-all duration-200"
                   >
-                    <Plus className="w-4 h-4 text-white" />
+                    <Plus className="w-5 h-5 text-white" />
                   </Button>
                 </div>
-                <div className="flex items-center mt-1 text-xs text-indigo-600">
-                  <HelpCircle className="w-3 h-3 mr-1" />
+                <div className="flex items-center mt-2 text-xs text-indigo-600">
+                  <HelpCircle className="w-4 h-4 mr-1" />
                   <span>Select or add a type</span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Device Name <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <div className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">
-                    <Mail className="w-4 h-4" />
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    <Mail className="w-5 h-5" />
                   </div>
                   <Input
                     value={deviceName}
                     onChange={(e) => setDeviceName(e.target.value)}
                     placeholder="e.g., ThinkPad T570"
-                    className="w-full 
-                              pl-8
-                              border-gray-300 rounded focus:border-indigo-600"
+                    className="w-full pl-10 border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
                   />
                 </div>
-                <div className="flex items-center mt-1 text-xs text-indigo-600">
-                  <HelpCircle className="w-3 h-3 mr-1" />
+                <div className="flex items-center mt-2 text-xs text-indigo-600">
+                  <HelpCircle className="w-4 h-4 mr-1" />
                   <span>Enter a unique device name</span>
                 </div>
               </div>
@@ -437,18 +384,17 @@ export default function ImportPDFPage() {
 
             <Button
               onClick={handleNextStep}
-              className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded py-2 text-base"
+              className="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg py-3 text-base font-medium transition-all duration-200"
             >
               Continue to PDF Upload
             </Button>
           </div>
         ) : (
-          /* PDF Upload Step */
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-center mb-4">
-              <div className="flex justify-center mb-2">
+          <div className="bg-white rounded-xl shadow-lg p-6 transition-all duration-300">
+            <div className="text-center mb-6">
+              <div className="flex justify-center mb-3">
                 <div className="relative">
-                  <div className="flex h-10 w-10 items-center justify-center rounded bg-indigo-600 text-white">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-600 text-white">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"
@@ -457,60 +403,56 @@ export default function ImportPDFPage() {
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className="h-6 w-6"
+                      className="h-7 w-7"
                     >
                       <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
                       <polyline points="14 2 14 8 20 8" />
-                      <path d="M9 13h6" />
+                      <path d="M9  veder13h6" />
                       <path d="M9 17h3" />
                     </svg>
                   </div>
-                  <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500 text-white">
-                    <Upload className="h-2 w-2" />
+                  <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white">
+                    <Upload className="h-3 w-3" />
                   </div>
                 </div>
               </div>
-              <h2 className="text-xl font-semibold text-gray-800">Upload Device Manual</h2>
-              <p className="text-sm text-gray-600">Upload PDF for {deviceName}</p>
+              <h2 className="text-2xl font-bold text-gray-900">Upload Device Manual</h2>
+              <p className="text-sm text-gray-600 mt-1">Upload PDF for {deviceName}</p>
             </div>
-            {
-              !showOCRButton &&
+            {!showOCRButton && (
               <div>
                 {!selectedFile ? (
                   <div
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
-                    className={`mb-4 cursor-pointer rounded border-2 border-dashed p-6 transition-colors ${isDragging ? "border-indigo-600 bg-indigo-50" : "border-gray-300 hover:border-gray-400"
-                      }`}
+                    className={`mb-6 cursor-pointer rounded-lg border-2 border-dashed p-8 transition-all duration-200 ${isDragging ? "border-indigo-500 bg-indigo-50" : "border-gray-300 hover:border-gray-400"}`}
                     onClick={handleUploadClick}
                   >
                     <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".pdf" className="hidden" />
                     <div className="text-center">
-                      <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                      <p className="text-sm text-gray-600">Drag and drop PDF or click to browse</p>
-                      <p className="text-xs text-gray-400">PDF up to 10MB</p>
+                      <Upload className="mx-auto h-10 w-10 text-gray-400 mb-3" />
+                      <p className="text-sm font-medium text-gray-700">Drag and drop PDF or click to browse</p>
+                      <p className="text-xs text-gray-500 mt-1">PDF up to 10MB</p>
                     </div>
                   </div>
                 ) : (
-                  <div className="mb-4 space-y-3">
-                    <div className="rounded border border-gray-200 p-4 bg-gray-50">
-                      <div className="flex items-center">
-                        <svg className="h-6 w-6 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path
-                            fillRule="evenodd"
-                            d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        <div className="ml-3 flex-1">
-                          <p className="text-sm font-medium text-gray-900">{selectedFile.name}</p>
-                          <p className="text-xs text-gray-500">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
-                        </div>
+                  <div className="mb-6 space-y-4">
+                    <div className="rounded-lg border border-gray-200 p-4 bg-gray-50 flex items-center">
+                      <svg className="h-7 w-7 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                          fillRule="evenodd"
+                          d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <div className="ml-4 flex-1">
+                        <p className="text-sm font-medium text-gray-900">{selectedFile.name}</p>
+                        <p className="text-xs text-gray-500">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
                       </div>
                     </div>
                     <div>
-                      <label htmlFor="pdfName" className="block text-xs font-medium text-gray-700 mb-1">
+                      <label htmlFor="pdfName" className="block text-sm font-medium text-gray-700 mb-2">
                         PDF Name (Optional)
                       </label>
                       <Input
@@ -519,40 +461,38 @@ export default function ImportPDFPage() {
                         value={pdfName}
                         onChange={(e) => setPdfName(e.target.value)}
                         placeholder="Enter custom PDF name"
-                        className="w-full rounded border-gray-300 focus:border-indigo-600"
+                        className="w-full rounded-lg border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
                       />
-                      <p className="mt-1 text-xs text-gray-500">Default: {selectedFile.name}</p>
+                      <p className="mt-2 text-xs text-gray-500">Default: {selectedFile.name}</p>
                     </div>
                   </div>
                 )}
               </div>
-            }
+            )}
 
-            {!showOCRButton && (<div className="flex gap-3">
-              {/* <Button onClick={handleBackStep} variant="outline" className="flex-1 rounded py-2 text-base">
-                Back
-              </Button> */}
-              <Button
-                onClick={selectedFile ? handleUpload : handleUploadClick}
-                className="flex-1 rounded bg-indigo-600 hover:bg-indigo-700 py-2 text-base text-white"
-                disabled={isUploading}
-              >
-                {isUploading ? "Processing..." : selectedFile ? "Process PDF" : "Select PDF"}
-              </Button>
-            </div>)}
-
+            {!showOCRButton && (
+              <div className="flex gap-4">
+                <Button
+                  onClick={selectedFile ? handleUpload : handleUploadClick}
+                  className="flex-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 py-3 text-base font-medium text-white transition-all duration-200"
+                  disabled={isUploading}
+                >
+                  {isUploading ? "Processing..." : selectedFile ? "Process PDF" : "Select PDF"}
+                </Button>
+              </div>
+            )}
 
             {showOCRButton && (
-              <div className="mt-4">
+              <div className="mt-6">
                 {isProcessingOCR ? (
                   <div className="flex justify-center">
-                    <LoaderWithTimer /> {/* Show loader while OCR is processing */}
+                    <LoaderWithTimer />
                   </div>
                 ) : (
                   <Button
                     onClick={handleOCR}
-                    className="w-full bg-blue-600 hover:bg-blue-300text-white rounded py-2 text-base"
-                    disabled={isAgentExtracting} // Disable if agent is extracting
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg py-3 text-base font-medium transition-all duration-200"
+                    disabled={isAgentExtracting}
                   >
                     {isAgentExtracting ? "Agent is Extracting..." : "Run OCR"}
                   </Button>
@@ -563,21 +503,20 @@ export default function ImportPDFPage() {
         )}
       </div>
 
-      {/* Add Brand Modal */}
       {showAddBrandModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded shadow p-4 w-full max-w-sm">
-            <h2 className="text-lg font-bold mb-3 text-gray-800">Add New Brand</h2>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md transition-all duration-300">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Add New Brand</h2>
             <div className="mb-4">
-              <label className="block text-xs font-medium text-gray-700 mb-1">Brand Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Brand Name</label>
               <Input
                 value={newBrandName}
                 onChange={(e) => setNewBrandName(e.target.value)}
                 placeholder="Enter brand name"
-                className="w-full"
+                className="w-full rounded-lg border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-end gap-3">
               <Button
                 onClick={() => {
                   setShowAddBrandModal(false)
@@ -585,11 +524,14 @@ export default function ImportPDFPage() {
                   toast.info("Action cancelled")
                 }}
                 variant="outline"
-                className="rounded"
+                className="rounded-lg border-gray-300 hover:bg-gray-100"
               >
                 Cancel
               </Button>
-              <Button onClick={handleAddBrand} className="bg-green-600 hover:bg-green-700 rounded">
+              <Button
+                onClick={handleAddBrand}
+                className="bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white"
+              >
                 Add Brand
               </Button>
             </div>
@@ -597,21 +539,20 @@ export default function ImportPDFPage() {
         </div>
       )}
 
-      {/* Add Type Modal */}
       {showAddTypeModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded shadow p-4 w-full max-w-sm">
-            <h2 className="text-lg font-bold mb-3 text-gray-800">Add New Device Type</h2>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md transition-all duration-300">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Add New Device Type</h2>
             <div className="mb-4">
-              <label className="block text-xs font-medium text-gray-700 mb-1">Type Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Type Name</label>
               <Input
                 value={newTypeName}
                 onChange={(e) => setNewTypeName(e.target.value)}
                 placeholder="Enter device type"
-                className="w-full"
+                className="w-full rounded-lg border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-end gap-3">
               <Button
                 onClick={() => {
                   setShowAddTypeModal(false)
@@ -619,11 +560,14 @@ export default function ImportPDFPage() {
                   toast.info("Action cancelled")
                 }}
                 variant="outline"
-                className="rounded"
+                className="rounded-lg border-gray-300 hover:bg-gray-100"
               >
                 Cancel
               </Button>
-              <Button onClick={handleAddType} className="bg-green-600 hover:bg-green-700 rounded">
+              <Button
+                onClick={handleAddType}
+                className="bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white"
+              >
                 Add Type
               </Button>
             </div>
