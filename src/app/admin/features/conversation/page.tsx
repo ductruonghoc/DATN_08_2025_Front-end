@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, ChevronDown, ChevronUp, Filter, X } from "lucide-react"
+import { Search, ChevronDown, ChevronUp, X } from "lucide-react"
 import { Input } from "@/components/form/input"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
@@ -53,6 +53,7 @@ export default function ConversationPage() {
 
         const res = await fetch(`${BASEURL}/pdf_process/devices_for_chat?${params.toString()}`)
         const json = await res.json()
+
         if (json.status && json.data && Array.isArray(json.data.devices)) {
           setDevices(json.data.devices)
           setPrevPageExisted(!!json.data.PrevPageExisted)
@@ -74,6 +75,7 @@ export default function ConversationPage() {
       }
       setLoading(false)
     }
+
     fetchDevices()
   }, [searchQuery, selectedBrand, selectedCategory, currentPage])
 
@@ -92,6 +94,7 @@ export default function ConversationPage() {
         setAllCategories([])
       }
     }
+
     fetchBrandsAndTypes()
   }, [])
 
@@ -123,7 +126,6 @@ export default function ConversationPage() {
     setCurrentPage(1)
   }
 
-  // Update handleDeviceSelect to use API device fields
   const handleDeviceSelect = (device: Device) => {
     try {
       sessionStorage.setItem("selectedDeviceId", device.device_id.toString())
@@ -141,7 +143,6 @@ export default function ConversationPage() {
     }
   }
 
-  // Helper functions using fetched data
   const getCategoriesForLetter = (letter: string): string[] => {
     return allCategories
       .filter((cat) => cat[0]?.toUpperCase() === letter)
@@ -161,16 +162,12 @@ export default function ConversationPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-slate-800 tracking-tight">
-            Choose Your Device
-          </h1>
-          <p className="text-slate-600 text-sm">
-            Select a device to start your conversation or skip to continue
-          </p>
+          <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Choose Your Device</h1>
+          <p className="text-slate-600 text-sm">Select a device to start your conversation or skip to continue</p>
         </div>
         <Button
           variant="outline"
-          className="rounded-xl border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 shadow-sm font-medium px-6"
+          className="rounded-xl border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 shadow-sm font-medium px-6 bg-transparent"
           onClick={handleSkip}
         >
           Skip
@@ -178,7 +175,7 @@ export default function ConversationPage() {
       </div>
 
       {/* Search and Filter Section */}
-      <div className="flex items-center gap-6 mb-8">
+      <div className="flex items-center gap-6 mb-8 relative">
         <div className="relative flex-1 max-w-lg">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
           <Input
@@ -194,36 +191,242 @@ export default function ConversationPage() {
             <Button
               variant="outline"
               className={`flex items-center gap-2 rounded-2xl border-slate-200 text-slate-700 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 shadow-sm font-medium px-6 py-3 ${
-                selectedCategory ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white'
+                selectedCategory ? "bg-blue-50 border-blue-300 text-blue-700" : "bg-white"
               }`}
               onClick={toggleCategoryFilter}
             >
               Category
               {selectedCategory && (
-                <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                  1
-                </span>
+                <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">1</span>
               )}
               {showCategoryFilter ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
+
+            {/* Category Filter Overlay */}
+            {showCategoryFilter && (
+              <div className="absolute top-full left-0 mt-2 border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xl z-50 w-[600px]">
+                <div className="p-3">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-slate-800">Select Category</h3>
+                    <button
+                      onClick={() => setShowCategoryFilter(false)}
+                      className="text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="flex mb-3">
+                    <Input
+                      placeholder="Search categories..."
+                      className="w-full text-sm border-slate-200 rounded-lg focus:border-blue-300 focus:ring-1 focus:ring-blue-100 transition-all duration-200"
+                      value={categorySearch}
+                      onChange={(e) => setCategorySearch(e.target.value)}
+                    />
+                  </div>
+                  <div className="relative">
+                    <div
+                      className="overflow-y-scroll border border-slate-100 rounded-md bg-gray-50"
+                      style={{
+                        height: "320px",
+                        scrollbarWidth: "auto",
+                        scrollbarColor: "#94a3b8 #f1f5f9",
+                      }}
+                    >
+                      <style jsx>{`
+                        div::-webkit-scrollbar {
+                          width: 14px;
+                        }
+                        div::-webkit-scrollbar-track {
+                          background: #f1f5f9;
+                          border-radius: 6px;
+                        }
+                        div::-webkit-scrollbar-thumb {
+                          background: #94a3b8;
+                          border-radius: 6px;
+                          border: 2px solid #f1f5f9;
+                        }
+                        div::-webkit-scrollbar-thumb:hover {
+                          background: #64748b;
+                        }
+                      `}</style>
+                      <div className="grid grid-cols-3 gap-3 p-3">
+                        {[
+                          "A",
+                          "B",
+                          "C",
+                          "D",
+                          "E",
+                          "F",
+                          "G",
+                          "H",
+                          "I",
+                          "J",
+                          "K",
+                          "L",
+                          "M",
+                          "N",
+                          "O",
+                          "P",
+                          "Q",
+                          "R",
+                          "S",
+                          "T",
+                          "U",
+                          "V",
+                          "W",
+                          "X",
+                          "Y",
+                          "Z",
+                        ].map((letter) => {
+                          const letterCategories = getCategoriesForLetter(letter)
+                          if (letterCategories.length === 0) return null
+
+                          return (
+                            <div key={letter} className="space-y-1">
+                              <h4 className="text-sm font-bold text-slate-800 border-b border-slate-300 pb-0.5">
+                                {letter}
+                              </h4>
+                              <div className="space-y-0.5">
+                                {letterCategories.map((category, idx) => (
+                                  <button
+                                    key={`${letter}-${idx}`}
+                                    className="block w-full text-left px-1.5 py-1.5 hover:bg-blue-50 hover:text-blue-700 rounded text-xs transition-all duration-200 text-slate-700"
+                                    onClick={() => handleCategorySelect(category)}
+                                  >
+                                    {category}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="relative">
             <Button
               variant="outline"
               className={`flex items-center gap-2 rounded-2xl border-slate-200 text-slate-700 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 shadow-sm font-medium px-6 py-3 ${
-                selectedBrand ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white'
+                selectedBrand ? "bg-blue-50 border-blue-300 text-blue-700" : "bg-white"
               }`}
               onClick={toggleBrandFilter}
             >
               Brand
               {selectedBrand && (
-                <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                  1
-                </span>
+                <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">1</span>
               )}
               {showBrandFilter ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
+
+            {/* Brand Filter Overlay */}
+            {showBrandFilter && (
+              <div className="absolute top-full right-0 mt-2 border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xl z-50 w-[600px]">
+                <div className="p-3">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-slate-800">Select Brand</h3>
+                    <button
+                      onClick={() => setShowBrandFilter(false)}
+                      className="text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="flex mb-3">
+                    <Input
+                      placeholder="Search brands..."
+                      className="w-full text-sm border-slate-200 rounded-lg focus:border-blue-300 focus:ring-1 focus:ring-blue-100 transition-all duration-200"
+                      value={brandSearch}
+                      onChange={(e) => setBrandSearch(e.target.value)}
+                    />
+                  </div>
+                  <div className="relative">
+                    <div
+                      className="overflow-y-scroll border border-slate-100 rounded-md bg-gray-50"
+                      style={{
+                        height: "320px",
+                        scrollbarWidth: "auto",
+                        scrollbarColor: "#94a3b8 #f1f5f9",
+                      }}
+                    >
+                      <style jsx>{`
+                        div::-webkit-scrollbar {
+                          width: 14px;
+                        }
+                        div::-webkit-scrollbar-track {
+                          background: #f1f5f9;
+                          border-radius: 6px;
+                        }
+                        div::-webkit-scrollbar-thumb {
+                          background: #94a3b8;
+                          border-radius: 6px;
+                          border: 2px solid #f1f5f9;
+                        }
+                        div::-webkit-scrollbar-thumb:hover {
+                          background: #64748b;
+                        }
+                      `}</style>
+                      <div className="grid grid-cols-3 gap-3 p-3">
+                        {[
+                          "A",
+                          "B",
+                          "C",
+                          "D",
+                          "E",
+                          "F",
+                          "G",
+                          "H",
+                          "I",
+                          "J",
+                          "K",
+                          "L",
+                          "M",
+                          "N",
+                          "O",
+                          "P",
+                          "Q",
+                          "R",
+                          "S",
+                          "T",
+                          "U",
+                          "V",
+                          "W",
+                          "X",
+                          "Y",
+                          "Z",
+                        ].map((letter) => {
+                          const letterBrands = getBrandsForLetter(letter)
+                          if (letterBrands.length === 0) return null
+
+                          return (
+                            <div key={letter} className="space-y-1">
+                              <h4 className="text-sm font-bold text-slate-800 border-b border-slate-300 pb-0.5">
+                                {letter}
+                              </h4>
+                              <div className="space-y-0.5">
+                                {letterBrands.map((brand, idx) => (
+                                  <button
+                                    key={`${letter}-${idx}`}
+                                    className="block w-full text-left px-1.5 py-1.5 hover:bg-blue-50 hover:text-blue-700 rounded text-xs transition-all duration-200 text-slate-700"
+                                    onClick={() => handleBrandSelect(brand)}
+                                  >
+                                    {brand}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {hasActiveFilters && (
@@ -270,110 +473,6 @@ export default function ConversationPage() {
         </div>
       )}
 
-      {/* Category Filter */}
-      {showCategoryFilter && (
-        <div className="mb-6 border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-lg backdrop-blur-sm">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-slate-800">Select Category</h3>
-              <button
-                onClick={() => setShowCategoryFilter(false)}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="flex mb-4">
-              <Input
-                placeholder="Search categories..."
-                className="w-full border-slate-200 rounded-xl focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-all duration-200"
-                value={categorySearch}
-                onChange={(e) => setCategorySearch(e.target.value)}
-              />
-            </div>
-            <div className="grid grid-cols-3 gap-8 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
-              {[
-                "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
-                "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
-              ].map((letter) => {
-                const letterCategories = getCategoriesForLetter(letter)
-                if (letterCategories.length === 0) return null
-                return (
-                  <div key={letter} className="space-y-3">
-                    <h4 className="text-lg font-bold sticky top-0 bg-white py-2 z-10 border-b border-slate-100 text-slate-800">
-                      {letter}
-                    </h4>
-                    <div className="space-y-1">
-                      {letterCategories.map((category, idx) => (
-                        <button
-                          key={`${letter}-${idx}`}
-                          className="block w-full text-left px-3 py-2 hover:bg-blue-50 hover:text-blue-700 rounded-lg text-sm transition-all duration-200 text-slate-700 font-medium"
-                          onClick={() => handleCategorySelect(category)}
-                        >
-                          {category}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Brand Filter */}
-      {showBrandFilter && (
-        <div className="mb-6 border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-lg backdrop-blur-sm">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-slate-800">Select Brand</h3>
-              <button
-                onClick={() => setShowBrandFilter(false)}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="flex mb-4">
-              <Input
-                placeholder="Search brands..."
-                className="w-full border-slate-200 rounded-xl focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-all duration-200"
-                value={brandSearch}
-                onChange={(e) => setBrandSearch(e.target.value)}
-              />
-            </div>
-            <div className="grid grid-cols-3 gap-8 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
-              {[
-                "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
-                "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
-              ].map((letter) => {
-                const letterBrands = getBrandsForLetter(letter)
-                if (letterBrands.length === 0) return null
-                return (
-                  <div key={letter} className="space-y-3">
-                    <h4 className="text-lg font-bold sticky top-0 bg-white py-2 z-10 border-b border-slate-100 text-slate-800">
-                      {letter}
-                    </h4>
-                    <div className="space-y-1">
-                      {letterBrands.map((brand, idx) => (
-                        <button
-                          key={`${letter}-${idx}`}
-                          className="block w-full text-left px-3 py-2 hover:bg-blue-50 hover:text-blue-700 rounded-lg text-sm transition-all duration-200 text-slate-700 font-medium"
-                          onClick={() => handleBrandSelect(brand)}
-                        >
-                          {brand}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Device Table */}
       <div className="border border-slate-200 rounded-2xl overflow-hidden mb-6 flex-1 bg-white shadow-sm">
         <div className="max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
@@ -381,8 +480,14 @@ export default function ConversationPage() {
             <div className="flex justify-center items-center h-40">
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div
+                  className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+                  style={{ animationDelay: "0.1s" }}
+                ></div>
+                <div
+                  className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+                  style={{ animationDelay: "0.2s" }}
+                ></div>
                 <span className="ml-2 text-slate-600 font-medium">Loading devices...</span>
               </div>
             </div>
@@ -441,7 +546,7 @@ export default function ConversationPage() {
             disabled={!prevPageExisted || currentPage === 1}
             className="px-4 py-2 text-slate-600 hover:text-slate-800 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all duration-200 font-medium"
           >
-            Previous 
+            Previous
           </button>
           <span className="px-4 py-2 font-semibold text-blue-700 bg-blue-50 rounded-lg border border-blue-200">
             Page {currentPage}
@@ -451,7 +556,7 @@ export default function ConversationPage() {
             disabled={!nextPageExisted}
             className="px-4 py-2 text-slate-600 hover:text-slate-800 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all duration-200 font-medium"
           >
-             Next 
+            Next
           </button>
         </div>
       </div>

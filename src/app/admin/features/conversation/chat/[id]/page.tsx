@@ -19,7 +19,6 @@ interface Message {
   content: string
   sender: "user" | "ai"
   timestamp: string // Store as ISO string
-  images_ids?: number[]
 }
 
 interface Note {
@@ -27,15 +26,6 @@ interface Note {
   title: string
   content: string
 }
-
-// interface Conversation {
-//   id: string
-//   title: string
-//   deviceId?: string
-//   lastMessage: string
-//   timestamp: string
-//   messages: Message[]
-// }
 
 export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   //Next.js router
@@ -164,7 +154,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         const loadedMessages: Message[] = []
         const pairs = json.data.pairs
         if (!pairs || !Array.isArray(pairs) || pairs.length === 0) {
-
           return
         }
         pairs.forEach((pair: any) => {
@@ -179,7 +168,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
             content: pair.response,
             sender: "ai",
             timestamp: pair.created_time,
-            images_ids: pair.images || [],
           })
         })
         if (isMounted) {
@@ -187,9 +175,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
           setMessages((prev) => [...prev, ...loadedMessages])
           setDeviceName(json.data.title || "Conversation")
         }
-
       } catch (error: any) {
-
       } finally {
         if (isMounted) setIsFetchingConversation(false)
       }
@@ -203,7 +189,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  
   }, [messages])
 
   useEffect(() => {
@@ -228,8 +213,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       const title = searchParams.get("title");
       if (firstMsg) {
         setFirstMsgState({ ready: true, value: firstMsg });
-        setInputValue(firstMsg); // Set input value to firstMsg
-        // Remove firstMsg from URL after sending
+        setInputValue(firstMsg);
         const url = new URL(window.location.href);
         url.searchParams.delete("firstMsg");
         window.history.replaceState({}, document.title, url.pathname);
@@ -244,16 +228,13 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   }, [id, searchParams]);
 
   useEffect(() => {
-
     if (firstMsgState.ready && firstMsgState.value.trim()) {
-      handleSendMessage() // Send first message silently
+      handleSendMessage()
       setFirstMsgState({ ready: false, value: "" });
     }
   }, [firstMsgState])
 
-
   const handleSendMessage = async () => {
-
     if (!inputValue.trim()) return
 
     const userMessage: Message = {
@@ -263,14 +244,12 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       timestamp: new Date().toISOString(),
     }
 
-
     setMessages((prev) => [...prev, userMessage])
     setInputValue("")
     setIsLoading(true)
-    // If this is a new conversation, create it and redirect
     if (id === "new") {
       try {
-        const token = localStorage.getItem("dmc_api_gateway_token") // Adjust if you store token elsewhere
+        const token = localStorage.getItem("dmc_api_gateway_token")
         const res = await fetch(`${BASEURL}/conversation/storing`, {
           method: "POST",
           headers: {
@@ -295,7 +274,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
           },
           ...prev,
         ]);
-        // Redirect to new conversation page and send the message after navigation
         router.replace(`/admin/features/conversation/chat/${json.data.conversation_id}?firstMsg=${encodeURIComponent(userMessage.content)}&title=${encodeURIComponent(json.data.title)}`)
         return
       } catch (err: any) {
@@ -327,7 +305,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         content: json.data.response,
         sender: "ai",
         timestamp: new Date().toISOString(),
-        images_ids: json.data.images_ids || [], // <-- Add this line
       }
 
       setMessages((prev) => [...prev, aiMessage])
@@ -385,7 +362,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     setDeleteNoteId(null)
     toast.success("Note deleted successfully")
   }
-
 
   const toggleNotesPanel = () => {
     setNotesCollapsed(!notesCollapsed)
@@ -472,17 +448,14 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                     </div>
                     <div className="flex flex-col max-w-[700px]">
                       <div
-                        className={`rounded-[10px] px-4 py-3 ${message.sender === "user"
+                        className={`rounded-[10px] px-4 py-3 transition-all duration-200 ease-in-out ${message.sender === "user"
                           ? "bg-[#4045ef] text-white"
                           : "bg-white text-[#2e3139] border border-gray-200"
-                          }`}
+                          } hover:shadow-sm`}
                       >
                         <div className="text-sm whitespace-pre-line break-words break-all max-w-[100%]">
                           <ReactMarkdown components={components}>{message.content}</ReactMarkdown>
                         </div>
-                        {message.images_ids && message.images_ids.length > 0 && (
-                          <MessageImageSlider images_ids={message.images_ids} />
-                        )}
                         <div
                           className={`text-xs mt-1 ${message.sender === "user" ? "text-blue-100" : "text-[#2e3139]/70"}`}
                         >
@@ -494,7 +467,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#4045ef]"
+                            className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#4045ef] transition-colors duration-200"
                             onClick={() => handleSaveNote(message)}
                           >
                             <Save className="h-3.5 w-3.5" />
@@ -503,7 +476,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#4045ef]"
+                            className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#4045ef] transition-colors duration-200"
                             onClick={() => handleCopyMessage(message.content)}
                           >
                             <Copy className="h-3.5 w-3.5" />
@@ -551,7 +524,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="text-[#2d336b] hover:text-[#4045ef]"
+                  className="text-[#2d336b] hover:text-[#4045ef] transition-colors duration-200"
                   aria-label="Attach file"
                 >
                   <Paperclip className="h-5 w-5" />
@@ -560,7 +533,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                   ref={inputRef}
                   type="text"
                   placeholder="Ask me anything"
-                  className="flex-1 border-0 focus:outline-none px-2 py-2 bg-white text-[#2d336b] placeholder-gray-400"
+                  className="flex-1 border-0 focus:outline-none px-2 py-2 bg-white text-[#2d336b] placeholder-gray-400 transition-all duration-200"
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={handleKeyDown}
@@ -569,7 +542,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                   type="button"
                   size="icon"
                   className={cn(
-                    "rounded-full h-8 w-8 flex items-center justify-center",
+                    "rounded-full h-8 w-8 flex items-center justify-center transition-all duration-200",
                     inputValue.trim() && !isLoading
                       ? "bg-[#4045ef] text-white hover:bg-[#3035df]"
                       : "bg-transparent text-[#2d336b]/50",
@@ -587,25 +560,28 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
           </div>
 
           {notesCollapsed ? (
-            <div className="w-12 h-full bg-white border border-gray-200 rounded-[10px] shadow-sm flex flex-col items-center py-4 space-y-4">
-              <button onClick={toggleNotesPanel} className="p-2 text-[#2e3139] hover:bg-gray-100 rounded-md">
+            <div className="w-12 h-full bg-white border border-gray-200 rounded-[10px] shadow-sm flex flex-col items-center py-4 space-y-4 transition-all duration-300 ease-in-out">
+              <button 
+                onClick={toggleNotesPanel} 
+                className="p-2 text-[#2e3139] hover:bg-gray-100 rounded-md transition-colors duration-200 hover:scale-105"
+              >
                 <Menu className="h-5 w-5" />
-              </button>
-              <button className="p-2 text-[#2e3139] hover:bg-gray-100 rounded-md">
-                <FileText className="h-5 w-5" />
               </button>
             </div>
           ) : (
             <div
               className={cn(
-                "h-full flex flex-col transition-all duration-300 ease-in-out",
-                notesOpen ? "w-80" : "w-0 opacity-0 overflow-hidden",
+                "h-full flex flex-col transition-all duration-300 ease-in-out transform",
+                notesOpen ? "w-80 translate-x-0" : "w-0 opacity-0 translate-x-4 overflow-hidden",
                 "bg-white border border-gray-200 rounded-[10px] shadow-sm",
               )}
             >
               <div className="p-4 border-b flex items-center justify-between bg-white border-gray-200 rounded-t-[10px]">
                 <h2 className="font-bold text-[#2e3139]">YOUR NOTES</h2>
-                <button onClick={toggleNotesPanel} className="text-[#2e3139] hover:bg-gray-100 p-1 rounded-md">
+                <button 
+                  onClick={toggleNotesPanel} 
+                  className="text-[#2e3139] hover:bg-gray-100 p-1 rounded-md transition-colors duration-200 hover:scale-105"
+                >
                   <Menu className="h-5 w-5" />
                 </button>
               </div>
@@ -613,15 +589,14 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
               <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300">
                 <div className="p-4 space-y-4">
                   {notes.map((note) => (
-                    <div key={note.id} className={`border-b pb-4 border-gray-200`}>
+                    <div key={note.id} className={`border-b pb-4 border-gray-200 transition-all duration-200 hover:bg-gray-50`}>
                       <div className="flex items-start gap-3">
-                        {/* <div className={"text-[#2e3139] mt-1"}>â€¢</div> */}
                         <div className="flex-1">
                           <div className="flex items-start justify-between">
                             <h3 className={`font-bold text-[#2e3139]`}>{note.title}</h3>
                             <button
                               onClick={() => setDeleteNoteId(deleteNoteId === note.id ? null : note.id)}
-                              className="text-gray-500 hover:text-[#4045ef]"
+                              className="text-gray-500 hover:text-[#4045ef] transition-colors duration-200 hover:scale-105"
                             >
                               <FileText className="h-4 w-4" />
                             </button>
@@ -631,7 +606,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                             <div className="mt-2 p-2 bg-white rounded-[10px] border border-gray-200 shadow-lg">
                               <button
                                 onClick={() => handleShareNote(note.id)}
-                                className="flex items-center gap-2 w-full text-left px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded"
+                                className="flex items-center gap-2 w-full text-left px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded transition-colors duration-200"
                               >
                                 <svg
                                   className="h-3 w-3"
@@ -647,7 +622,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                               </button>
                               <button
                                 onClick={() => handleDeleteNote(note.id)}
-                                className="flex items-center gap-2 w-full text-left px-2 py-1 text-xs text-red-600 hover:bg-gray-100 rounded"
+                                className="flex items-center gap-2 w-full text-left px-2 py-1 text-xs text-red-600 hover:bg-gray-100 rounded transition-colors duration-200"
                               >
                                 <Trash2 className="h-3 w-3" />
                                 Delete this note
@@ -673,7 +648,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                       }
                     )
                   }
-                  className="flex items-center gap-2 w-full justify-start px-3 py-2 rounded-[10px] bg-white border border-[#4045ef] hover:bg-[#f1f6ff]"
+                  className="flex items-center gap-2 w-full justify-start px-3 py-2 rounded-[10px] bg-white border border-[#4045ef] hover:bg-[#f1f6ff] transition-all duration-200 hover:scale-[1.01]"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -698,7 +673,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
 
           {showShareModal && shareNoteId && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+              <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md transform transition-all duration-300 scale-100">
                 <h2 className="text-lg font-medium mb-4 text-[#2e3139]">
                   "{notes.find((n) => n.id === shareNoteId)?.title}"
                 </h2>
@@ -708,19 +683,19 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                     type="text"
                     value={shareLink}
                     readOnly
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm transition-all duration-200"
                   />
                 </div>
                 <div className="flex justify-between">
                   <button
                     onClick={handleCopyShareLink}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-all duration-200 hover:scale-105"
                   >
                     Copy
                   </button>
                   <button
                     onClick={handleCloseShareModal}
-                    className="px-4 py-2 bg-[#2d336b] text-white rounded-md hover:bg-[#1e2347] transition-colors"
+                    className="px-4 py-2 bg-[#2d336b] text-white rounded-md hover:bg-[#1e2347] transition-all duration-200 hover:scale-105"
                   >
                     Done
                   </button>
