@@ -74,7 +74,6 @@ export default function OTPVerificationPage() {
       })
 
       const data = await response.json()
-      console.log("API data:", data)
 
       if (!response.ok || !data.success) {
         setError(data.message || "OTP verification failed.")
@@ -82,7 +81,6 @@ export default function OTPVerificationPage() {
         return
       }
 
-      console.log("OTP valid, navigating...")
       sessionStorage.setItem("otpCode", otpString)
       sessionStorage.setItem("resetEmail", email)
       router.push("/client/forgot-password/reset-password")

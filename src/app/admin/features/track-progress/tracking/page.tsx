@@ -46,7 +46,6 @@ export default function TrackProgressPage() {
       (brandFilter && brandFilter !== "*") ||
       (categoryFilter && categoryFilter !== "*") ||
       statusFilter !== "all";
-    console.log("Has filters:", hasFilters);
     if (hasFilters) {
       setPage(1) // Reset to page 1 if any filter changes
 
