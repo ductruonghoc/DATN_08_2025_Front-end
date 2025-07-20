@@ -147,7 +147,7 @@ export default function TrackProgressPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#e8dcdc] font-sans antialiased" onClick={handleCloseSidebar}>
+    <div className="flex min-h-screen font-sans antialiased" onClick={handleCloseSidebar}>
       <div 
         className={`flex-1 p-4 transition-all duration-300 ${selectedFile ? "mr-80" : ""}`} 
         onClick={(e) => e.stopPropagation()}
@@ -205,7 +205,7 @@ export default function TrackProgressPage() {
               <div className="p-6 text-center text-gray-500 text-sm">Loading...</div>
             ) : (
               <table className="w-full">
-                <thead className="bg-blue-50">
+                <thead>
                   <tr className="text-left text-xs font-medium text-blue-700">
                     <th className="px-4 py-3">Filename</th>
                     <th className="px-4 py-3">Brand</th>
