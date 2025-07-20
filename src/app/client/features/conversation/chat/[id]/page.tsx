@@ -415,7 +415,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                       </div>
                       {message.sender === "ai" && (
                         <div className="flex mt-2 space-x-2">
-                          <Button
+                          {/* <Button
                             variant="ghost"
                             size="sm"
                             className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#4045ef] transition-colors duration-200"
@@ -423,7 +423,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                           >
                             <Save className="h-3.5 w-3.5" />
                             <span>Save as note</span>
-                          </Button>
+                          </Button> */}
                           <Button
                             variant="ghost"
                             size="sm"
