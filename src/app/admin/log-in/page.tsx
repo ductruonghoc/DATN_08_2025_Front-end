@@ -3,14 +3,14 @@ import { User, Lock, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/form/input";
 import { useState } from "react";
-import { useRouter } from "next/navigation"; // Import useRouter
-import BASEURL from "../../api/backend/dmc_api_gateway/baseurl"; // Adjust the import path as necessary
+import { useRouter } from "next/navigation";
+import BASEURL from "../../api/backend/dmc_api_gateway/baseurl";
 
 export default function SignInPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState(""); // State for error message
-  const router = useRouter(); // Initialize useRouter
+  const [errorMessage, setErrorMessage] = useState("");
+  const router = useRouter();
 
   const handleLogin = async () => {
     try {
@@ -28,74 +28,80 @@ export default function SignInPage() {
       const result = await response.json();
 
       if (result.success) {
-        // Store the token in local storage
         localStorage.setItem("dmc_api_gateway_token", result.data.token);
-        setErrorMessage(""); // Clear error message on success
-        router.push("/admin/features"); // Redirect to the features page
+        setErrorMessage("");
+        router.push("/admin/features");
       } else {
-        setErrorMessage(result.message || "Login failed!"); // Set error message
+        setErrorMessage(result.message || "Login failed!");
       }
     } catch (error) {
       console.error("Error during login:", error);
-      setErrorMessage("An error occurred. Please try again."); // Set error message
+      setErrorMessage("An error occurred. Please try again.");
     }
   };
 
   return (
     <div
-      className="min-h-screen bg-black text-white flex flex-col"
+      className="min-h-screen bg-black text-white flex flex-col font-sans"
       style={{
         backgroundImage: "url('/admin.gif')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
-      }}>
-      {/* Blur and opacity overlay */}
+      }}
+    >
       <div className="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm"></div>
       <div className="relative z-10 flex flex-col min-h-screen">
-        <header className="container mx-auto p-4 flex justify-between items-center">
-          <div className="text-2xl font-bold">DMC</div>
+        <header className="container mx-auto p-4 flex items-center">
+          <div className="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-purple-400">
+            TechBot
+          </div>
         </header>
 
-        <main className="flex-1 flex items-center justify-center p-4">
-          <div className="w-full max-w-md space-y-8">
+        <main className="flex-1 flex items-center justify-center p-6">
+          <div className="w-full max-w-md space-y-10 bg-white/95 backdrop-blur-md p-8 rounded-2xl shadow-xl border border-gray-200">
             <div className="text-center">
-              <h1 className="text-3xl font-semibold">Welcome Back</h1>
-              <p className="mt-2">Hi admin, let login with your account</p>
+              <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600">
+                Welcome Back
+              </h1>
+              <p className="mt-3 text-gray-600 text-lg font-medium">
+                Hi admin, please sign in to your account
+              </p>
             </div>
 
-            <form 
-              className="space-y-6 text-black bg-white p-5 rounded-lg shadow-md"
+            <form
+              className="space-y-6"
               onSubmit={(e) => {
-                e.preventDefault(); // Prevent the default form submission
-                handleLogin(); // Call the login handler
-              }}>
-              <div className="space-y-2">
-                <label htmlFor="username" className="block text-sm font-medium">
+                e.preventDefault();
+                handleLogin();
+              }}
+            >
+              <div className="space-y-3">
+                <label htmlFor="username" className="block text-sm font-medium text-gray-700">
                   Username
                 </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User className="h-5 w-5 text-muted-foreground" />
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <User className="h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                   </div>
                   <Input
                     id="username"
                     name="username"
-                    placeholder="example"
+                    placeholder="Enter your username"
                     onChange={(e) => setUsername(e.target.value)}
-                    className="pl-10 rounded-full border-2 border-[#a9b5df] focus:border-[#4045ef] w-full placeholder:text-gray-300 py-[22px]"
+                    className="pl-12 pr-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-white text-gray-900 placeholder:text-gray-400 w-full transition-all duration-300 ease-in-out"
                     required
                   />
                 </div>
               </div>
 
-              <div className="space-y-2 ">
-                <label htmlFor="password" className="block text-sm font-medium">
+              <div className="space-y-3">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                   Password
                 </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-muted-foreground" />
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                   </div>
                   <Input
                     id="password"
@@ -103,26 +109,25 @@ export default function SignInPage() {
                     type="password"
                     placeholder="Enter your password"
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 rounded-full border-2 border-[#a9b5df] focus:border-[#4045ef] w-full placeholder:text-gray-300 py-[22px] "
+                    className="pl-12 pr-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-white text-gray-900 placeholder:text-gray-400 w-full transition-all duration-300 ease-in-out"
                     required
                   />
                 </div>
               </div>
 
-              {/* Error message */}
               {errorMessage !== "" && (
-                <p 
-                  className="text-sm text-center bg-red-500 text-white p-2">
-                    <TriangleAlert className="inline mr-1" />
-                    {errorMessage}
-                    </p>
+                <p className="text-sm text-center bg-red-100 text-red-600 p-3 rounded-lg flex items-center justify-center gap-2">
+                  <TriangleAlert className="h-5 w-5" />
+                  {errorMessage}
+                </p>
               )}
 
               <button
                 type="submit"
-                className="w-full bg-[#2e3470] text-white hover:bg-[#232759] rounded-full py-[12px]">
-                Log in
-              </button>
+                className="w-full bg-blue-600 text-white hover:bg-blue-700 rounded-lg py-3 font-semibold text-lg transition-all duration-300 ease-in-out transform hover:scale-105"
+              >
+                Sign In
+              </Button>
             </form>
           </div>
         </main>

@@ -1,13 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search } from "lucide-react"
+import { Search, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/form/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/form/select"
 import { useRouter } from "next/navigation"
-import BASEURL from "../../../../api/backend/dmc_api_gateway/baseurl"; // Adjust the import path as necessary
-import { set } from "date-fns"
+import BASEURL from "../../../../api/backend/dmc_api_gateway/baseurl"
 
 interface PDFFile {
   id: string
@@ -41,8 +40,6 @@ export default function TrackProgressPage() {
   const [allBrands, setAllBrands] = useState<string[]>([])
   const [allCategories, setAllCategories] = useState<string[]>([])
 
-
-  // Fetch PDF files with filters and pagination
   useEffect(() => {
     const fetchPDFs = async () => {
       setLoading(true)
@@ -50,11 +47,9 @@ export default function TrackProgressPage() {
         const params = new URLSearchParams()
         params.append("offset", String(page))
         if (searchQuery) params.append("nameQuery", searchQuery)
-         
         if (brandFilter) params.append("brand", brandFilter === "*" ? "" : brandFilter)
         if (categoryFilter) params.append("category", categoryFilter === "*" ? "" : categoryFilter)
         params.append("sort", "scoring")
-        // Scoring filter
         if (statusFilter === "in-progress") {
           params.append("min_scoring", "1")
           params.append("max_scoring", "2")
@@ -113,7 +108,7 @@ export default function TrackProgressPage() {
     }
     fetchPDFs()
   }, [searchQuery, statusFilter, brandFilter, categoryFilter, page])
-  // Fetch all brands and categories for filters
+
   useEffect(() => {
     const fetchBrandsAndTypes = async () => {
       try {
@@ -129,75 +124,74 @@ export default function TrackProgressPage() {
       }
     }
     fetchBrandsAndTypes()
-  }, [setAllBrands, setAllCategories])
+  }, [])
 
   const handleRowClick = (file: PDFFile) => {
     setSelectedFile(file)
   }
 
   const handleProcessPDF = () => {
-
     if (selectedFile && selectedFile.progress.current >= 2) {
       sessionStorage.setItem("pdf_id", selectedFile.id)
       router.push("/admin/features/track-progress/finish")
     } else if (selectedFile?.progress.current === 1) {
-      sessionStorage.setItem("pdf_id", selectedFile.id);
-      router.push("/admin/features/import?scoring=1");
-    }
-    else {
-      // Optionally show a warning or do nothing
+      sessionStorage.setItem("pdf_id", selectedFile.id)
+      router.push("/admin/features/import?scoring=1")
+    } else {
       alert("PDF must be at least OCR processed before importing information.")
     }
+  }
 
+  const handleCloseSidebar = () => {
+    setSelectedFile(null)
   }
 
   return (
-    <div className="flex h-full bg-gray-50">
-      {/* Main content area */}
-      <div className={`flex-1 transition-all duration-300 ${selectedFile ? "mr-80" : ""}`}>
-        <div className="p-6 h-full">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-xl font-bold text-[#2e3139]">PROGRESS DASHBOARD</h1>
-            <div className="flex items-center gap-4">
+    <div className="flex min-h-screen font-sans antialiased" onClick={handleCloseSidebar}>
+      <div 
+        className={`flex-1 p-4 transition-all duration-300 ${selectedFile ? "mr-80" : ""}`} 
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="max-w-6xl mx-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-lg font-medium text-gray-800">PDF Progress</h1>
+            <div className="flex items-center gap-2">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Search"
-                  className="pl-9 pr-4 py-2 w-64 border-gray-300 rounded-md"
+                  placeholder="Search PDFs"
+                  className="pl-8 pr-3 py-1.5 w-64 rounded-md border border-gray-200 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm transition-all bg-white shadow-sm"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
               <Select value={brandFilter} onValueChange={setBrandFilter}>
-                <SelectTrigger className="w-32 border-gray-300 rounded-md">
+                <SelectTrigger className="w-32 rounded-md border-gray-200 focus:ring-1 focus:ring-blue-500 text-sm bg-white shadow-sm">
                   <SelectValue placeholder="Brand" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-md bg-white shadow-lg">
                   <SelectItem value="*">All Brands</SelectItem>
                   {allBrands.map((brand) => (
                     <SelectItem key={brand} value={brand}>{brand}</SelectItem>
                   ))}
-                  {/* Add more brands as needed */}
                 </SelectContent>
               </Select>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-32 border-gray-300 rounded-md">
+                <SelectTrigger className="w-32 rounded-md border-gray-200 focus:ring-1 focus:ring-blue-500 text-sm bg-white shadow-sm">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-md bg-white shadow-lg">
                   <SelectItem value="*">All Categories</SelectItem>
                   {allCategories.map((cat) => (
                     <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                   ))}
-                  {/* Add more categories as needed */}
                 </SelectContent>
               </Select>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-32 border-gray-300 rounded-md">
+                <SelectTrigger className="w-32 rounded-md border-gray-200 focus:ring-1 focus:ring-blue-500 text-sm bg-white shadow-sm">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-md bg-white shadow-lg">
                   <SelectItem value="all">All</SelectItem>
                   <SelectItem value="in-progress">In Progress</SelectItem>
                   <SelectItem value="complete">Complete</SelectItem>
@@ -205,55 +199,63 @@ export default function TrackProgressPage() {
               </Select>
             </div>
           </div>
-          {/* Table */}
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+
+          <div className="bg-white rounded-lg shadow-md border border-gray-100 overflow-hidden">
             {loading ? (
-              <div className="p-8 text-center text-gray-500">Loading...</div>
+              <div className="p-6 text-center text-gray-500 text-sm">Loading...</div>
             ) : (
               <table className="w-full">
                 <thead>
-                  <tr className="bg-gray-100 text-left">
-                    <th className="px-4 py-2">Filename</th>
-                    <th className="px-4 py-2">Brand</th>
-                    <th className="px-4 py-2">Category</th>
-                    <th className="px-4 py-2">Progress</th>
-                    <th className="px-4 py-2">Status</th>
-                    <th className="px-4 py-2">Last Modified</th>
+                  <tr className="text-left text-xs font-medium text-blue-700">
+                    <th className="px-4 py-3">Filename</th>
+                    <th className="px-4 py-3">Brand</th>
+                    <th className="px-4 py-3">Category</th>
+                    <th className="px-4 py-3">Progress</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3">Last Modified</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-gray-100">
                   {pdfFiles.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="text-center py-6 text-gray-400">No PDF files found.</td>
+                      <td colSpan={6} className="text-center py-6 text-gray-500 text-sm">
+                        No PDFs found
+                      </td>
                     </tr>
                   ) : (
                     pdfFiles.map((file) => {
-                      let barColor = "";
-                      if (file.progress.status === "not-full-embeded") barColor = "bg-yellow-200"; // orange yellow
-                      else if (file.progress.status === "need-ocr") barColor = "bg-sky-200"; // sky blue
-                      else if (file.progress.status === "complete") barColor = "bg-green-200"; // mint green
-                      const percent = Math.round((file.progress.current / file.progress.total) * 100);
+                      const barColor =
+                        file.progress.status === "not-full-embeded"
+                          ? "bg-amber-500"
+                          : file.progress.status === "need-ocr"
+                          ? "bg-blue-500"
+                          : "bg-green-500"
+                      const percent = Math.round((file.progress.current / file.progress.total) * 100)
 
                       return (
                         <tr
                           key={file.id}
-                          className={`hover:bg-gray-50 cursor-pointer`}
-                          onClick={() => handleRowClick(file)}
+                          className="hover:bg-blue-50 cursor-pointer transition-colors duration-150"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleRowClick(file)
+                          }}
                         >
-                          <td className="px-4 py-2">{file.filename}</td>
-                          <td className="px-4 py-2">{file.device.brand}</td>
-                          <td className="px-4 py-2">{file.device.category}</td>
-                          <td className="px-4 py-2 w-40">
-                            <div className="w-full bg-gray-200 rounded h-3 relative">
+                          <td className="px-4 py-3 text-sm text-gray-800">{file.filename}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{file.device.brand}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{file.device.category}</td>
+                          <td className="px-4 py-3 w-36">
+                            <div className="w-full bg-gray-200 rounded-full h-1.5">
                               <div
-                                className={`h-3 rounded ${barColor}`}
+                                className={`h-1.5 rounded-full ${barColor} transition-all duration-300`}
                                 style={{ width: `${percent}%` }}
                               ></div>
-
                             </div>
                           </td>
-                          <td className="px-4 py-2 capitalize">{file.progress.status.replace("-", " ")}</td>
-                          <td className="px-4 py-2">{file.lastAccess}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600 capitalize">
+                            {file.progress.status.replace("-", " ")}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{file.lastAccess}</td>
                         </tr>
                       )
                     })
@@ -262,19 +264,27 @@ export default function TrackProgressPage() {
               </table>
             )}
           </div>
-          {/* Pagination */}
+
           <div className="flex justify-end gap-2 mt-4">
             <Button
               variant="outline"
               disabled={!hasPrev || loading}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              onClick={(e) => {
+                e.stopPropagation()
+                setPage((p) => Math.max(1, p - 1))
+              }}
+              className="rounded-md border-gray-200 text-sm hover:bg-blue-100 transition-all"
             >
               Previous
             </Button>
             <Button
               variant="outline"
               disabled={!hasNext || loading}
-              onClick={() => setPage((p) => p + 1)}
+              onClick={(e) => {
+                e.stopPropagation()
+                setPage((p) => p + 1)
+              }}
+              className="rounded-md border-gray-200 text-sm hover:bg-blue-100 transition-all"
             >
               Next
             </Button>
@@ -282,74 +292,81 @@ export default function TrackProgressPage() {
         </div>
       </div>
 
-      {/* PDF Details Sidebar */}
       {selectedFile && (
-        <div className="fixed right-0 top-16 bottom-0 w-80 bg-white border-l border-gray-200 shadow-lg z-40 overflow-y-auto">
-          <div className="p-6">
-            <h2 className="text-lg font-bold text-[#2e3139] mb-6">PDF DETAIL</h2>
+        <div 
+          className="fixed right-0 top-0 bottom-0 w-80 bg-white border-l border-gray-100 shadow-lg z-50 overflow-y-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="p-6 relative">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                handleCloseSidebar()
+              }}
+              className="absolute left-4 top-4 p-1 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <X className="h-5 w-5 text-gray-500" />
+            </button>
+            <h2 className="text-base font-medium text-gray-800 mb-4 mt-8">PDF Details</h2>
 
-            <div className="space-y-6">
-              {/* Basic Info */}
+            <div className="space-y-4">
               <div>
-                <label className="text-sm text-gray-500 block mb-1">Filename</label>
-                <p className="text-sm text-[#2e3139] break-words">{selectedFile.filename}</p>
+                <label className="text-xs font-medium text-gray-500 block mb-1">Filename</label>
+                <p className="text-sm text-gray-800 break-words">{selectedFile.filename}</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-sm text-gray-500 block mb-1">Pages</label>
-                  <p className="text-sm text-[#2e3139]">{selectedFile.progress.total}</p>
+                  <label className="text-xs font-medium text-gray-500 block mb-1">Pages</label>
+                  <p className="text-sm text-gray-800">{selectedFile.progress.total}</p>
                 </div>
                 <div>
-                  <label className="text-sm text-gray-500 block mb-1">Finished</label>
-                  <p className="text-sm text-[#2e3139]">
+                  <label className="text-xs font-medium text-gray-500 block mb-1">Progress</label>
+                  <p className="text-sm text-gray-800">
                     {Math.round((selectedFile.progress.current / selectedFile.progress.total) * 100)}%
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-sm text-gray-500 block mb-1">Upload at</label>
-                  <p className="text-sm text-[#2e3139]">{selectedFile.uploadAt}</p>
+                  <label className="text-xs font-medium text-gray-500 block mb-1">Uploaded</label>
+                  <p className="text-sm text-gray-800">{selectedFile.uploadAt}</p>
                 </div>
                 <div>
-                  <label className="text-sm text-gray-500 block mb-1">Last access</label>
-                  <p className="text-sm text-[#2e3139]">{selectedFile.lastAccess}</p>
+                  <label className="text-xs font-medium text-gray-500 block mb-1">Last Accessed</label>
+                  <p className="text-sm text-gray-800">{selectedFile.lastAccess}</p>
                 </div>
               </div>
 
-              {/* Device Details */}
               <div>
-                <h3 className="text-sm font-medium text-[#2e3139] mb-3">Device detail</h3>
-                <div className="space-y-3">
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <label className="text-xs text-gray-500 block mb-1">Brand</label>
-                      <p className="text-sm text-[#2e3139]">{selectedFile.device.brand}</p>
-                    </div>
-                    <div>
-                      <label className="text-xs text-gray-500 block mb-1">Category</label>
-                      <p className="text-sm text-[#2e3139]">{selectedFile.device.category}</p>
-                    </div>
-                    <div>
-                      <label className="text-xs text-gray-500 block mb-1">Device</label>
-                      <p className="text-sm text-[#2e3139]">{selectedFile.device.model}</p>
-                    </div>
+                <h3 className="text-xs font-medium text-gray-800 mb-2">Device Details</h3>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 block mb-1">Brand</label>
+                    <p className="text-sm text-gray-800">{selectedFile.device.brand}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 block mb-1">Category</label>
+                    <p className="text-sm text-gray-800">{selectedFile.device.category}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 block mb-1">Model</label>
+                    <p className="text-sm text-gray-800">{selectedFile.device.model}</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Process Button */}
-            <div className="mt-8">
-              <Button
-                onClick={handleProcessPDF}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-md font-medium"
-              >
-                Process PDF
-              </Button>
-            </div>
+            <Button
+              onClick={(e) => {
+                e.stopPropagation()
+                handleProcessPDF()
+              }}
+              className="w-full mt-6 bg-blue-500 hover:bg-blue-600 text-white text-sm py-2 rounded-md font-medium transition-all"
+            >
+              Process PDF
+            </Button>
           </div>
         </div>
       )}
