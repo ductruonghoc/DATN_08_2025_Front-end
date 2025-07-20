@@ -1,6 +1,5 @@
 "use client";
 import { User, Lock, TriangleAlert } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/form/input";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -127,7 +126,7 @@ export default function SignInPage() {
                 className="w-full bg-blue-600 text-white hover:bg-blue-700 rounded-lg py-3 font-semibold text-lg transition-all duration-300 ease-in-out transform hover:scale-105"
               >
                 Sign In
-              </Button>
+              </button>
             </form>
           </div>
         </main>

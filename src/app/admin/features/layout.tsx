@@ -10,7 +10,6 @@ import {
   Upload,
   Plus,
   FileText,
-  MoreHorizontal,
   ChevronDown,
   LogOut,
   Trash2,
@@ -42,6 +41,12 @@ export default function HomeLayout({
   const handleNewConversation = () => {
     router.push("/admin/features/conversation")
   }
+
+  const handleSignOut = () => {
+    localStorage.removeItem("dmc_api_gateway_token");
+    router.push("/client/log-in");
+  };
+
 
   const handleDeleteConversation = (conversationId: string) => {
     setConversationToDelete(conversationId)
@@ -351,7 +356,9 @@ export default function HomeLayout({
             {showUserMenu && (
               <div className="absolute right-0 top-full mt-2 w-48 rounded-md shadow-lg bg-white border border-gray-200 z-50 transition-all duration-200 transform scale-100 hover:scale-105">
                 <div className="py-1">
-                  <button className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left transition-all duration-200 hover:scale-105 active:scale-95">
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left transition-all duration-200 hover:scale-105 active:scale-95">
                     <LogOut className="h-4 w-4" />
                     <span>Sign out</span>
                   </button>

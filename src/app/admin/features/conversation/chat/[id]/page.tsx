@@ -566,7 +566,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                             </button>
                             {deleteNoteId === note.id && (
                               <div
-                                ref={(el) => noteMenuRefs.current[note.id] = el}
+                                ref={(el) => {noteMenuRefs.current[note.id] = el}}
                                 className="absolute right-0 top-6 z-10 mt-2 p-2 bg-white rounded-[10px] border border-gray-200 shadow-lg transition-all duration-200 ease-in-out"
                               >
                                 <button

@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Upload, FileText, Settings, MessageSquare } from "lucide-react"
+import { Upload, FileText, MessageSquare } from "lucide-react"
 
 export default function HomePage() {
   return (
