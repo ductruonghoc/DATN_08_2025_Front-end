@@ -71,10 +71,8 @@ export default function HomeLayout({
     setActiveConversationMenu(activeConversationMenu === conversationId ? null : conversationId)
   }
 
-  const handleLogoClick = () => {
-    if (!sidebarOpen) {
-      setSidebarOpen(true)
-    }
+  const handleMenuClick = () => {
+    setSidebarOpen(true)
   }
 
   useEffect(() => {
@@ -209,19 +207,23 @@ export default function HomeLayout({
           )}
         >
           {sidebarOpen ? (
-            <Link href="/admin/features" className="flex items-center gap-3 transition-all duration-200 hover:scale-105">
+            <Link href="/admin/features" className="flex items-center gap-3 transition-all duration-200 hover:scale-105 active:scale-95">
               <img src="/favicon.ico" alt="TechBot Icon" className="h-10 w-10" />
               <span className="text-2xl font-bold text-[#2d336b]">TechBot</span>
             </Link>
           ) : (
-            <Link href="/admin/features" onClick={handleLogoClick} className="flex items-center justify-center transition-all duration-200 hover:scale-105">
-              <img src="/favicon.ico" alt="TechBot Icon" className="h-10 w-10" />
-            </Link>
+            <button
+              onClick={handleMenuClick}
+              className="flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95"
+              aria-label="Toggle sidebar"
+            >
+              <Menu className="h-5 w-5 text-[#2d336b]" />
+            </button>
           )}
           {sidebarOpen && (
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-md hover:bg-white/20 transition-colors duration-200 transform hover:scale-105"
+              className="p-2 rounded-md hover:bg-white/20 transition-all duration-200 hover:scale-105 active:scale-95"
               aria-label="Toggle sidebar"
             >
               <Menu className="h-5 w-5 text-[#2d336b]" />
@@ -234,7 +236,7 @@ export default function HomeLayout({
             <button
               onClick={handleNewConversation}
               className={cn(
-                "flex items-center gap-2 rounded-md bg-white shadow-sm hover:bg-gray-50 transition-all duration-200 transform hover:scale-105",
+                "flex items-center gap-2 rounded-md bg-white shadow-sm hover:bg-gray-50 transition-all duration-200 hover:scale-105 active:scale-95",
                 sidebarOpen ? "w-full px-4 py-2 text-sm text-[#2d336b]" : "h-10 w-10 justify-center"
               )}
             >
@@ -247,7 +249,7 @@ export default function HomeLayout({
             <Link
               href="/admin/features/import"
               className={cn(
-                "flex items-center gap-3 rounded-md hover:bg-white/20 transition-all duration-200 transform hover:scale-105 relative",
+                "flex items-center gap-3 rounded-md hover:bg-white/20 transition-all duration-200 hover:scale-105 active:scale-95 relative",
                 sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
                 pathname.includes("/admin/features/import")
                   ? "bg-white/20 before:absolute before:left-0 before:h-full before:w-1 before:bg-[#2d336b]"
@@ -260,7 +262,7 @@ export default function HomeLayout({
             <Link
               href="/admin/features/track-progress/tracking"
               className={cn(
-                "flex items-center gap-3 rounded-md hover:bg-white/20 transition-all duration-200 transform hover:scale-105 relative",
+                "flex items-center gap-3 rounded-md hover:bg-white/20 transition-all duration-200 hover:scale-105 active:scale-95 relative",
                 sidebarOpen ? "px-3 py-2 text-[#2d336b]" : "h-10 w-10 justify-center my-2",
                 pathname.includes("/admin/features/track-progress")
                   ? "bg-white/20 before:absolute before:left-0 before:h-full before:w-1 before:bg-[#2d336b]"
@@ -280,7 +282,7 @@ export default function HomeLayout({
                   <div
                     key={conversation.id}
                     className={cn(
-                      "flex items-center justify-between rounded-md px-3 py-2 hover:bg-white/20 transition-all duration-200 transform hover:scale-105",
+                      "flex items-center justify-between rounded-md px-3 py-2 hover:bg-white/20 transition-all duration-200 hover:scale-105 active:scale-95",
                       pathname.includes(`/admin/features/conversation/chat/${conversation.id}`)
                         ? "bg-white/20"
                         : ""
@@ -301,7 +303,7 @@ export default function HomeLayout({
                       <div className="relative">
                         <button
                           onClick={() => handleDeleteConversation(conversation.id)}
-                          className="text-[#2d336b] hover:text-red-600 p-1 transition-all duration-200 transform hover:scale-110"
+                          className="text-[#2d336b] hover:text-red-600 p-1 transition-all duration-200 hover:scale-110 active:scale-90"
                           aria-label="Delete conversation"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -326,12 +328,12 @@ export default function HomeLayout({
           <div className="flex items-center gap-2 relative" ref={userMenuRef}>
             <button
               onClick={toggleUserMenu}
-              className="flex items-center gap-2 text-[#2d336b] hover:text-[#4045ef] transition-all duration-200 transform hover:scale-105"
+              className="flex items-center gap-2 text-[#2d336b] hover:text-[#4045ef] transition-all duration-200 hover:scale-105 active:scale-95"
             >
               <span>Admin</span>
               <ChevronDown className="h-4 w-4" />
             </button>
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 transition-all duration-200 hover:scale-110">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 transition-all duration-200 hover:scale-110 active:scale-95">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -347,9 +349,9 @@ export default function HomeLayout({
               </svg>
             </div>
             {showUserMenu && (
-              <div className="absolute right-0 top-full mt-2 w-48 rounded-md shadow-lg bg-white border border-gray-200 z-50 transition-opacity duration-200 opacity-100">
+              <div className="absolute right-0 top-full mt-2 w-48 rounded-md shadow-lg bg-white border border-gray-200 z-50 transition-all duration-200 transform scale-100 hover:scale-105">
                 <div className="py-1">
-                  <button className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left transition-all duration-200">
+                  <button className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left transition-all duration-200 hover:scale-105 active:scale-95">
                     <LogOut className="h-4 w-4" />
                     <span>Sign out</span>
                   </button>
@@ -363,7 +365,7 @@ export default function HomeLayout({
 
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-200 opacity-100">
-          <div className="bg-white rounded-md shadow-lg p-6 w-full max-w-md transition-all duration-200 scale-100 hover:scale-105">
+          <div className="bg-white rounded-md shadow-lg p-6 w-full max-w-md transition-all duration-200 transform scale-100 hover:scale-105">
             <h2 className="text-lg font-medium mb-4 text-[#2e3139]">Delete Conversation</h2>
             <p className="text-gray-600 mb-6">
               Are you sure you want to delete this conversation? This action cannot be undone.
@@ -371,13 +373,13 @@ export default function HomeLayout({
             <div className="flex justify-end gap-3">
               <button
                 onClick={cancelDeleteConversation}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 rounded-md transition-all duration-200 transform hover:scale-105"
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 rounded-md transition-all duration-200 transform hover:scale-105 active:scale-95"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDeleteConversation}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-all duration-200 transform hover:scale-105"
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-all duration-200 transform hover:scale-105 active:scale-95"
               >
                 Delete
               </button>

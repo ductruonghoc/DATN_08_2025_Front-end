@@ -6,10 +6,10 @@ export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 via-white to-indigo-50 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
       <div className="w-full max-w-6xl px-4 sm:px-6 lg:px-8">
-        <h1 className="mb-6 text-3xl sm:text-4xl lg:text-5xl font-bold text-center text-gray-900 tracking-tight animate-pulse-slow">
+        <h1 className="mb-6 text-3xl sm:text-4xl lg:text-5xl font-extrabold text-center text-gray-800 tracking-tight animate-fade-in">
           TechBot
         </h1>
-        <p className="mb-10 text-center text-gray-600 text-base sm:text-lg lg:text-xl max-w-3xl mx-auto leading-relaxed transition-opacity duration-500 hover:opacity-90">
+        <p className="mb-10 text-center text-gray-500 text-base sm:text-lg lg:text-xl max-w-3xl mx-auto leading-relaxed transition-all duration-500 hover:opacity-80 hover:text-gray-600">
           Your intelligent PDF assistant. Seamlessly upload, manage, and interact with your documents.
         </p>
 

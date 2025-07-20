@@ -469,9 +469,9 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="border-t p-4 bg-white border-gray-200 rounded-b-[10px]">
+            <div className="border-t p-5 bg-white border-gray-200 rounded-b-[10px]">
               <div className="flex items-center border rounded-[10px] overflow-hidden pr-2 bg-white border-gray-300">
-                <Button
+                {/* <Button
                   type="button"
                   variant="ghost"
                   size="icon"
@@ -479,7 +479,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                   aria-label="Attach file"
                 >
                   <Paperclip className="h-5 w-5" />
-                </Button>
+                </Button> */}
                 <input
                   ref={inputRef}
                   type="text"
@@ -603,7 +603,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                 </div>
               </div>
 
-              <div className="p-4 border-t bg-white border-gray-200 rounded-b-[10px]">
+              {/* <div className="p-4 border-t bg-white border-gray-200 rounded-b-[10px]">
                 <Button
                   onClick={() =>
                     handleSaveNote(
@@ -634,7 +634,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                   </svg>
                   <span className="text-[#4045ef]">Save as note</span>
                 </Button>
-              </div>
+              </div> */}
             </div>
           )}
 

@@ -546,7 +546,7 @@ export default function ConversationPage() {
             disabled={!prevPageExisted || currentPage === 1}
             className="px-4 py-2 text-slate-600 hover:text-slate-800 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all duration-200 font-medium"
           >
-            Previous
+            Prev
           </button>
           <span className="px-4 py-2 font-semibold text-blue-700 bg-blue-50 rounded-lg border border-blue-200">
             Page {currentPage}
