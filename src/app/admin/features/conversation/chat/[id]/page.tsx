@@ -510,7 +510,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
             </div>
           </div>
 
-          {notesCollapsed ? (
+          {/* {notesCollapsed ? (
             <div className="w-12 h-full bg-white border border-gray-200 rounded-[10px] shadow-sm flex flex-col items-center py-4 space-y-4 transition-all duration-300 ease-in-out">
               <button
                 onClick={toggleNotesPanel}
@@ -635,8 +635,8 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                   <span className="text-[#4045ef]">Save as note</span>
                 </Button>
               </div> */}
-            </div>
-          )}
+            {/* </div>
+          )} */} 
 
           {showShareModal && shareNoteId && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-300 ease-in-out">
