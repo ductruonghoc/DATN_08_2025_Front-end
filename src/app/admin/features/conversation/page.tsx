@@ -1,735 +1,565 @@
 "use client"
-//React
-import React from "react"
-import { useState, useRef, useEffect } from "react"
-//Next.js
-import { useRouter, useSearchParams } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { User, Bot, Paperclip, Copy, Save, FileText, Trash2, Menu } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { toast, ToastContainer } from "react-toastify"
-import ReactMarkdown from "react-markdown"
-import BASEURL from "@/src/app/api/backend/dmc_api_gateway/baseurl"
-import Loader from "@/components/loader/loader"
-import MessageImageSlider from "@/components/slider/messege"
-import { useConversations } from "@/context/conversation"
 
-interface Message {
-  id: string
-  content: string
-  sender: "user" | "ai"
-  timestamp: string // Store as ISO string
-  images_ids?: number[]
+import { useState, useEffect } from "react"
+import { Search, ChevronDown, ChevronUp, X } from "lucide-react"
+import { Input } from "@/components/form/input"
+import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation"
+import BASEURL from "@/src/app/api/backend/dmc_api_gateway/baseurl"
+
+interface Device {
+  device_id: number
+  device_name: string
+  category: string
+  brand: string
 }
 
-interface Note {
+interface Conversation {
   id: string
   title: string
-  content: string
+  deviceId?: string
+  lastMessage: string
+  timestamp: string // Store as ISO string for sessionStorage
+  messages?: { id: string; content: string; sender: "user" | "ai"; timestamp: string }[]
 }
 
-// interface Conversation {
-//   id: string
-//   title: string
-//   deviceId?: string
-//   lastMessage: string
-//   timestamp: string
-//   messages: Message[]
-// }
-
-export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
-  //Next.js router
+export default function ConversationPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  //Params retrieval
-  const { id } = React.use(params)
-  //State management
-  const [inputValue, setInputValue] = useState("")
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: `welcome-${Date.now()}`,
-      content: "Hello! I'm your device manual assistant. I can help you with any questions about how to use your devices. Just ask me anything about setup, troubleshooting, or features!",
-      sender: "ai",
-      timestamp: new Date().toISOString(),
-    },
-  ])
-  const [isLoading, setIsLoading] = useState(false)
-  const [notesOpen, setNotesOpen] = useState(true)
-  const [notesCollapsed, setNotesCollapsed] = useState(false)
-  const [showSettingsMenu, setShowSettingsMenu] = useState(false)
-  const [showUserMenu, setShowUserMenu] = useState(false)
-  const [deleteNoteId, setDeleteNoteId] = useState<string | null>(null)
-  const [notes, setNotes] = useState<Note[]>([
-    {
-      id: "note-1",
-      title: "How to get the screen?",
-      content:
-        "To get the screen for your Lenovo Thinkpad T570, you'll need to order a replacement LCD panel. Make sure to get the correct resolution and type (touch or non-touch) that matches your model. You can find compatible screens on Lenovo's parts website or through authorized resellers.",
-    },
-    {
-      id: "note-2",
-      title: "What's the best lens for portraits?",
-      content:
-        "For portrait photography with the Canon EOS R5, I would recommend the RF 85mm f/1.2L USM. It's considered one of the best portrait lenses due to its ideal focal length and exceptional bokeh. The wide aperture creates beautiful background blur while keeping your subject tack sharp.",
-    },
-    {
-      id: "note-3",
-      title: "Battery replacement",
-      content: "The battery can be replaced by removing the bottom panel and disconnecting the old battery.",
-    },
-    {
-      id: "note-4",
-      title: "Screen resolution settings",
-      content: "To change screen resolution, go to Settings > Display > Screen Resolution.",
-    },
-    {
-      id: "note-5",
-      title: "Keyboard shortcuts",
-      content: "Ctrl+Alt+Delete: Task Manager, Alt+Tab: Switch applications, Windows+L: Lock computer",
-    },
-    {
-      id: "note-6",
-      title: "Wi-Fi troubleshooting",
-      content: "Try restarting the router, forgetting the network and reconnecting, or updating drivers.",
-    },
-    {
-      id: "note-7",
-      title: "Printer setup",
-      content: "Connect the printer to the same network, add it in Settings > Devices > Printers & scanners.",
-    },
-    {
-      id: "note-8",
-      title: "Software updates",
-      content: "Check for updates in Settings > Update & Security > Windows Update.",
-    },
-    {
-      id: "note-9",
-      title: "Backup procedures",
-      content: "Use Windows Backup or third-party software to create regular backups of important files.",
-    },
-    {
-      id: "note-10",
-      title: "Storage management",
-      content: "Clean up disk space using Disk Cleanup or by uninstalling unused applications.",
-    },
-    {
-      id: "note-11",
-      title: "Security recommendations",
-      content: "Use strong passwords, enable two-factor authentication, and keep software updated.",
-    },
-    {
-      id: "note-12",
-      title: "Performance optimization",
-      content: "Close unused applications, disable startup programs, and consider adding more RAM.",
-    },
-  ])
-  const [deviceName, setDeviceName] = useState("")
-  const [deviceId, setDeviceId] = useState<number | null>(null)
-  const [isFetchingConversation, setIsFetchingConversation] = useState(false)
-  const [firstMsgState, setFirstMsgState] = useState<{ ready: boolean, value: string }>({ ready: false, value: "" });
+  const [searchQuery, setSearchQuery] = useState("")
+  const [showCategoryFilter, setShowCategoryFilter] = useState(false)
+  const [showBrandFilter, setShowBrandFilter] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [selectedBrand, setSelectedBrand] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [devices, setDevices] = useState<Device[]>([])
+  const [loading, setLoading] = useState(false)
+  const [prevPageExisted, setPrevPageExisted] = useState(false)
+  const [nextPageExisted, setNextPageExisted] = useState(false)
+  const [allBrands, setAllBrands] = useState<string[]>([])
+  const [allCategories, setAllCategories] = useState<string[]>([])
+  const [categorySearch, setCategorySearch] = useState("")
+  const [brandSearch, setBrandSearch] = useState("")
 
-  const inputRef = useRef<HTMLInputElement>(null)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const settingsRef = useRef<HTMLDivElement>(null)
-  const userMenuRef = useRef<HTMLDivElement>(null)
-
-  const [showShareModal, setShowShareModal] = useState(false)
-  const [shareNoteId, setShareNoteId] = useState<string | null>(null)
-  const [shareLink, setShareLink] = useState("")
-
-  //Context for conversations
-  const { conversations, setConversations } = useConversations()
-
+  // Fetch devices from API
   useEffect(() => {
-    let isMounted = true
-    const storedDeviceId = sessionStorage.getItem("selectedDeviceId")
-    setDeviceId(storedDeviceId ? parseInt(storedDeviceId, 10) : null)
-    const fetchConversation = async () => {
-      if (id === "new") {
-        if (isMounted) {
-          setDeviceName("New Conversation")
-        }
-        return
-      }
+    const fetchDevices = async () => {
+      setLoading(true)
       try {
-        setIsFetchingConversation(true)
-        const token = localStorage.getItem("dmc_api_gateway_token")
-        const res = await fetch(`${BASEURL}/conversation/${id}`, {
-          headers: {
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        })
+        const params = new URLSearchParams()
+        params.append("offset", currentPage.toString())
+        if (searchQuery) params.append("name", searchQuery)
+        if (selectedBrand) params.append("brand", selectedBrand)
+        if (selectedCategory) params.append("category", selectedCategory)
+
+        const res = await fetch(`${BASEURL}/pdf_process/devices_for_chat?${params.toString()}`)
         const json = await res.json()
-        if (!json.success) throw new Error(json.message)
-        const loadedMessages: Message[] = []
-        const pairs = json.data.pairs
-        if (!pairs || !Array.isArray(pairs) || pairs.length === 0) {
 
-          return
+        if (json.status && json.data && Array.isArray(json.data.devices)) {
+          setDevices(json.data.devices)
+          setPrevPageExisted(!!json.data.PrevPageExisted)
+          setNextPageExisted(!!json.data.NextPageExisted)
+        } else if (json.status && json.data && json.data.devices) {
+          // In case devices is a single object, not array
+          setDevices([json.data.devices])
+          setPrevPageExisted(!!json.data.PrevPageExisted)
+          setNextPageExisted(!!json.data.NextPageExisted)
+        } else {
+          setDevices([])
+          setPrevPageExisted(false)
+          setNextPageExisted(false)
         }
-        pairs.forEach((pair: any) => {
-          loadedMessages.push({
-            id: `req-${pair.id}`,
-            content: pair.request,
-            sender: "user",
-            timestamp: pair.created_time,
-          })
-          loadedMessages.push({
-            id: `res-${pair.id}`,
-            content: pair.response,
-            sender: "ai",
-            timestamp: pair.created_time,
-            images_ids: pair.images || [],
-          })
-        })
-        if (isMounted) {
-          setDeviceId(json.data.device_id ?? null)
-          setMessages((prev) => [...prev, ...loadedMessages])
-          setDeviceName(json.data.title || "Conversation")
+      } catch (e) {
+        setDevices([])
+        setPrevPageExisted(false)
+        setNextPageExisted(false)
+      }
+      setLoading(false)
+    }
+
+    fetchDevices()
+  }, [searchQuery, selectedBrand, selectedCategory, currentPage])
+
+  // Fetch all brands and device types on mount
+  useEffect(() => {
+    const fetchBrandsAndTypes = async () => {
+      try {
+        const res = await fetch(`${BASEURL}/pdf_process/get_brands_and_device_types`)
+        const json = await res.json()
+        if (json.success && json.data) {
+          setAllBrands((json.data.brands || []).map((b: any) => b.label))
+          setAllCategories((json.data.deviceTypes || json.data.devices || []).map((d: any) => d.label))
         }
-
-      } catch (error: any) {
-
-      } finally {
-        if (isMounted) setIsFetchingConversation(false)
-      }
-    }
-    fetchConversation()
-    inputRef.current?.focus()
-    return () => {
-      isMounted = false
-    }
-  }, [id])
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  
-  }, [messages])
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
-        setShowSettingsMenu(false)
-      }
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
-        setShowUserMenu(false)
+      } catch (e) {
+        setAllBrands([])
+        setAllCategories([])
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
+    fetchBrandsAndTypes()
   }, [])
 
-  useEffect(() => {
-    if (id !== "new") {
-      const firstMsg = searchParams.get("firstMsg");
-      const title = searchParams.get("title");
-      if (firstMsg) {
-        setFirstMsgState({ ready: true, value: firstMsg });
-        setInputValue(firstMsg); // Set input value to firstMsg
-        // Remove firstMsg from URL after sending
-        const url = new URL(window.location.href);
-        url.searchParams.delete("firstMsg");
-        window.history.replaceState({}, document.title, url.pathname);
-      }
-      if (title) {
-        setDeviceName(title)
-        const url = new URL(window.location.href);
-        url.searchParams.delete("title");
-        window.history.replaceState({}, document.title, url.pathname);
-      }
-    }
-  }, [id, searchParams]);
+  const toggleCategoryFilter = () => {
+    setShowCategoryFilter(!showCategoryFilter)
+    if (showBrandFilter) setShowBrandFilter(false)
+  }
 
-  useEffect(() => {
+  const toggleBrandFilter = () => {
+    setShowBrandFilter(!showBrandFilter)
+    if (showCategoryFilter) setShowCategoryFilter(false)
+  }
 
-    if (firstMsgState.ready && firstMsgState.value.trim()) {
-      handleSendMessage() // Send first message silently
-      setFirstMsgState({ ready: false, value: "" });
-    }
-  }, [firstMsgState])
+  const handleCategorySelect = (category: string) => {
+    setSelectedCategory(category)
+    setShowCategoryFilter(false)
+    setCurrentPage(1)
+  }
 
+  const handleBrandSelect = (brand: string) => {
+    setSelectedBrand(brand)
+    setShowBrandFilter(false)
+    setCurrentPage(1)
+  }
 
-  const handleSendMessage = async () => {
+  const clearFilters = () => {
+    setSelectedCategory(null)
+    setSelectedBrand(null)
+    setCurrentPage(1)
+  }
 
-    if (!inputValue.trim()) return
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: inputValue,
-      sender: "user",
-      timestamp: new Date().toISOString(),
-    }
-
-
-    setMessages((prev) => [...prev, userMessage])
-    setInputValue("")
-    setIsLoading(true)
-    // If this is a new conversation, create it and redirect
-    if (id === "new") {
-      try {
-        const token = localStorage.getItem("dmc_api_gateway_token") // Adjust if you store token elsewhere
-        const res = await fetch(`${BASEURL}/conversation/storing`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({
-            ...(deviceId ? { device_id: deviceId } : {}),
-            query: userMessage.content,
-          }),
-        })
-        
-        const json = await res.json()
-   
-        if (!json.success || !json.data.conversation_id) throw new Error(json.message || "Failed to create conversation")
-        setConversations(prev => [
-          {
-            id: json.data.conversation_id,
-            title: json.data.title || "Untitled",
-            deviceName: json.data.device_name || "",
-            timestamp: new Date(json.data.conversation_updated_time),
-          },
-          ...prev,
-        ]);
-        // Redirect to new conversation page and send the message after navigation
-        router.replace(`/admin/features/conversation/chat/${json.data.conversation_id}?firstMsg=${encodeURIComponent(userMessage.content)}&title=${encodeURIComponent(json.data.title)}`)
-        return
-      } catch (err: any) {
-        toast.error("Failed to create conversation: " + err.message)
-        setIsLoading(false)
-        return
-      }
-    }
-
+  const handleDeviceSelect = (device: Device) => {
     try {
-      const token = localStorage.getItem("dmc_api_gateway_token")
-      const res = await fetch(`${BASEURL}/conversation/rag_query`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          query: userMessage.content,
-          ...(token ? { conversation_id: id } : {}),
-          ...(deviceId ? { device_id: deviceId } : {}),
-        }),
-      })
-      const json = await res.json()
-
-      if (!json.success) throw new Error(json.message || "Failed to get response")
-      const aiMessage: Message = {
-        id: json.data.pair_id,
-        content: json.data.response,
-        sender: "ai",
-        timestamp: new Date().toISOString(),
-        images_ids: json.data.images_ids || [], // <-- Add this line
-      }
-
-      setMessages((prev) => [...prev, aiMessage])
-    } catch (err: any) {
-      toast.error("Failed to get response: " + err.message)
-    }
-    finally {
-      setIsLoading(false)
+      sessionStorage.setItem("selectedDeviceId", device.device_id.toString())
+      router.push("/admin/features/conversation/chat/new")
+    } catch (error) {
+      console.error("Error saving device id to sessionStorage:", error)
     }
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey && inputValue.trim()) {
-      e.preventDefault()
-      handleSendMessage()
+  const handleSkip = () => {
+    try {
+      router.push(`/admin/features/conversation/chat/new`)
+    } catch (error) {
+      console.error("Error saving conversation to sessionStorage:", error)
     }
   }
 
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp)
-    if (isNaN(date.getTime())) {
-      return "Invalid date"
-    }
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+  const getCategoriesForLetter = (letter: string): string[] => {
+    return allCategories
+      .filter((cat) => cat[0]?.toUpperCase() === letter)
+      .filter((cat) => cat.toLowerCase().includes(categorySearch.toLowerCase()))
   }
 
-  const handleSaveNote = (message: Message) => {
-    const newNote: Note = {
-      id: `note-${Date.now()}`,
-      title:
-        message.sender === "user"
-          ? message.content
-          : messages.find((m) => m.sender === "user" && new Date(m.timestamp) < new Date(message.timestamp))?.content || "Untitled",
-      content: message.content,
-    }
-
-    setNotes((prev) => [...prev, newNote])
-    toast.success("Note saved successfully")
+  const getBrandsForLetter = (letter: string): string[] => {
+    return allBrands
+      .filter((brand) => brand[0]?.toUpperCase() === letter)
+      .filter((brand) => brand.toLowerCase().includes(brandSearch.toLowerCase()))
   }
 
-  const handleCopyMessage = (content: string) => {
-    navigator.clipboard
-      .writeText(content)
-      .then(() => {
-        toast.success("Message copied to clipboard")
-      })
-      .catch((err) => {
-        console.error("Failed to copy text: ", err)
-        toast.error("Failed to copy message")
-      })
-  }
-
-  const handleDeleteNote = (id: string) => {
-    setNotes((prev) => prev.filter((note) => note.id !== id))
-    setDeleteNoteId(null)
-    toast.success("Note deleted successfully")
-  }
-
-
-  const toggleNotesPanel = () => {
-    setNotesCollapsed(!notesCollapsed)
-  }
-
-  const handleShareNote = (noteId: string) => {
-    const note = notes.find((n) => n.id === noteId)
-    if (note) {
-      setShareNoteId(noteId)
-      setShareLink(`https://notelink1234.com/${noteId}`)
-      setShowShareModal(true)
-      setDeleteNoteId(null)
-      toast.success("Share link generated")
-    }
-  }
-
-  const handleCopyShareLink = () => {
-    navigator.clipboard
-      .writeText(shareLink)
-      .then(() => {
-        toast.success("Share link copied to clipboard")
-      })
-      .catch((err) => {
-        console.error("Failed to copy link: ", err)
-        toast.error("Failed to copy share link")
-      })
-  }
-
-  const handleCloseShareModal = () => {
-    setShowShareModal(false)
-    setShareNoteId(null)
-    setShareLink("")
-    toast.info("Share modal closed")
-  }
-
-  const components = {
-    li: ({ node, ...props }: any) => (
-      <li style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }} {...props} />
-    ),
-    code: ({ node, inline, className, children, ...props }: any) => {
-      if (inline) {
-        return (
-          <code style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }} className={className} {...props}>
-            {children}
-          </code>
-        );
-      }
-      return (
-        <code style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', wordBreak: 'break-word' }} className={className} {...props}>
-          <code>{children}</code>
-        </code>
-      );
-    },
-  };
+  const hasActiveFilters = selectedCategory || selectedBrand
 
   return (
-    <div className="flex h-full overflow-auto p-4 gap-4 bg-[#E6D9D9] w-full">
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} closeOnClick pauseOnHover />
-      {isFetchingConversation ? (
-        <div className="flex flex-1 items-center justify-center h-full bg-white rounded-[10px] border border-gray-200 shadow-sm">
-          <Loader />
+    <div className="flex flex-col h-full p-6 bg-gradient-to-br from-slate-50 to-gray-100 min-h-screen">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Choose Your Device</h1>
+          <p className="text-slate-600 text-sm">Select a device to start your conversation or skip to continue</p>
         </div>
-      ) : (
-        <>
-          <div className="flex-1 flex flex-col h-full relative bg-white overflow-hidden rounded-[10px] border border-gray-200 shadow-sm">
-            <div className="flex items-center justify-between p-4 border-b z-10 bg-white border-gray-200 text-[#2d336b] rounded-t-[10px]">
-              <div className="flex items-center gap-3">
-                <h1 className="text-lg font-medium">{deviceName || "New Conversation"}</h1>
-              </div>
-            </div>
+        <Button
+          variant="outline"
+          className="rounded-xl border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 shadow-sm font-medium px-6 bg-transparent"
+          onClick={handleSkip}
+        >
+          Skip
+        </Button>
+      </div>
 
-            <div className={`flex-1 overflow-y-auto p-4 space-y-6 bg-white max-w-[calc(100% - 16px)]`}>
-              {messages.map((message) => (
-                <div key={message.id} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`flex max-w-[700px] ${message.sender === "user" ? "flex-row-reverse" : "flex-row"}`}>
-                    <div
-                      className={`flex items-center justify-center h-8 w-8 rounded-full flex-shrink-0 ${message.sender === "user" ? "ml-3 bg-[#4045ef]" : `mr-3 bg-gray-200`}`}
-                    >
-                      {message.sender === "user" ? (
-                        <User className="h-5 w-5 text-white" />
-                      ) : (
-                        <Bot className="h-5 w-5 text-[#4045ef]" />
-                      )}
-                    </div>
-                    <div className="flex flex-col max-w-[700px]">
-                      <div
-                        className={`rounded-[10px] px-4 py-3 ${message.sender === "user"
-                          ? "bg-[#4045ef] text-white"
-                          : "bg-white text-[#2e3139] border border-gray-200"
-                          }`}
-                      >
-                        <div className="text-sm whitespace-pre-line break-words break-all max-w-[100%]">
-                          <ReactMarkdown components={components}>{message.content}</ReactMarkdown>
-                        </div>
-                        {message.images_ids && message.images_ids.length > 0 && (
-                          <MessageImageSlider images_ids={message.images_ids} />
-                        )}
-                        <div
-                          className={`text-xs mt-1 ${message.sender === "user" ? "text-blue-100" : "text-[#2e3139]/70"}`}
-                        >
-                          {formatTime(message.timestamp)}
-                        </div>
-                      </div>
-                      {message.sender === "ai" && (
-                        <div className="flex mt-2 space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#4045ef]"
-                            onClick={() => handleSaveNote(message)}
-                          >
-                            <Save className="h-3.5 w-3.5" />
-                            <span>Save as note</span>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#4045ef]"
-                            onClick={() => handleCopyMessage(message.content)}
-                          >
-                            <Copy className="h-3.5 w-3.5" />
-                            <span>Copy</span>
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
+      {/* Search and Filter Section */}
+      <div className="flex items-center gap-6 mb-8 relative">
+        <div className="relative flex-1 max-w-lg">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+          <Input
+            placeholder="Search devices..."
+            className="pl-12 pr-4 py-3 rounded-2xl border-slate-200 bg-white shadow-sm focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all duration-200 text-slate-700 placeholder:text-slate-500"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
 
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="flex flex-row">
-                    <div className={`flex items-center justify-center h-8 w-8 rounded-full mr-3 bg-gray-200`}>
-                      <Bot className="h-5 w-5 text-[#4045ef]" />
-                    </div>
-                    <div className={`rounded-[10px] px-4 py-3 bg-white border border-gray-200`}>
-                      <div className="flex space-x-2">
-                        <div
-                          className={`w-2 h-2 rounded-full animate-bounce bg-gray-300`}
-                          style={{ animationDelay: "0ms" }}
-                        />
-                        <div
-                          className={`w-2 h-2 rounded-full animate-bounce bg-gray-300`}
-                          style={{ animationDelay: "300ms" }}
-                        />
-                        <div
-                          className={`w-2 h-2 rounded-full animate-bounce bg-gray-300`}
-                          style={{ animationDelay: "600ms" }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Button
+              variant="outline"
+              className={`flex items-center gap-2 rounded-2xl border-slate-200 text-slate-700 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 shadow-sm font-medium px-6 py-3 ${
+                selectedCategory ? "bg-blue-50 border-blue-300 text-blue-700" : "bg-white"
+              }`}
+              onClick={toggleCategoryFilter}
+            >
+              Category
+              {selectedCategory && (
+                <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">1</span>
               )}
+              {showCategoryFilter ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </Button>
 
-              <div ref={messagesEndRef} />
-            </div>
+            {/* Category Filter Overlay */}
+            {showCategoryFilter && (
+              <div className="absolute top-full left-0 mt-2 border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xl z-50 w-[600px]">
+                <div className="p-3">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-slate-800">Select Category</h3>
+                    <button
+                      onClick={() => setShowCategoryFilter(false)}
+                      className="text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="flex mb-3">
+                    <Input
+                      placeholder="Search categories..."
+                      className="w-full text-sm border-slate-200 rounded-lg focus:border-blue-300 focus:ring-1 focus:ring-blue-100 transition-all duration-200"
+                      value={categorySearch}
+                      onChange={(e) => setCategorySearch(e.target.value)}
+                    />
+                  </div>
+                  <div className="relative">
+                    <div
+                      className="overflow-y-scroll border border-slate-100 rounded-md bg-gray-50"
+                      style={{
+                        height: "320px",
+                        scrollbarWidth: "auto",
+                        scrollbarColor: "#94a3b8 #f1f5f9",
+                      }}
+                    >
+                      <style jsx>{`
+                        div::-webkit-scrollbar {
+                          width: 14px;
+                        }
+                        div::-webkit-scrollbar-track {
+                          background: #f1f5f9;
+                          border-radius: 6px;
+                        }
+                        div::-webkit-scrollbar-thumb {
+                          background: #94a3b8;
+                          border-radius: 6px;
+                          border: 2px solid #f1f5f9;
+                        }
+                        div::-webkit-scrollbar-thumb:hover {
+                          background: #64748b;
+                        }
+                      `}</style>
+                      <div className="grid grid-cols-3 gap-3 p-3">
+                        {[
+                          "A",
+                          "B",
+                          "C",
+                          "D",
+                          "E",
+                          "F",
+                          "G",
+                          "H",
+                          "I",
+                          "J",
+                          "K",
+                          "L",
+                          "M",
+                          "N",
+                          "O",
+                          "P",
+                          "Q",
+                          "R",
+                          "S",
+                          "T",
+                          "U",
+                          "V",
+                          "W",
+                          "X",
+                          "Y",
+                          "Z",
+                        ].map((letter) => {
+                          const letterCategories = getCategoriesForLetter(letter)
+                          if (letterCategories.length === 0) return null
 
-            <div className="border-t p-4 bg-white border-gray-200 rounded-b-[10px]">
-              <div className="flex items-center border rounded-[10px] overflow-hidden pr-2 bg-white border-gray-300">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="text-[#2d336b] hover:text-[#4045ef]"
-                  aria-label="Attach file"
-                >
-                  <Paperclip className="h-5 w-5" />
-                </Button>
-                <input
-                  ref={inputRef}
-                  type="text"
-                  placeholder="Ask me anything"
-                  className="flex-1 border-0 focus:outline-none px-2 py-2 bg-white text-[#2d336b] placeholder-gray-400"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                />
-                <Button
-                  type="button"
-                  size="icon"
-                  className={cn(
-                    "rounded-full h-8 w-8 flex items-center justify-center",
-                    inputValue.trim() && !isLoading
-                      ? "bg-[#4045ef] text-white hover:bg-[#3035df]"
-                      : "bg-transparent text-[#2d336b]/50",
-                  )}
-                  onClick={handleSendMessage}
-                  disabled={!inputValue.trim() || isLoading}
-                  aria-label="Send message"
-                >
-                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8 5v14l11-7-11-7z" fill="currentColor" />
-                  </svg>
-                </Button>
+                          return (
+                            <div key={letter} className="space-y-1">
+                              <h4 className="text-sm font-bold text-slate-800 border-b border-slate-300 pb-0.5">
+                                {letter}
+                              </h4>
+                              <div className="space-y-0.5">
+                                {letterCategories.map((category, idx) => (
+                                  <button
+                                    key={`${letter}-${idx}`}
+                                    className="block w-full text-left px-1.5 py-1.5 hover:bg-blue-50 hover:text-blue-700 rounded text-xs transition-all duration-200 text-slate-700"
+                                    onClick={() => handleCategorySelect(category)}
+                                  >
+                                    {category}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
-          {notesCollapsed ? (
-            <div className="w-12 h-full bg-white border border-gray-200 rounded-[10px] shadow-sm flex flex-col items-center py-4 space-y-4">
-              <button onClick={toggleNotesPanel} className="p-2 text-[#2e3139] hover:bg-gray-100 rounded-md">
-                <Menu className="h-5 w-5" />
-              </button>
-              <button className="p-2 text-[#2e3139] hover:bg-gray-100 rounded-md">
-                <FileText className="h-5 w-5" />
-              </button>
-            </div>
-          ) : (
-            <div
-              className={cn(
-                "h-full flex flex-col transition-all duration-300 ease-in-out",
-                notesOpen ? "w-80" : "w-0 opacity-0 overflow-hidden",
-                "bg-white border border-gray-200 rounded-[10px] shadow-sm",
-              )}
+          <div className="relative">
+            <Button
+              variant="outline"
+              className={`flex items-center gap-2 rounded-2xl border-slate-200 text-slate-700 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 shadow-sm font-medium px-6 py-3 ${
+                selectedBrand ? "bg-blue-50 border-blue-300 text-blue-700" : "bg-white"
+              }`}
+              onClick={toggleBrandFilter}
             >
-              <div className="p-4 border-b flex items-center justify-between bg-white border-gray-200 rounded-t-[10px]">
-                <h2 className="font-bold text-[#2e3139]">YOUR NOTES</h2>
-                <button onClick={toggleNotesPanel} className="text-[#2e3139] hover:bg-gray-100 p-1 rounded-md">
-                  <Menu className="h-5 w-5" />
-                </button>
-              </div>
+              Brand
+              {selectedBrand && (
+                <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">1</span>
+              )}
+              {showBrandFilter ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </Button>
 
-              <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300">
-                <div className="p-4 space-y-4">
-                  {notes.map((note) => (
-                    <div key={note.id} className={`border-b pb-4 border-gray-200`}>
-                      <div className="flex items-start gap-3">
-                        {/* <div className={"text-[#2e3139] mt-1"}>â€¢</div> */}
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between">
-                            <h3 className={`font-bold text-[#2e3139]`}>{note.title}</h3>
-                            <button
-                              onClick={() => setDeleteNoteId(deleteNoteId === note.id ? null : note.id)}
-                              className="text-gray-500 hover:text-[#4045ef]"
-                            >
-                              <FileText className="h-4 w-4" />
-                            </button>
-                          </div>
-                          <p className={`text-sm mt-1 text-[#2e3139]`}>{note.content}</p>
-                          {deleteNoteId === note.id && (
-                            <div className="mt-2 p-2 bg-white rounded-[10px] border border-gray-200 shadow-lg">
-                              <button
-                                onClick={() => handleShareNote(note.id)}
-                                className="flex items-center gap-2 w-full text-left px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded"
-                              >
-                                <svg
-                                  className="h-3 w-3"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                >
-                                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                                </svg>
-                                Share with link
-                              </button>
-                              <button
-                                onClick={() => handleDeleteNote(note.id)}
-                                className="flex items-center gap-2 w-full text-left px-2 py-1 text-xs text-red-600 hover:bg-gray-100 rounded"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                                Delete this note
-                              </button>
+            {/* Brand Filter Overlay */}
+            {showBrandFilter && (
+              <div className="absolute top-full right-0 mt-2 border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xl z-50 w-[600px]">
+                <div className="p-3">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-slate-800">Select Brand</h3>
+                    <button
+                      onClick={() => setShowBrandFilter(false)}
+                      className="text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="flex mb-3">
+                    <Input
+                      placeholder="Search brands..."
+                      className="w-full text-sm border-slate-200 rounded-lg focus:border-blue-300 focus:ring-1 focus:ring-blue-100 transition-all duration-200"
+                      value={brandSearch}
+                      onChange={(e) => setBrandSearch(e.target.value)}
+                    />
+                  </div>
+                  <div className="relative">
+                    <div
+                      className="overflow-y-scroll border border-slate-100 rounded-md bg-gray-50"
+                      style={{
+                        height: "320px",
+                        scrollbarWidth: "auto",
+                        scrollbarColor: "#94a3b8 #f1f5f9",
+                      }}
+                    >
+                      <style jsx>{`
+                        div::-webkit-scrollbar {
+                          width: 14px;
+                        }
+                        div::-webkit-scrollbar-track {
+                          background: #f1f5f9;
+                          border-radius: 6px;
+                        }
+                        div::-webkit-scrollbar-thumb {
+                          background: #94a3b8;
+                          border-radius: 6px;
+                          border: 2px solid #f1f5f9;
+                        }
+                        div::-webkit-scrollbar-thumb:hover {
+                          background: #64748b;
+                        }
+                      `}</style>
+                      <div className="grid grid-cols-3 gap-3 p-3">
+                        {[
+                          "A",
+                          "B",
+                          "C",
+                          "D",
+                          "E",
+                          "F",
+                          "G",
+                          "H",
+                          "I",
+                          "J",
+                          "K",
+                          "L",
+                          "M",
+                          "N",
+                          "O",
+                          "P",
+                          "Q",
+                          "R",
+                          "S",
+                          "T",
+                          "U",
+                          "V",
+                          "W",
+                          "X",
+                          "Y",
+                          "Z",
+                        ].map((letter) => {
+                          const letterBrands = getBrandsForLetter(letter)
+                          if (letterBrands.length === 0) return null
+
+                          return (
+                            <div key={letter} className="space-y-1">
+                              <h4 className="text-sm font-bold text-slate-800 border-b border-slate-300 pb-0.5">
+                                {letter}
+                              </h4>
+                              <div className="space-y-0.5">
+                                {letterBrands.map((brand, idx) => (
+                                  <button
+                                    key={`${letter}-${idx}`}
+                                    className="block w-full text-left px-1.5 py-1.5 hover:bg-blue-50 hover:text-blue-700 rounded text-xs transition-all duration-200 text-slate-700"
+                                    onClick={() => handleBrandSelect(brand)}
+                                  >
+                                    {brand}
+                                  </button>
+                                ))}
+                              </div>
                             </div>
-                          )}
-                        </div>
+                          )
+                        })}
                       </div>
                     </div>
-                  ))}
+                  </div>
                 </div>
               </div>
+            )}
+          </div>
 
-              <div className="p-4 border-t bg-white border-gray-200 rounded-b-[10px]">
-                <Button
-                  onClick={() =>
-                    handleSaveNote(
-                      messages[messages.length - 1] || {
-                        id: "new",
-                        content: "New note",
-                        sender: "ai",
-                        timestamp: new Date().toISOString(),
-                      }
-                    )
-                  }
-                  className="flex items-center gap-2 w-full justify-start px-3 py-2 rounded-[10px] bg-white border border-[#4045ef] hover:bg-[#f1f6ff]"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-[#4045ef]"
-                  >
-                    <path d="M12 5v14" />
-                    <path d="M5 12h14" />
-                  </svg>
-                  <span className="text-[#4045ef]">Save as note</span>
-                </Button>
-              </div>
-            </div>
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearFilters}
+              className="text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-2xl transition-all duration-200 px-4 py-2"
+            >
+              <X className="h-4 w-4 mr-1" />
+              Clear All
+            </Button>
           )}
+        </div>
+      </div>
 
-          {showShareModal && shareNoteId && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-                <h2 className="text-lg font-medium mb-4 text-[#2e3139]">
-                  "{notes.find((n) => n.id === shareNoteId)?.title}"
-                </h2>
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Share link:</label>
-                  <input
-                    type="text"
-                    value={shareLink}
-                    readOnly
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm"
-                  />
-                </div>
-                <div className="flex justify-between">
-                  <button
-                    onClick={handleCopyShareLink}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
-                  >
-                    Copy
-                  </button>
-                  <button
-                    onClick={handleCloseShareModal}
-                    className="px-4 py-2 bg-[#2d336b] text-white rounded-md hover:bg-[#1e2347] transition-colors"
-                  >
-                    Done
-                  </button>
-                </div>
-              </div>
-            </div>
+      {/* Active Filters Display */}
+      {hasActiveFilters && (
+        <div className="flex flex-wrap gap-3 mb-6">
+          {selectedCategory && (
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 rounded-full text-sm font-medium border border-blue-200">
+              <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+              Category: {selectedCategory}
+              <button
+                onClick={() => setSelectedCategory(null)}
+                className="ml-1 hover:bg-blue-200 rounded-full p-1 transition-colors"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
           )}
-        </>
+          {selectedBrand && (
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 rounded-full text-sm font-medium border border-green-200">
+              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+              Brand: {selectedBrand}
+              <button
+                onClick={() => setSelectedBrand(null)}
+                className="ml-1 hover:bg-green-200 rounded-full p-1 transition-colors"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+        </div>
       )}
+
+      {/* Device Table */}
+      <div className="border border-slate-200 rounded-2xl overflow-hidden mb-6 flex-1 bg-white shadow-sm">
+        <div className="max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
+          {loading ? (
+            <div className="flex justify-center items-center h-40">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                <div
+                  className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+                  style={{ animationDelay: "0.1s" }}
+                ></div>
+                <div
+                  className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+                  style={{ animationDelay: "0.2s" }}
+                ></div>
+                <span className="ml-2 text-slate-600 font-medium">Loading devices...</span>
+              </div>
+            </div>
+          ) : (
+            <table className="w-full">
+              <thead className="sticky top-0 bg-white z-10 border-b border-slate-200">
+                <tr>
+                  <th className="text-left py-4 px-6 font-semibold text-slate-700 bg-slate-50">Device Name</th>
+                  <th className="text-left py-4 px-6 font-semibold text-slate-700 bg-slate-50">Category</th>
+                  <th className="text-left py-4 px-6 font-semibold text-slate-700 bg-slate-50">Brand</th>
+                </tr>
+              </thead>
+              <tbody>
+                {devices.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} className="text-center py-12 text-slate-500">
+                      <div className="flex flex-col items-center space-y-2">
+                        <Search className="h-8 w-8 text-slate-300" />
+                        <span className="font-medium">No devices found</span>
+                        <span className="text-sm">Try adjusting your search or filters</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  devices.map((device, index) => (
+                    <tr
+                      key={device.device_id}
+                      className={`${
+                        index % 2 === 0 ? "bg-white" : "bg-slate-50"
+                      } border-b border-slate-100 hover:bg-blue-50 hover:shadow-sm cursor-pointer transition-all duration-200 group`}
+                      onClick={() => handleDeviceSelect(device)}
+                    >
+                      <td className="py-4 px-6 text-slate-800 font-medium group-hover:text-blue-700 transition-colors">
+                        {device.device_name}
+                      </td>
+                      <td className="py-4 px-6 text-slate-600 group-hover:text-slate-800 transition-colors">
+                        {device.category}
+                      </td>
+                      <td className="py-4 px-6 text-slate-600 group-hover:text-slate-800 transition-colors">
+                        {device.brand}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-center items-center">
+        <div className="flex items-center space-x-1 bg-white rounded-xl shadow-sm border border-slate-200 p-1">
+          <button
+            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={!prevPageExisted || currentPage === 1}
+            className="px-4 py-2 text-slate-600 hover:text-slate-800 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all duration-200 font-medium"
+          >
+            Previous
+          </button>
+          <span className="px-4 py-2 font-semibold text-blue-700 bg-blue-50 rounded-lg border border-blue-200">
+            Page {currentPage}
+          </span>
+          <button
+            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={!nextPageExisted}
+            className="px-4 py-2 text-slate-600 hover:text-slate-800 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all duration-200 font-medium"
+          >
+            Next
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

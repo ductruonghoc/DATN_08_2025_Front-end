@@ -63,7 +63,7 @@ export default function HomePage() {
           </div>
 
           {/* Device Management Card */}
-          <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col min-w-0 group">
+          {/* <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col min-w-0 group">
             <div className="flex items-center mb-4">
               <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center mr-3 group-hover:bg-indigo-200 transition-colors duration-200">
                 <Settings className="h-5 w-5 text-indigo-600 group-hover:scale-110 transition-transform duration-200" />
@@ -76,7 +76,7 @@ export default function HomePage() {
                 Manage Devices
               </Button>
             </Link>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

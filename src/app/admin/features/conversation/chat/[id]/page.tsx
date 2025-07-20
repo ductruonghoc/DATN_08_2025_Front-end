@@ -50,70 +50,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [deleteNoteId, setDeleteNoteId] = useState<string | null>(null)
-  const [notes, setNotes] = useState<Note[]>([
-    {
-      id: "note-1",
-      title: "How to get the screen?",
-      content:
-        "To get the screen for your Lenovo Thinkpad T570, you'll need to order a replacement LCD panel. Make sure to get the correct resolution and type (touch or non-touch) that matches your model. You can find compatible screens on Lenovo's parts website or through authorized resellers.",
-    },
-    {
-      id: "note-2",
-      title: "What's the best lens for portraits?",
-      content:
-        "For portrait photography with the Canon EOS R5, I would recommend the RF 85mm f/1.2L USM. It's considered one of the best portrait lenses due to its ideal focal length and exceptional bokeh. The wide aperture creates beautiful background blur while keeping your subject tack sharp.",
-    },
-    {
-      id: "note-3",
-      title: "Battery replacement",
-      content: "The battery can be replaced by removing the bottom panel and disconnecting the old battery.",
-    },
-    {
-      id: "note-4",
-      title: "Screen resolution settings",
-      content: "To change screen resolution, go to Settings > Display > Screen Resolution.",
-    },
-    {
-      id: "note-5",
-      title: "Keyboard shortcuts",
-      content: "Ctrl+Alt+Delete: Task Manager, Alt+Tab: Switch applications, Windows+L: Lock computer",
-    },
-    {
-      id: "note-6",
-      title: "Wi-Fi troubleshooting",
-      content: "Try restarting the router, forgetting the network and reconnecting, or updating drivers.",
-    },
-    {
-      id: "note-7",
-      title: "Printer setup",
-      content: "Connect the printer to the same network, add it in Settings > Devices > Printers & scanners.",
-    },
-    {
-      id: "note-8",
-      title: "Software updates",
-      content: "Check for updates in Settings > Update & Security > Windows Update.",
-    },
-    {
-      id: "note-9",
-      title: "Backup procedures",
-      content: "Use Windows Backup or third-party software to create regular backups of important files.",
-    },
-    {
-      id: "note-10",
-      title: "Storage management",
-      content: "Clean up disk space using Disk Cleanup or by uninstalling unused applications.",
-    },
-    {
-      id: "note-11",
-      title: "Security recommendations",
-      content: "Use strong passwords, enable two-factor authentication, and keep software updated.",
-    },
-    {
-      id: "note-12",
-      title: "Performance optimization",
-      content: "Close unused applications, disable startup programs, and consider adding more RAM.",
-    },
-  ])
+  const [notes, setNotes] = useState<Note[]>([])
   const [deviceName, setDeviceName] = useState("")
   const [deviceId, setDeviceId] = useState<number | null>(null)
   const [isFetchingConversation, setIsFetchingConversation] = useState(false)
@@ -127,6 +64,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const [showShareModal, setShowShareModal] = useState(false)
   const [shareNoteId, setShareNoteId] = useState<string | null>(null)
   const [shareLink, setShareLink] = useState("")
+  const noteMenuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
 
   //Context for conversations
   const { conversations, setConversations } = useConversations()
@@ -201,13 +139,16 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setShowUserMenu(false)
       }
+      if (deleteNoteId && !Object.values(noteMenuRefs.current).some(ref => ref?.contains(event.target as Node))) {
+        setDeleteNoteId(null)
+      }
     }
 
     document.addEventListener("mousedown", handleClickOutside)
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [])
+  }, [deleteNoteId])
 
   useEffect(() => {
     if (id !== "new") {
@@ -577,9 +518,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
               >
                 <Menu className="h-5 w-5" />
               </button>
-              {/* <button className="p-2 text-[#2e3139] hover:bg-gray-100 rounded-md transition-colors duration-200">
-                <FileText className="h-5 w-5" />
-              </button> */}
             </div>  
           ) : (
             <div
@@ -608,7 +546,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                     >
                       <div className="flex items-start gap-3">
                         <div className="flex-1">
-                          <div className="flex items-start justify-between">
+                          <div className="flex items-start justify-between relative">
                             <h3 className="font-bold text-[#2e3139]">{note.title}</h3>
                             <button
                               onClick={() => setDeleteNoteId(deleteNoteId === note.id ? null : note.id)}
@@ -626,35 +564,38 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                                 <circle cx="12" cy="19" r="1" />
                               </svg>
                             </button>
+                            {deleteNoteId === note.id && (
+                              <div
+                                ref={(el) => noteMenuRefs.current[note.id] = el}
+                                className="absolute right-0 top-6 z-10 mt-2 p-2 bg-white rounded-[10px] border border-gray-200 shadow-lg transition-all duration-200 ease-in-out"
+                              >
+                                <button
+                                  onClick={() => handleShareNote(note.id)}
+                                  className="flex items-center gap-2 w-full text-left px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded transition-colors duration-200"
+                                >
+                                  <svg
+                                    className="h-3 w-3"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                  >
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                                  </svg>
+                                  Share with link
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteNote(note.id)}
+                                  className="flex items-center gap-2 w-full text-left px-2 py-1 text-xs text-red-600 hover:bg-gray-100 rounded transition-colors duration-200"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                  Delete this note
+                                </button>
+                              </div>
+                            )}
                           </div>
                           <p className="text-sm mt-1 text-[#2e3139]">{note.content}</p>
-                          {deleteNoteId === note.id && (
-                            <div className="mt-2 p-2 bg-white rounded-[10px] border border-gray-200 shadow-lg transition-all duration-200 ease-in-out">
-                              <button
-                                onClick={() => handleShareNote(note.id)}
-                                className="flex items-center gap-2 w-full text-left px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded transition-colors duration-200"
-                              >
-                                <svg
-                                  className="h-3 w-3"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                >
-                                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                                </svg>
-                                Share with link
-                              </button>
-                              <button
-                                onClick={() => handleDeleteNote(note.id)}
-                                className="flex items-center gap-2 w-full text-left px-2 py-1 text-xs text-red-600 hover:bg-gray-100 rounded transition-colors duration-200"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                                Delete this note
-                              </button>
-                            </div>
-                          )}
                         </div>
                       </div>
                     </div>

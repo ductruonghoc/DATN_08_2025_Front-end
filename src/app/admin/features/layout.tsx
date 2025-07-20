@@ -71,6 +71,12 @@ export default function HomeLayout({
     setActiveConversationMenu(activeConversationMenu === conversationId ? null : conversationId)
   }
 
+  const handleLogoClick = () => {
+    if (!sidebarOpen) {
+      setSidebarOpen(true)
+    }
+  }
+
   useEffect(() => {
     const checkAuthorization = async () => {
       const token = localStorage.getItem("dmc_api_gateway_token")
@@ -199,16 +205,28 @@ export default function HomeLayout({
         <div
           className={cn(
             "flex h-16 items-center border-b border-gray-200 transition-all duration-300 ease-in-out",
-            sidebarOpen ? "justify-end px-4" : "justify-center px-2"
+            sidebarOpen ? "justify-between px-4" : "justify-center px-2"
           )}
         >
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 rounded-md hover:bg-white/20 transition-colors duration-200 transform hover:scale-105"
-            aria-label="Toggle sidebar"
-          >
-            <Menu className="h-5 w-5 text-[#2d336b]" />
-          </button>
+          {sidebarOpen ? (
+            <Link href="/admin/features" className="flex items-center gap-3 transition-all duration-200 hover:scale-105">
+              <img src="/favicon.ico" alt="TechBot Icon" className="h-10 w-10" />
+              <span className="text-2xl font-bold text-[#2d336b]">TechBot</span>
+            </Link>
+          ) : (
+            <Link href="/admin/features" onClick={handleLogoClick} className="flex items-center justify-center transition-all duration-200 hover:scale-105">
+              <img src="/favicon.ico" alt="TechBot Icon" className="h-10 w-10" />
+            </Link>
+          )}
+          {sidebarOpen && (
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2 rounded-md hover:bg-white/20 transition-colors duration-200 transform hover:scale-105"
+              aria-label="Toggle sidebar"
+            >
+              <Menu className="h-5 w-5 text-[#2d336b]" />
+            </button>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto py-4 px-3">
@@ -279,32 +297,15 @@ export default function HomeLayout({
                       </div>
                     </Link>
                     <div className="flex items-center">
-                      <span className="text-xs text-[#2d336b]/70 ml-2">{formatRelativeTime(conversation.timestamp)}</span>
+                      <span className="text-xs text-[#2d336b]/70 mr-2">{formatRelativeTime(conversation.timestamp)}</span>
                       <div className="relative">
                         <button
-                          className="ml-1 text-[#2d336b] hover:text-[#4045ef] p-1 transition-all duration-200 transform hover:scale-110"
-                          onClick={(e) => toggleConversationMenu(conversation.id, e)}
+                          onClick={() => handleDeleteConversation(conversation.id)}
+                          className="text-[#2d336b] hover:text-red-600 p-1 transition-all duration-200 transform hover:scale-110"
+                          aria-label="Delete conversation"
                         >
-                          <MoreHorizontal className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
-                        {activeConversationMenu === conversation.id && (
-                          <div
-                            ref={(el) => {
-                              conversationMenuRefs.current[conversation.id] = el
-                            }}
-                            className="absolute right-0 top-full mt-2 w-48 rounded-md shadow-lg bg-white border border-gray-200 z-50 transition-opacity duration-200 opacity-100"
-                          >
-                            <div className="py-1">
-                              <button
-                                onClick={() => handleDeleteConversation(conversation.id)}
-                                className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left transition-all duration-200"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                                <span>Delete conversation</span>
-                              </button>
-                            </div>
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -321,30 +322,15 @@ export default function HomeLayout({
           sidebarOpen ? "ml-64" : "ml-16"
         )}
       >
-        <div className="h-16 bg-white flex items-center px-6 sticky top-0 z-40 border-b border-gray-200">
-          <Link href="/admin/features" className="flex items-center gap-3 transition-all duration-200 hover:scale-105">
-            <img src="/favicon.ico" alt="TechBot Icon" className="h-10 w-10" />
-            <span className="text-2xl font-bold text-[#2d336b]">TechBot</span>
-          </Link>
-          <div className="flex-1" />
-          <div className="flex items-center gap-4 relative" ref={userMenuRef}>
+        <div className="h-16 bg-white flex items-center justify-end px-6 sticky top-0 z-40 border-b border-gray-200">
+          <div className="flex items-center gap-2 relative" ref={userMenuRef}>
             <button
               onClick={toggleUserMenu}
               className="flex items-center gap-2 text-[#2d336b] hover:text-[#4045ef] transition-all duration-200 transform hover:scale-105"
             >
-              <span>User</span>
+              <span>Admin</span>
               <ChevronDown className="h-4 w-4" />
             </button>
-            {showUserMenu && (
-              <div className="absolute right-0 top-full mt-2 w-48 rounded-md shadow-lg bg-white border border-gray-200 z-50 transition-opacity duration-200 opacity-100">
-                <div className="py-1">
-                  <button className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left transition-all duration-200">
-                    <LogOut className="h-4 w-4" />
-                    <span>Sign out</span>
-                  </button>
-                </div>
-              </div>
-            )}
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 transition-all duration-200 hover:scale-110">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -360,6 +346,16 @@ export default function HomeLayout({
                 <circle cx="12" cy="7" r="4" />
               </svg>
             </div>
+            {showUserMenu && (
+              <div className="absolute right-0 top-full mt-2 w-48 rounded-md shadow-lg bg-white border border-gray-200 z-50 transition-opacity duration-200 opacity-100">
+                <div className="py-1">
+                  <button className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left transition-all duration-200">
+                    <LogOut className="h-4 w-4" />
+                    <span>Sign out</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         <main className="flex-1 overflow-auto bg-gray-50 p-4">{children}</main>
