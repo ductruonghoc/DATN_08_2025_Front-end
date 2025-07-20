@@ -118,11 +118,11 @@ export default function SignInPage() {
                     </p>
               )}
 
-              <Button
+              <button
                 type="submit"
-                className="w-full bg-[#2e3470] text-white hover:bg-[#232759] rounded-full py-[22px]">
+                className="w-full bg-[#2e3470] text-white hover:bg-[#232759] rounded-full py-[12px]">
                 Log in
-              </Button>
+              </button>
             </form>
           </div>
         </main>

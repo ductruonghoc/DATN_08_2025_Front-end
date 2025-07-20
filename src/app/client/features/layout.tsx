@@ -1,0 +1,356 @@
+"use client"
+
+import type React from "react"
+import { Button } from "@/components/ui/button"
+import { useState, useRef, useEffect, use } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import {
+  Menu,
+  Upload,
+  Plus,
+  FileText,
+  MoreHorizontal,
+  ChevronDown,
+  LogOut,
+  Trash2,
+} from "lucide-react"
+import { cn } from "@/lib/utils"
+import { usePathname } from "next/navigation"
+import BASEURL from "../../api/backend/dmc_api_gateway/baseurl"
+import Loader from "@/components/loader/loader"; // Import the Loader component
+import { useConversations } from "@/context/conversation"
+
+export default function HomeLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [showUserMenu, setShowUserMenu] = useState(false)
+  const [activeConversationMenu, setActiveConversationMenu] = useState<string | null>(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [conversationToDelete, setConversationToDelete] = useState<string | null>(null)
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
+  //context for conversations
+  const { conversations, setConversations } = useConversations()
+
+  const pathname = usePathname()
+  const router = useRouter()
+  const userMenuRef = useRef<HTMLDivElement>(null)
+  const conversationMenuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
+
+  const handleNewConversation = () => {
+    router.push("/client/features/conversation")
+  }
+
+  const handleDeleteConversation = (conversationId: string) => {
+    setConversationToDelete(conversationId)
+    setShowDeleteModal(true)
+    setActiveConversationMenu(null)
+  }
+
+  const confirmDeleteConversation = () => {
+    if (conversationToDelete) {
+      setConversations(conversations.filter((conv: any) => conv.id !== conversationToDelete))
+      setShowDeleteModal(false)
+      setConversationToDelete(null)
+      if (pathname.includes(`/client/features/conversation/chat/${conversationToDelete}`)) {
+        router.push("/client/features/conversation")
+      }
+    }
+  }
+
+  const cancelDeleteConversation = () => {
+    setShowDeleteModal(false)
+    setConversationToDelete(null)
+  }
+
+  const toggleConversationMenu = (conversationId: string, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setActiveConversationMenu(activeConversationMenu === conversationId ? null : conversationId)
+  }
+
+  const handleSignOut = () => {
+    localStorage.removeItem("dmc_api_gateway_token");
+    router.push("/client/log-in");
+  };
+
+  //hooks here
+  useEffect(() => {
+    const checkAuthorization = async () => {
+      const token = localStorage.getItem("dmc_api_gateway_token")
+      if (!token) {
+        setIsAuthorized(false)
+        return
+      }
+
+      try {
+        const response = await fetch(`${BASEURL}/auth/client_authorize`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        if (response.status === 200) {
+          setIsAuthorized(true)
+        } else {
+          setIsAuthorized(false)
+        }
+      } catch (error) {
+        console.error("Authorization check failed:", error)
+        setIsAuthorized(false)
+      }
+    }
+
+    checkAuthorization()
+  }, [])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false)
+      }
+      if (
+        activeConversationMenu &&
+        !conversationMenuRefs.current[activeConversationMenu]?.contains(event.target as Node)
+      ) {
+        setActiveConversationMenu(null)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [activeConversationMenu])
+
+  // Fetch conversations from API
+  useEffect(() => {
+    if (!isAuthorized) return; // Only fetch if authorized
+    const fetchConversations = async () => {
+      const token = localStorage.getItem("dmc_api_gateway_token")
+      if (!token) return
+
+      try {
+        const res = await fetch(`${BASEURL}/conversation/list`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        const json = await res.json()
+        if (json.status && json.data && Array.isArray(json.data.conversations)) {
+          setConversations(
+            json.data.conversations.map((conv: any) => ({
+              id: conv.conversation_id,
+              title: conv.conversation_title || "Untitled",
+              lastMessage: "", // You can fetch last message separately if needed
+              timestamp: new Date(conv.conversation_updated_time),
+              deviceName: conv.device_name,
+            }))
+
+          )
+
+        }
+      } catch (error) {
+        console.error("Failed to fetch conversations:", error)
+      }
+    }
+    fetchConversations()
+
+  }, [setConversations, isAuthorized])
+
+  const formatRelativeTime = (date: Date) => {
+    const now = new Date()
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+    if (diffInSeconds < 60) return "just now"
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`
+    return date.toLocaleDateString()
+  }
+
+  const toggleUserMenu = () => {
+    setShowUserMenu(!showUserMenu)
+  }
+
+  if (isAuthorized === null) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100">
+        <Loader /> {/* Replace loading text with the Loader component */}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-full overflow-hidden bg-white">
+      <div
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex flex-col bg-[#fff2f2] transition-all duration-300 ease-in-out",
+          sidebarOpen ? "w-64" : "w-16"
+        )}
+      >
+        <div className="flex h-16 items-center px-2">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="flex items-center justify-center rounded-[10px] p-2 hover:bg-white/50"
+            aria-label="Toggle sidebar"
+          >
+            <Menu className="h-5 w-5 text-[#2d336b]" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-auto py-4">
+          <div className={cn("px-4", sidebarOpen ? "" : "flex justify-center")}>
+            <button
+              onClick={handleNewConversation}
+              className={cn(
+                "flex items-center gap-2 rounded-[10px] bg-white shadow-sm cursor-pointer hover:bg-gray-50 transition-colors",
+                sidebarOpen ? "w-full px-4 py-2 text-sm text-[#2d336b]" : "h-10 w-10 justify-center",
+                pathname.includes("/client/features/conversation") ? "ring-2 ring-[#4045ef]/20" : ""
+              )}
+            >
+              <Plus className="h-4 w-4" />
+              {sidebarOpen && <span>New conversation</span>}
+            </button>
+          </div>
+
+          {sidebarOpen && (
+            <div className="mt-8 px-2">
+              <h3 className="px-3 text-xs font-semibold uppercase text-[#2d336b] mb-2">Your conversations</h3>
+              <div className="space-y-1">
+                {isAuthorized ?
+                  conversations.map((conversation) => (
+                    <div
+                      key={conversation.id}
+                      className={cn(
+                        "flex items-center justify-between rounded-[10px] px-3 py-2 hover:bg-white/50 relative",
+                        pathname.includes(`/client/features/conversation/chat/${conversation.id}`) ? "bg-white/50" : ""
+                      )}
+                    >
+                      <Link href={`/client/features/conversation/chat/${conversation.id}`} className="flex-1 min-w-0">
+                        <div className="flex items-center">
+                          <span className="font-medium text-sm truncate text-[#2d336b]">
+                            {conversation.deviceName || "Untitled"}
+                          </span>
+                        </div>
+                        <div className="flex items-center text-xs text-[#2d336b] mt-1">
+                          <span className="truncate">{conversation.title}</span>
+                        </div>
+                      </Link>
+                      <div className="flex items-center">
+                        <span className="text-xs text-[#2d336b] ml-2">{formatRelativeTime(conversation.timestamp)}</span>
+                        <div className="relative">
+                          <button
+                            className="ml-1 text-[#2d336b] hover:text-[#4045ef] p-1"
+                            onClick={(e) => toggleConversationMenu(conversation.id, e)}
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </button>
+                          {activeConversationMenu === conversation.id && (
+                            <div
+                              ref={(el) => { conversationMenuRefs.current[conversation.id] = el }}
+                              className="absolute right-0 top-full mt-1 w-48 rounded-[10px] shadow-lg bg-white border border-gray-200 z-50"
+                            >
+                              <div className="py-1">
+                                <button
+                                  onClick={() => handleDeleteConversation(conversation.id)}
+                                  className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  <span>Delete conversation</span>
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )) :
+                  <div className="text-gray-400 text-sm px-3 py-2">
+                    No conversations available.
+                  </div>
+                }
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div
+        className={cn(
+          "flex flex-1 flex-col transition-all duration-300 ease-in-out h-full",
+          sidebarOpen ? "ml-64" : "ml-16"
+        )}
+      >
+        <div className="h-16 bg-white flex items-center px-4 sticky top-0 z-40">
+          <Link href="/client/features" className="flex items-center gap-2">
+            <img src="/favicon.ico" alt="TechBot Icon" className="h-10 w-10" />
+            <span className="text-2xl font-bold text-[#2d336b]">TechBot</span>
+          </Link>
+          <div className="flex-1"></div>
+          <div className="flex items-center gap-4 relative" ref={userMenuRef}>
+            <button onClick={toggleUserMenu} className="flex items-center gap-2 text-[#2d336b] hover:underline">
+              <span>User</span>
+              <ChevronDown className="h-4 w-4" />
+            </button>
+            {showUserMenu && (
+              <div className="absolute right-0 top-full mt-1 w-48 rounded-[10px] shadow-lg bg-white border border-gray-200 z-50">
+                <div className="py-1">
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left">
+                    <LogOut className="h-4 w-4" />
+                    <span>Sign out</span>
+                  </button>
+                </div>
+              </div>
+            )}
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-5 w-5 text-gray-700"
+              >
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </div>
+          </div>
+        </div>
+        <main className="flex-1 overflow-auto">{children}</main>
+      </div>
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h2 className="text-lg font-medium mb-4 text-[#2e3139]">Delete Conversation</h2>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this conversation? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={cancelDeleteConversation}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteConversation}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
