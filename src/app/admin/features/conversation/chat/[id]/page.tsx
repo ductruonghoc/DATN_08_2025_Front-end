@@ -342,7 +342,10 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
 
   const components = {
     li: ({ node, ...props }: any) => (
-      <li style={{ overflowWrap: "anywhere", wordBreak: "break-word" }} {...props} />
+      <li style={{ overflowWrap: "normal", wordBreak: "normal" }} {...props} />
+    ),
+    p: ({ node, ...props }: any) => (
+      <p style={{ overflowWrap: "normal", wordBreak: "normal" }} {...props} />
     ),
     code: ({ node, inline, className, children, ...props }: any) => {
       if (inline) {
