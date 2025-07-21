@@ -350,13 +350,13 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     code: ({ node, inline, className, children, ...props }: any) => {
       if (inline) {
         return (
-          <code style={{ overflowWrap: "anywhere", wordBreak: "break-word" }} className={className} {...props}>
+          <code style={{ overflowWrap: "normal", wordBreak: "normal" }} className={className} {...props}>
             {children}
           </code>
         )
       }
       return (
-        <code style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", wordBreak: "break-word" }} className={className} {...props}>
+        <code style={{ whiteSpace: "nowrap", overflowWrap: "normal", wordBreak: "normal" }} className={className} {...props}>
           <code>{children}</code>
         </code>
       )
