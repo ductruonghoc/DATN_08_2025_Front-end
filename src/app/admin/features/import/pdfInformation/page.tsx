@@ -543,11 +543,13 @@ export default function PDFInformationPage() {
                   <div className="flex-1 overflow-y-auto space-y-4">
                     {images.map((image) => (
                       <div key={image.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+                        <div className="flex items-center justify-center w-full">
                         <LazyImage
                           imgId={image.id}
                           alt={`Image ${image.id}`}
-                          className="w-full h-48 object-cover rounded-md mb-4"
+                          className="w-72 h-72 object-contain rounded-md mb-4"
                         />
+                        </div>
                         <div className="space-y-4">
                           <label className="block text-sm font-medium text-gray-700">Image Description</label>
                           <textarea
