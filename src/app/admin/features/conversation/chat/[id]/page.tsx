@@ -244,14 +244,62 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       })
       const json = await res.json()
       if (!json.success) throw new Error(json.message || "Failed to get response")
+      // Streaming response effect
       const aiMessage: Message = {
         id: json.data.pair_id,
-        content: json.data.response,
+        content: "",
         sender: "ai",
         timestamp: new Date().toISOString(),
-        images_ids: json.data.images_ids || [],
-      }
-      setMessages((prev) => [...prev, aiMessage])
+        images_ids: [],
+      };
+
+      setMessages((prev) => [...prev, aiMessage]);
+
+      const words = json.data.response.split(" ");
+      const maxDuration = 10000; // Maximum duration in milliseconds (5 seconds)
+      const delay = Math.min(maxDuration / words.length, 5); // Calculate delay per word, capped at 50ms
+
+      let currentContent = "";
+      let wordIndex = 0;
+
+      const interval = setInterval(() => {
+        if (wordIndex < words.length) {
+          currentContent += (wordIndex === 0 ? "" : " ") + words[wordIndex];
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === aiMessage.id ? { ...msg, content: currentContent } : msg
+            )
+          );
+          wordIndex++;
+        } else {
+          clearInterval(interval); // Stop the interval when all words are displayed
+        }
+      }, delay);
+      // Ensure the interval is cleared after the maximum duration
+      // Ensure the interval is cleared after the maximum duration
+      setTimeout(() => {
+        clearInterval(interval);
+        if (wordIndex < words.length) {
+          // If the effect is incomplete, display the full response immediately
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === aiMessage.id
+                ? { ...msg, content: json.data.response, images_ids: json.data.images_ids || [] }
+                : msg
+            )
+          );
+        } else {
+          // Show images after the full response is displayed
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === aiMessage.id
+                ? { ...msg, images_ids: json.data.images_ids || [] }
+                : msg
+            )
+          );
+        }
+        setIsLoading(false); // Allow user input after the response is fully displayed
+      }, maxDuration);
     } catch (err: any) {
       toast.error("Failed to get response: " + err.message)
     } finally {
@@ -375,7 +423,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       />
     ),
     p: ({ node, ...props }: any) => (
-      <p
+      <div
         style={{
           overflowWrap: "normal",
           wordBreak: "normal",
@@ -598,6 +646,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={handleKeyDown}
+                  disabled={isLoading} // Disable input when loading
                 />
                 <Button
                   type="button"
@@ -609,7 +658,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                       : "bg-transparent text-[#2d336b]/50"
                   )}
                   onClick={handleSendMessage}
-                  disabled={!inputValue.trim() || isLoading}
+                  disabled={!inputValue.trim() || isLoading} // Disable button when loading
                   aria-label="Send message"
                 >
                   <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" xmlns="http://www.w3.org/2000/svg">
