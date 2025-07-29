@@ -364,7 +364,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   }
 
   return (
-    <div className="flex h-full overflow-auto p-4 gap-4 bg-[#E6D9D9] w-full">
+    <div className="flex h-full overflow-auto p-4 gap-4 bg-[#E6D9D9] w-full overflow-x-hidden">
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} closeOnClick pauseOnHover />
       {isFetchingConversation ? (
         <div className="flex flex-1 items-center justify-center h-full bg-white rounded-[10px] border border-gray-200 shadow-sm">
@@ -379,7 +379,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-white max-w-[calc(100% - 16px)]">
+            <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-white max-w-[calc(100% - 16px)] overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300">
               {messages.map((message) => (
                 <div key={message.id} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"} transition-all duration-300 ease-in-out`}>
                   <div className={`flex max-w-[700px] ${message.sender === "user" ? "flex-row-reverse" : "flex-row"}`}>
