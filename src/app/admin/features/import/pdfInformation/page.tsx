@@ -40,17 +40,11 @@ export default function PDFInformationPage() {
   const [totalPages, setTotalPages] = useState(0)
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [pdfName, setPdfName] = useState<string>("")
-  const [deviceInfo, setDeviceInfo] = useState({ name: "", brand: "", type: "" })
-  const [checkedPages, setCheckedPages] = useState<Set<number>>(new Set())
   const [activeTab, setActiveTab] = useState<"texts" | "images">("texts")
   const [paragraph, setParagraph] = useState<string>("")
   const [isParagraphModified, setIsParagraphModified] = useState(false)
   const [images, setImages] = useState<ImageData[]>([])
   const [scale, setScale] = useState(1.0)
-  const [snipping, setSnipping] = useState(false)
-  const [snipRect, setSnipRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
-  const [snipStart, setSnipStart] = useState<{ x: number; y: number } | null>(null)
-  const [snipImage, setSnipImage] = useState<string | null>(null)
   //const [snipReady, setSnipReady] = useState(false)
   const [pdfId, setPdfId] = useState<number | null>(null)
   const [embedLoading, setEmbedLoading] = useState(false)
@@ -155,25 +149,64 @@ export default function PDFInformationPage() {
     // Optionally, debounce and save to server
   }
 
-  // const handleCheckPage = () => {
-  //   const newCheckedPages = new Set(checkedPages)
-  //   if (checkedPages.has(currentPage)) {
-  //     newCheckedPages.delete(currentPage)
-  //     toast.info(`Page ${currentPage} unchecked`)
-  //   } else {
-  //     if (images.some((img) => !img.description)) {
-  //       toast.error("Please describe all images before checking the page")
-  //       return
-  //     }
-  //     newCheckedPages.add(currentPage)
-  //     toast.success(`Page ${currentPage} checked`)
-  //   }
-  //   setCheckedPages(newCheckedPages)
-  //   if (newCheckedPages.size === totalPages) {
-  //     toast.success("All pages processed successfully!")
-  //     setTimeout(() => router.push("/admin/features/track-progress/finish"), 1000)
-  //   }
-  // }
+  const fetchSaveImage = async (capturedImg: string) => {
+    if (!pdfId) {
+      toast.error("PDF ID is missing. Please start from the beginning.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${BASEURL}/pdf_process/create_new_image`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          pdf_id: pdfId,
+          page_number: currentPage,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create a new image.");
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        const { image_id, signed_url } = result.data;
+
+        // Upload the captured image to the signed URL
+        const blob = await (await fetch(capturedImg)).blob();
+        const uploadResponse = await fetch(signed_url, {
+          method: "PUT",
+          body: blob,
+          headers: {
+            "Content-Type": "image/png",
+          },
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error("Failed to upload the image.");
+        }
+             // Append the new image to the images list
+      setImages((prevImages) => [
+        ...prevImages,
+        {
+          id: image_id,
+          src: `/placeholder.svg?id=${image_id}`, // Replace with the actual image URL if available
+          description: "",
+          checked: false,
+        },
+      ]);
+        toast.success("Image saved successfully!");
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error: any) {
+      toast.error("Error saving image: " + error.message);
+    }
+  };
 
   const handleImageDescriptionChange = (imageId: number, description: string) => {
     setImages((prev) =>
@@ -215,54 +248,6 @@ export default function PDFInformationPage() {
   const handleZoomOut = () => setScale((s) => Math.max(s - 0.2, 0.5))
   const handleZoomReset = () => setScale(1.0)
 
-  const handleSnipMouseDown = (e: React.MouseEvent) => {
-    if (!snipping || !pdfViewerRef.current) return
-    const rect = pdfViewerRef.current.getBoundingClientRect()
-    const scrollLeft = pdfViewerRef.current.scrollLeft
-    const scrollTop = pdfViewerRef.current.scrollTop
-    const startX = e.clientX - rect.left + scrollLeft
-    const startY = e.clientY - rect.top + scrollTop
-    setSnipStart({ x: startX, y: startY })
-    setSnipRect({ x: startX, y: startY, w: 0, h: 0 })
-  }
-
-  const handleSnipMouseMove = (e: React.MouseEvent) => {
-    if (!snipping || !snipStart || !pdfViewerRef.current) return
-    const rect = pdfViewerRef.current.getBoundingClientRect()
-    const scrollLeft = pdfViewerRef.current.scrollLeft
-    const scrollTop = pdfViewerRef.current.scrollTop
-    const contentWidth = pdfViewerRef.current.clientWidth
-    const contentHeight = pdfViewerRef.current.clientHeight
-    let currX = e.clientX - rect.left + scrollLeft
-    let currY = e.clientY - rect.top + scrollTop
-    currX = Math.max(0, Math.min(currX, contentWidth))
-    currY = Math.max(0, Math.min(currY, contentHeight))
-    setSnipRect({
-      x: Math.min(snipStart.x, currX),
-      y: Math.min(snipStart.y, currY),
-      w: Math.abs(currX - snipStart.x),
-      h: Math.abs(currY - snipStart.y),
-    })
-  }
-
-  const handleSnipMouseUp = async () => {
-    setSnipStart(null)
-    setSnipping(false)
-    if (pdfViewerRef.current && snipRect && snipRect.w > 5 && snipRect.h > 5) {
-      const newImageSrc = `/placeholder.svg?page=${currentPage}&snip=true&device=${deviceInfo.name}`
-      setSnipImage(newImageSrc)
-      setImages((prev) => [
-        ...prev,
-        { id: prev.length + 1, src: newImageSrc, description: "", checked: false },
-      ])
-      toast.success("Area snipped and added to images")
-    }
-    setSnipRect(null)
-  }
-
-
-
-
   return (
     <div className="flex flex-col h-full pt-6 bg-gray-50">
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} closeOnClick pauseOnHover />
@@ -287,47 +272,10 @@ export default function PDFInformationPage() {
           <div
             ref={pdfViewerRef}
             className="flex-1 border border-gray-200 rounded-lg flex items-center justify-center bg-white overflow-hidden relative shadow-sm"
-            style={{
-              userSelect: snipping ? "none" : undefined,
-              cursor: snipping ? "crosshair" : undefined,
-            }}
-            onMouseDown={snipping ? handleSnipMouseDown : undefined}
-            onMouseMove={snipping && snipStart ? handleSnipMouseMove : undefined}
-            onMouseUp={snipping && snipStart ? handleSnipMouseUp : undefined}
           >
             {/* Controls */}
             <div className="absolute top-4 left-4 right-4 z-10">
               <div className="flex items-center justify-between bg-white/95 backdrop-blur-sm rounded-lg p-2 shadow-md">
-                {/* <div className="flex items-center gap-2">
-                  {!snipReady ? (
-                    <Button
-                      onClick={() => {
-                        setSnipping(true)
-                        setSnipRect(null)
-                        setSnipImage(null)
-                        setSnipReady(true)
-                      }}
-                      className={`px-3 py-1 text-sm ${snipping ? "bg-green-600 hover:bg-green-700" : "bg-indigo-600 hover:bg-indigo-700"
-                        }`}
-                      disabled={snipping}
-                    >
-                      {snipping ? <Check className="w-4 h-4 mr-1" /> : null}
-                      {snipping ? "Ready to Snip" : "Snip Area"}
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={() => {
-                        setSnipReady(false)
-                        setSnipping(false)
-                        setSnipImage(null)
-                      }}
-                      className="px-3 py-1 text-sm bg-green-600 hover:bg-green-700"
-                    >
-                      <Check className="w-4 h-4 mr-1" />
-                      Confirm Snip
-                    </Button>
-                  )}
-                </div> */}
                 <div className="flex justify-center items-center gap-4">
                   <div className="flex items-center bg-indigo-50 rounded-lg">
                     <button
@@ -350,21 +298,6 @@ export default function PDFInformationPage() {
                       <ChevronRight className="w-5 h-5" />
                     </button>
                   </div>
-                  {/* <div
-                    className={`rounded-lg px-6 py-2 ${isCurrentPageChecked
-                      ? "bg-green-600 hover:bg-green-700 text-white"
-                      : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
-                      }`}
-                  >
-                    {isCurrentPageChecked ? (
-                      <>
-                        <Check className="w-4 h-4 mr-2" />
-                        Checked
-                      </>
-                    ) : (
-                      "In progress"
-                    )}
-                  </div> */}
                 </div>
                 <div className="flex items-center gap-2">
                   <Button onClick={handleZoomOut} variant="outline" size="sm" className="px-2 py-1 text-xs">
@@ -384,7 +317,12 @@ export default function PDFInformationPage() {
             {/* PDF Content */}
             {pdfUrl ? (
               <div className="pt-[80px]" style={{ transform: `scale(${scale})`, transformOrigin: "center center" }}>
-                <PDFViewer pdfUrl={pdfUrl} currentPage={currentPage} onLoadSuccess={() => { }} />
+                <PDFViewer
+                  pdfUrl={pdfUrl}
+                  currentPage={currentPage}
+                  onLoadSuccess={() => { }}
+                  fetchSaveImage={fetchSaveImage}
+                />
               </div>
             ) : (
               <div className="text-center p-4">
@@ -392,40 +330,6 @@ export default function PDFInformationPage() {
               </div>
             )}
 
-            {/* Snipping overlay */}
-            {/* {snipping && snipRect && (
-              <div
-                style={{
-                  position: "absolute",
-                  left: snipRect.x,
-                  top: snipRect.y,
-                  width: snipRect.w,
-                  height: snipRect.h,
-                  border: "2px dashed indigo-600",
-                  background: "rgba(79,70,229,0.1)",
-                  pointerEvents: "none",
-                  zIndex: 20,
-                }}
-              />
-            )} */}
-
-            {/* Snip preview */}
-            {/* {snipImage && (
-              <div className="absolute bottom-4 left-4 z-30 bg-white p-2 rounded-lg shadow-md border max-w-[200px]">
-                <img src={snipImage || "/placeholder.svg"} alt="Snipped area" className="w-full h-auto rounded" />
-                <Button
-                  onClick={() => {
-                    setSnipImage(null)
-                    setSnipReady(false)
-                  }}
-                  variant="outline"
-                  size="sm"
-                  className="w-full mt-2 text-xs"
-                >
-                  Close Preview
-                </Button>
-              </div>
-            )} */}
           </div>
 
           {/* Navigation */}

@@ -12,6 +12,7 @@ interface PDFViewerProps {
   pdfUrl: string
   currentPage: number
   onLoadSuccess: (data: { numPages: number }) => void
+  fetchSaveImage?: (capturedImg: string) => Promise<void>
 }
 
 interface Rect {
@@ -21,13 +22,14 @@ interface Rect {
   height: number
 }
 
-export default function PDFViewer({ pdfUrl, currentPage, onLoadSuccess }: PDFViewerProps) {
+export default function PDFViewer({ pdfUrl, currentPage, onLoadSuccess, fetchSaveImage }: PDFViewerProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [numPages, setNumPages] = useState<number>(0)
   const [selectionRect, setSelectionRect] = useState<Rect | null>(null); // Lưu trữ tọa độ vùng chọn
   const [isDragging, setIsDragging] = useState(false);
   const [startPoint, setStartPoint] = useState({ x: 0, y: 0 });
+  const [capturedImage, setCapturedImage] = useState<string | null>(null); // State to store the captured image
 
   const pageRef = useRef<HTMLDivElement>(null);
 
@@ -123,12 +125,26 @@ export default function PDFViewer({ pdfUrl, currentPage, onLoadSuccess }: PDFVie
 
     // Lấy dữ liệu hình ảnh (ví dụ: base64)
     const imageData = tempCanvas.toDataURL('image/png');
-    console.log('Captured image data:', imageData);
     // Ở đây bạn có thể hiển thị ảnh đã chụp, tải xuống, hoặc gửi đi
     // Ví dụ: hiển thị trong một <img>
-    const img = document.createElement('img');
-    img.src = imageData;
-    document.body.appendChild(img); // Hoặc hiển thị trong một modal/component khác
+    setCapturedImage(imageData);
+  };
+
+  const handleSaveImage = async () => {
+    if (!capturedImage) {
+      console.error("No image to save.");
+      return;
+    }
+
+    try {
+      if (fetchSaveImage) {
+        await fetchSaveImage(capturedImage);
+      }
+      setSelectionRect(null); // Clear the selection rectangle after saving
+      setCapturedImage(null); // Clear the captured image after successful fetch
+    } catch (error) {
+      console.error("Error saving image:", error);
+    }
   };
 
   if (isLoading) {
@@ -154,7 +170,7 @@ export default function PDFViewer({ pdfUrl, currentPage, onLoadSuccess }: PDFVie
   return (
     <div className="w-full h-full flex items-center justify-center overflow-auto p-4">
       <div
-        className="bg-white shadow-md border border-gray-200 rounded-lg max-w-2xl w-full h-full overflow-y-auto"
+        className="relative bg-white shadow-md border border-gray-200 rounded-lg max-w-2xl w-full h-full overflow-y-auto"
         style={{ maxHeight: "55vh" }}
       >
         {/* Mock PDF Page */}
@@ -198,7 +214,7 @@ export default function PDFViewer({ pdfUrl, currentPage, onLoadSuccess }: PDFVie
                   width: selectionRect.width,
                   height: selectionRect.height,
                 }}
-              > 
+              >
               </div>
             )}
           </div>
@@ -207,6 +223,25 @@ export default function PDFViewer({ pdfUrl, currentPage, onLoadSuccess }: PDFVie
           Page {currentPage} of {numPages}
         </div>
       </div>
+      {/* Display the captured image */}
+      {capturedImage && (
+        <div
+          className="absolute top-20 right-4 bg-white shadow-lg border border-gray-300 rounded-lg p-2"
+          style={{ zIndex: 1000 }}
+        >
+          <img
+            src={capturedImage}
+            alt="Captured"
+            className="max-w-[200px] max-h-[200px] rounded mb-2"
+          />
+          <button
+            onClick={handleSaveImage}
+            className="bg-[#4045ef] text-white px-4 py-2 rounded text-sm hover:bg-[#3035df]"
+          >
+            Save
+          </button>
+        </div>
+      )}
     </div>
   )
 }
