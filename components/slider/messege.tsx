@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react"
+import { ArrowLeft, ArrowRight } from "lucide-react"
 import BASEURL from "@/src/app/api/backend/dmc_api_gateway/baseurl"
 const MessageImageSlider = ({ images_ids }: { images_ids: number[] }) => {
   const [sliderIdx, setSliderIdx] = useState(0)
@@ -39,7 +40,7 @@ const MessageImageSlider = ({ images_ids }: { images_ids: number[] }) => {
           }
           className="text-[#2d336b] hover:text-[#4045ef]"
         >
-          &lt;
+          <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex space-x-1">
           {images_ids.map((_, idx) => (
@@ -57,7 +58,7 @@ const MessageImageSlider = ({ images_ids }: { images_ids: number[] }) => {
           }
           className="text-[#2d336b] hover:text-[#4045ef]"
         >
-          &gt;
+          <ArrowRight className="h-5 w-5" />
         </button>
       </div>
     </div>

@@ -33,7 +33,10 @@ interface ImageData {
 export default function PDFInformationPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [currentPage, setCurrentPage] = useState(1)
+  const initialPage = parseInt(searchParams.get("page_number") || "1", 10) // Get initial page from URL
+  const [currentPage, setCurrentPage] = useState(
+    !isNaN(initialPage) && initialPage >= 1 ? initialPage : 1
+  )
   const [totalPages, setTotalPages] = useState(0)
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [pdfName, setPdfName] = useState<string>("")
@@ -64,65 +67,57 @@ export default function PDFInformationPage() {
   const pdfViewerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const storedPdfId = sessionStorage.getItem("pdf_id") // Lấy pdf_id từ sessionStorage
-    //const storedPdfId = 57 //mocked pdf_id
+    const storedPdfId = sessionStorage.getItem("pdf_id");
     if (!storedPdfId) {
-      // Nếu không tồn tại pdf_id, chuyển hướng về trang import
-      toast.error("PDF ID is missing. Please start from the beginning.")
-      router.push("/admin/features/import")
-    } else {
-      setPdfId(storedPdfId ? Number(storedPdfId) : null)
-      // Fetch initial PDF state
-      fetch(`${BASEURL}/pdf_process/get_pdf_initial_state?pdf_id=${storedPdfId}`)
-        .then(async (res) => {
-          if (!res.ok) throw new Error(await res.text())
-          return res.json()
-        })
-        .then((json) => {
-          if (!json.success) throw new Error(json.message)
-          const data = json.data
-          if (!data.pdf_ocr_flag) {
-            toast.error("PDF OCR failed. Please re-import.")
-            router.push("/admin/features/import")
-            return
-          }
-          setPdfName(data.pdf_name || "")
-          setPdfUrl(data.pdf_gcs_signed_read_url || null)
-          setParagraph(data.page_paragraph?.context || "")
-          setParagraphId(data.page_paragraph?.id || null)
-          setIsParagraphModified(!!data.page_paragraph?.modified)
-          setTotalPages(data.pdf_number_of_pages || 0)
-
-          setImages(
-            (data.images || []).map((img: any) => ({
-              id: img.id,
-              src: `/placeholder.svg?id=${img.id}`, // Replace with real image src if available
-              description: img.alt || "",
-              checked: !!img.modified,
-            }))
-          )
-          setInitialSetupDone(true)
-        })
-        .catch((err) => {
-          toast.error("Failed to load PDF state: " + err.message)
-          // router.push("/admin/features/import")
-        })
+      toast.error("PDF ID is missing. Please start from the beginning.");
+      router.push("/admin/features/import");
+      return;
     }
-  }, [setInitialSetupDone, router, setPdfId, setPdfUrl, setPdfName, setParagraph, setImages, setCheckedPages])
+
+    setPdfId(Number(storedPdfId));
+    fetch(`${BASEURL}/pdf_process/get_pdf_initial_state?pdf_id=${storedPdfId}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error(await res.text());
+        return res.json();
+      })
+      .then((json) => {
+        if (!json.success) throw new Error(json.message);
+        const data = json.data;
+        if (!data.pdf_ocr_flag) {
+          toast.error("PDF OCR failed. Please re-import.");
+          router.push("/admin/features/import");
+          return;
+        }
+        setPdfName(data.pdf_name || "");
+        setPdfUrl(data.pdf_gcs_signed_read_url || null);
+        setTotalPages(data.pdf_number_of_pages || 0);
+        setInitialSetupDone(true);
+
+        // Set the initial page after setup is complete
+        setCurrentPage(
+          !isNaN(initialPage) && initialPage >= 1 && initialPage <= data.pdf_number_of_pages
+            ? initialPage
+            : 1
+        );
+      })
+      .catch((err) => {
+        toast.error("Failed to load PDF state: " + err.message);
+      });
+  }, [router, initialPage]);
 
   // Fetch single page data when currentPage changes
   useEffect(() => {
-    if (!pdfId) return
-    if (initialSetupDone === false) return
+    if (!pdfId || !initialSetupDone || currentPage === null) return;
+
     async function fetchPageData() {
       try {
         const res = await fetch(
           `${BASEURL}/pdf_process/get_pdf_state?pdf_id=${pdfId}&page_number=${currentPage}`
-        )
-        if (!res.ok) throw new Error(await res.text())
-        const json = await res.json()
-        if (!json.success) throw new Error(json.message)
-        const data = json.data
+        );
+        if (!res.ok) throw new Error(await res.text());
+        const json = await res.json();
+        if (!json.success) throw new Error(json.message);
+        const data = json.data;
         setParagraph(data.page_paragraph?.context || "")
         setParagraphId(data.page_paragraph?.id || null)
         setIsParagraphModified(!!data.page_paragraph?.modified)
@@ -135,21 +130,12 @@ export default function PDFInformationPage() {
           }))
         )
       } catch (err: any) {
-        toast.error("Failed to load page data: " + err.message)
+        toast.error("Failed to load page data: " + err.message);
       }
     }
-    fetchPageData()
-  }, [currentPage, pdfId, initialSetupDone, setParagraph, setParagraphId, setIsParagraphModified, setImages])
 
-  useEffect(() => {
-    const pageParam = searchParams.get("page_number")
-    if (pageParam) {
-      const pageNum = parseInt(pageParam, 10)
-      if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= totalPages) {
-        setCurrentPage(pageNum)
-      }
-    }
-  }, [searchParams, totalPages])
+    fetchPageData();
+  }, [currentPage, pdfId, initialSetupDone]);
 
   const nextPage = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1)
@@ -544,11 +530,11 @@ export default function PDFInformationPage() {
                     {images.map((image) => (
                       <div key={image.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                         <div className="flex items-center justify-center w-full">
-                        <LazyImage
-                          imgId={image.id}
-                          alt={`Image ${image.id}`}
-                          className="w-72 h-72 object-contain rounded-md mb-4"
-                        />
+                          <LazyImage
+                            imgId={image.id}
+                            alt={`Image ${image.id}`}
+                            className="w-72 h-72 object-contain rounded-md mb-4"
+                          />
                         </div>
                         <div className="space-y-4">
                           <label className="block text-sm font-medium text-gray-700">Image Description</label>
@@ -586,7 +572,7 @@ export default function PDFInformationPage() {
               )}
             </div>
 
-             {/* View Processes Button */}
+            {/* View Processes Button */}
             {canViewProcesses && (
               <Button
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white mt-4"

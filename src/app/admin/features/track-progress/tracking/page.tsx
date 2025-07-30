@@ -130,8 +130,12 @@ export default function TrackProgressPage() {
         const res = await fetch(`${BASEURL}/pdf_process/get_brands_and_device_types`)
         const json = await res.json()
         if (json.success && json.data) {
-          setAllBrands((json.data.brands || []).map((b: any) => b.label))
-          setAllCategories((json.data.deviceTypes || json.data.devices || []).map((d: any) => d.label))
+          const uniqueBrands:string[] = Array.from(new Set((json.data.brands || []).map((b: any) => b.label)));
+          const uniqueCategories:string[] = Array.from(
+            new Set((json.data.deviceTypes || json.data.devices || []).map((d: any) => d.label))
+          );
+          setAllBrands(uniqueBrands);
+          setAllCategories(uniqueCategories);
         }
       } catch (e) {
         setAllBrands([])
@@ -186,8 +190,8 @@ export default function TrackProgressPage() {
                 </SelectTrigger>
                 <SelectContent className="rounded-md bg-white shadow-lg">
                   <SelectItem value="*">All Brands</SelectItem>
-                  {allBrands.map((brand) => (
-                    <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+                  {allBrands.map((brand, idx) => (
+                    <SelectItem key={idx} value={brand}>{brand}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -197,8 +201,8 @@ export default function TrackProgressPage() {
                 </SelectTrigger>
                 <SelectContent className="rounded-md bg-white shadow-lg">
                   <SelectItem value="*">All Categories</SelectItem>
-                  {allCategories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  {allCategories.map((cat, idx) => (
+                    <SelectItem key={idx} value={cat}>{cat}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

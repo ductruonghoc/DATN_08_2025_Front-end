@@ -167,7 +167,7 @@ export default function ConversationPage() {
   const hasActiveFilters = selectedCategory || selectedBrand
 
   return (
-    <div className="flex flex-col h-full p-6 bg-gradient-to-br from-slate-50 to-gray-100 min-h-screen">
+    <div className="flex flex-col h-full p-6 bg-gradient-to-br from-slate-50 to-gray-100 min-h-screen overflow-x-hidden">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div className="space-y-2">
