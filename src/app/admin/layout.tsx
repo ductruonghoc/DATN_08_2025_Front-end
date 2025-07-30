@@ -1,5 +1,6 @@
 "use client"
 import { ConversationsProvider } from "@/context/conversation"
+import { Analytics } from "@vercel/analytics/react"
 
 export default function Layout({
   children,
@@ -15,7 +16,9 @@ export default function Layout({
         <ConversationsProvider>
           {children}
         </ConversationsProvider>
+        <Analytics />
       </body>
+      
     </html>
   )
 }

@@ -3,6 +3,7 @@ import { ConversationsProvider } from "@/context/conversation"
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import BASEURL from "@/src/app/api/backend/dmc_api_gateway/baseurl";
+import { Analytics } from "@vercel/analytics/react";
 
 export default function Layout({
   children,
@@ -39,6 +40,7 @@ export default function Layout({
         <ConversationsProvider>
           {children}
         </ConversationsProvider>
+        <Analytics />
       </body>
     </html>
   )

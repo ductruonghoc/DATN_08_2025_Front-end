@@ -19,6 +19,7 @@ import Loader from "@/components/loader/loader"
 import { useConversations } from "@/context/conversation"
 import { toast, ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
+import { Analytics } from "@vercel/analytics/react"
 
 export default function HomeLayout({
   children,
@@ -425,6 +426,7 @@ export default function HomeLayout({
           </div>
         </div>
       )}
+      <Analytics />
     </div>
   )
 }
