@@ -30,7 +30,7 @@ export default function ForgotPasswordPage() {
 
       if (response.ok && data.success) {
         sessionStorage.setItem("resetEmail", email)
-        router.push("/forgot-password/verify")
+        router.push("/client/forgot-password/verify")
       } else {
         setError(data.message || "Failed to send OTP.")
       }
