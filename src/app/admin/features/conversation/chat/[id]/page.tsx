@@ -13,6 +13,8 @@ import BASEURL from "@/src/app/api/backend/dmc_api_gateway/baseurl"
 import Loader from "@/components/loader/loader"
 import MessageImageSlider from "@/components/slider/messege"
 import { useConversations } from "@/context/conversation"
+//Components
+import ReferencesPillButtons from "@/components/pillButtons/references"
 
 interface Message {
   id: string
@@ -20,6 +22,7 @@ interface Message {
   sender: "user" | "ai"
   timestamp: string // Store as ISO string
   images_ids?: number[]
+  context_ids?: number[]
 }
 
 interface Note {
@@ -27,6 +30,19 @@ interface Note {
   title: string
   content: string
 }
+
+const preprocessContent = (content: string) => {
+  // Remove strings like "[Source 1]" or "[Nguồn 1]"
+  const removeBracketedSources = content.replace(/\[(Source|Nguồn) \d+\]/g, `🔗`);
+
+  // Replace strings like "Source 1" or "Nguồn 1" (without brackets) with a link chain icon
+  const replaceSourcesWithIcon = removeBracketedSources.replace(
+    /\b(Source|Nguồn) \d+\b/g,
+    `🔗`
+  );
+
+  return replaceSourcesWithIcon;
+};
 
 export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   //Next.js router
@@ -108,6 +124,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
             sender: "ai",
             timestamp: pair.created_time,
             images_ids: pair.images || [],
+            context_ids: pair.context_ids || [],
           })
         })
         if (isMounted) {
@@ -244,6 +261,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       })
       const json = await res.json()
       if (!json.success) throw new Error(json.message || "Failed to get response")
+      console.log('Response: ', json.data)
       // Streaming response effect
       const aiMessage: Message = {
         id: json.data.pair_id,
@@ -251,6 +269,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         sender: "ai",
         timestamp: new Date().toISOString(),
         images_ids: [],
+        context_ids: []
       };
 
       setMessages((prev) => [...prev, aiMessage]);
@@ -284,7 +303,10 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === aiMessage.id
-                ? { ...msg, content: json.data.response, images_ids: json.data.images_ids || [] }
+                ? { ...msg, content: json.data.response, 
+                  images_ids: json.data.images_ids || [],
+                  context_ids: json.data.context_ids || []
+                }
                 : msg
             )
           );
@@ -293,10 +315,13 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === aiMessage.id
-                ? { ...msg, images_ids: json.data.images_ids || [] }
+                ? { ...msg, 
+                  images_ids: json.data.images_ids || [], 
+                  context_ids: json.data.context_ids || [] }
                 : msg
             )
           );
+          console.log("Updated message with context IDs:", json.data.context_ids);
         }
         setIsLoading(false); // Allow user input after the response is fully displayed
       }, maxDuration);
@@ -354,21 +379,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     toast.success("Note deleted successfully")
   }
 
-  const toggleNotesPanel = () => {
-    setNotesCollapsed(!notesCollapsed)
-  }
-
-  const handleShareNote = (noteId: string) => {
-    const note = notes.find((n) => n.id === noteId)
-    if (note) {
-      setShareNoteId(noteId)
-      setShareLink(`https://notelink1234.com/${noteId}`)
-      setShowShareModal(true)
-      setDeleteNoteId(null)
-      toast.success("Share link generated")
-    }
-  }
-
   const handleCopyShareLink = () => {
     navigator.clipboard
       .writeText(shareLink)
@@ -389,8 +399,8 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   }
 
   const components = {
-    li: ({ node, ...props }: any) => (
-      <li
+    li: ({ node, ...props }: any) => {
+      return <li
         style={{
           overflowWrap: "normal",
           wordBreak: "normal",
@@ -399,7 +409,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         }}
         {...props}
       />
-    ),
+    },
     h2: ({ node, ...props }: any) => (
       <h2
         style={{
@@ -422,17 +432,21 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         {...props}
       />
     ),
-    p: ({ node, ...props }: any) => (
-      <div
-        style={{
-          overflowWrap: "normal",
-          wordBreak: "normal",
-          marginBottom: "1rem", // Add spacing between paragraphs
-          lineHeight: "1.6", // Improve readability with line height
-        }}
-        {...props}
-      />
-    ),
+    p: ({ node, ...props }: any) => {
+
+
+      return (
+        <div
+          style={{
+            overflowWrap: "normal",
+            wordBreak: "normal",
+            marginBottom: "1rem", // Add spacing between paragraphs
+            lineHeight: "1.6", // Improve readability with line height
+          }}
+          {...props}
+        />
+      );
+    },
     code: ({ node, inline, className, children, ...props }: any) => {
       if (inline) {
         return (
@@ -558,8 +572,16 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                         <div className={`whitespace-normal break-words break-all w-full 
                                                                  
                           ${message.sender === "user" ? "text-sm" : "text-lg"}`}>
-                          <ReactMarkdown components={components}>{message.content}</ReactMarkdown>
+                          <ReactMarkdown components={
+                            {
+                              ...components,
+                            }}>{preprocessContent(message.content)}</ReactMarkdown>
                         </div>
+                        {/* Add ReferencesPillButtons here */}
+                        {message.context_ids && message.context_ids.length > 0 && (
+                          <ReferencesPillButtons contextIds={message.context_ids} />
+                        )}
+
                         {message.images_ids && message.images_ids.length > 0 && (
                           <div className="relative mt-2 overflow-hidden rounded-[10px] shadow-sm">
                             <MessageImageSlider images_ids={message.images_ids} />
